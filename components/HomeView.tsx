@@ -64,7 +64,7 @@ const HomeView: React.FC<Props> = ({ user, sleepData, activity, setActivity, aiI
   ];
 
   const BetaBadge = () => (
-    <span className="inline-block px-2 py-0.5 bg-teal-500 text-white text-[10px] font-black tracking-widest rounded-md border border-teal-600 ml-2 align-middle">BETA</span>
+    <span className="inline-block px-2 py-0.5 bg-teal-500 text-white text-[10px] font-black tracking-widest rounded-md border border-teal-600 ml-2 align-middle font-display">BETA</span>
   );
 
   return (
@@ -77,7 +77,7 @@ const HomeView: React.FC<Props> = ({ user, sleepData, activity, setActivity, aiI
             <h2 className="text-4xl xs:text-5xl sm:text-6xl md:text-8xl font-black tracking-tight text-slate-900 leading-[1.1] md:leading-tight hero-text-shadow text-balance">
               Find your <br/><span className="text-teal-700 italic">Sanctuary.</span><BetaBadge />
             </h2>
-            <p className="text-base sm:text-xl md:text-2xl text-slate-700 md:text-slate-800 font-bold max-w-2xl leading-relaxed hero-text-shadow">
+            <p className="text-base sm:text-xl md:text-2xl text-slate-700 md:text-slate-800 font-semibold max-w-2xl leading-relaxed hero-text-shadow">
               Hi {user?.name}, how can we help you find balance today?
             </p>
           </div>
@@ -90,7 +90,7 @@ const HomeView: React.FC<Props> = ({ user, sleepData, activity, setActivity, aiI
             </button>
             <button 
               onClick={() => setView(AppView.JOURNAL)}
-              className="bg-slate-900 text-white px-8 md:px-10 py-4 md:py-6 rounded-2xl md:rounded-[2.5rem] font-black text-lg md:text-2xl hover:bg-slate-800 transition-all shadow-lg"
+              className="bg-slate-900 text-white px-8 md:px-10 py-4 md:py-6 rounded-2xl md:rounded-[2.5rem] font-black text-lg md:text-2xl hover:bg-slate-800 transition-all shadow-lg font-display"
             >
               Quick Journal
             </button>
@@ -101,7 +101,7 @@ const HomeView: React.FC<Props> = ({ user, sleepData, activity, setActivity, aiI
       <div className="space-y-6 md:space-y-8">
         <div className="px-4 md:px-0 flex items-center gap-3">
           <h3 className="text-2xl md:text-4xl font-black text-slate-900 tracking-tight">Discover Your Space</h3>
-          <span className="px-2 py-0.5 bg-slate-200 text-slate-600 text-[10px] font-black tracking-widest rounded">BETA</span>
+          <span className="label-caps px-2 py-0.5 bg-slate-200 text-slate-600 rounded">BETA</span>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8">
           {modules.map((m) => (
@@ -115,9 +115,9 @@ const HomeView: React.FC<Props> = ({ user, sleepData, activity, setActivity, aiI
               </div>
               <div className="space-y-2">
                 <h4 className={`text-xl md:text-2xl font-black ${m.textColor}`}>{m.title}</h4>
-                <p className="text-sm md:text-base font-bold text-slate-500 leading-snug">{m.desc}</p>
+                <p className="text-sm md:text-base font-semibold text-slate-500 leading-snug">{m.desc}</p>
               </div>
-              <div className={`flex items-center gap-2 text-sm font-black uppercase tracking-widest ${m.textColor} pt-4 opacity-0 group-hover:opacity-100 transition-opacity`}>
+              <div className={`flex items-center gap-2 label-caps ${m.textColor} pt-4 opacity-0 group-hover:opacity-100 transition-opacity`}>
                 Open Room <ChevronRight size={16} />
               </div>
             </button>
@@ -129,8 +129,8 @@ const HomeView: React.FC<Props> = ({ user, sleepData, activity, setActivity, aiI
         <div className="glass-card p-6 sm:p-10 rounded-[2.5rem] md:rounded-[4rem] space-y-6 md:space-y-8 flex flex-col justify-between shadow-xl">
           <div className="flex justify-between items-start">
             <div className="space-y-1 md:space-y-2">
-              <h3 className="text-2xl md:text-4xl font-bold text-slate-900">Restfulness</h3>
-              <p className="text-[10px] md:text-sm text-slate-500 font-black uppercase tracking-widest opacity-80">Weekly Recovery</p>
+              <h3 className="text-2xl md:text-4xl font-black text-slate-900">Restfulness</h3>
+              <p className="label-caps text-slate-500 opacity-80">Weekly Recovery</p>
             </div>
             <button 
               onClick={() => setView(AppView.SLEEP)}
@@ -149,8 +149,8 @@ const HomeView: React.FC<Props> = ({ user, sleepData, activity, setActivity, aiI
                   </linearGradient>
                 </defs>
                 <Tooltip 
-                  contentStyle={{ background: '#ffffff', borderRadius: '16px', border: 'none', boxShadow: '0 10px 15px rgba(0,0,0,0.1)', color: '#0f172a' }}
-                  itemStyle={{ color: '#0d9488' }}
+                  contentStyle={{ background: '#ffffff', borderRadius: '16px', border: 'none', boxShadow: '0 10px 15px rgba(0,0,0,0.1)', color: '#0f172a', fontFamily: 'Outfit' }}
+                  itemStyle={{ color: '#0d9488', fontWeight: 700 }}
                 />
                 <Area type="monotone" dataKey="hours" stroke="#0d9488" strokeWidth={4} md:strokeWidth={5} fillOpacity={1} fill="url(#colorHours)" />
               </AreaChart>
@@ -158,12 +158,12 @@ const HomeView: React.FC<Props> = ({ user, sleepData, activity, setActivity, aiI
           </div>
           <div className="flex items-center justify-between pt-6 md:pt-8 border-t border-slate-100">
             <div className="flex items-baseline gap-2">
-              <span className="text-4xl md:text-6xl font-black text-slate-900">{aiInsights?.score || '71.8'}</span>
-              <span className="text-slate-500 text-[10px] md:text-sm font-black uppercase tracking-widest opacity-80">Score</span>
+              <span className="text-4xl md:text-6xl font-black text-slate-900 display-number">{aiInsights?.score || '71.8'}</span>
+              <span className="label-caps text-slate-500 opacity-80">Score</span>
             </div>
             <div className="text-right">
-              <p className="text-[9px] md:text-[11px] font-black text-slate-500 uppercase tracking-widest opacity-80">Current State</p>
-              <p className="text-xl md:text-2xl font-bold text-teal-600">{aiInsights?.label || 'Moderate'}</p>
+              <p className="label-caps text-slate-500 opacity-80">Current State</p>
+              <p className="text-xl md:text-2xl font-black text-teal-600">{aiInsights?.label || 'Moderate'}</p>
             </div>
           </div>
         </div>
@@ -185,7 +185,7 @@ const HomeView: React.FC<Props> = ({ user, sleepData, activity, setActivity, aiI
                <button onClick={addWater} className="w-10 h-10 md:w-14 md:h-14 bg-cyan-700 text-white rounded-full flex items-center justify-center shadow-lg hover:scale-110 active:scale-95 transition-all">
                 <ArrowUpRight size={20} className="md:w-7 md:h-7" />
                </button>
-               <p className="text-[10px] md:text-sm font-black text-slate-900 mt-1 md:mt-2 uppercase tracking-widest whitespace-nowrap">{activity.waterIntake} Glasses</p>
+               <p className="label-caps text-slate-900 mt-1 md:mt-2 whitespace-nowrap">{activity.waterIntake} Glasses</p>
             </div>
           </div>
           <div className="glass-card p-5 sm:p-8 rounded-[1.5rem] md:rounded-[2.5rem] flex items-center justify-between hover:shadow-xl transition-all">
@@ -195,25 +195,25 @@ const HomeView: React.FC<Props> = ({ user, sleepData, activity, setActivity, aiI
               </div>
               <div className="space-y-1">
                 <h4 className="text-lg md:text-2xl font-black text-slate-900">Daily Steps</h4>
-                <p className="text-3xl md:text-5xl font-black text-emerald-800">{activity.steps.toLocaleString()}</p>
+                <p className="text-3xl md:text-5xl font-black text-emerald-800 display-number">{activity.steps.toLocaleString()}</p>
               </div>
             </div>
             <button 
               onClick={() => setView(AppView.ACTIVITY)}
-              className="text-right group"
+              className="text-right group outline-none"
             >
-               <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest opacity-80">View Flow</span>
-               <p className="text-xl md:text-2xl font-black text-slate-900 flex items-center gap-1">52% <ChevronRight size={16} className="group-hover:translate-x-1 transition-transform"/></p>
+               <span className="label-caps text-slate-500 opacity-80">View Flow</span>
+               <p className="text-xl md:text-2xl font-black text-slate-900 flex items-center gap-1 display-number">52% <ChevronRight size={16} className="group-hover:translate-x-1 transition-transform"/></p>
             </button>
           </div>
           <div className="glass-card p-8 rounded-[2rem] md:rounded-[3rem] bg-slate-900 text-white border-none flex-1 flex flex-col justify-center relative overflow-hidden shadow-xl">
              <div className="absolute top-[-40px] right-[-40px] opacity-10">
                 <Wind size={150} />
              </div>
-             <p className="text-teal-400 font-black mb-3 flex items-center gap-2 tracking-[0.2em] uppercase text-[10px] md:text-sm relative z-10">
+             <p className="label-caps text-teal-400 mb-3 flex items-center gap-2 relative z-10">
                 <Sparkles size={14}/> Daily Insight
              </p>
-             <p className="text-lg md:text-2xl text-white italic font-bold leading-snug md:leading-relaxed relative z-10 text-balance">
+             <p className="text-lg md:text-2xl text-white italic font-bold leading-relaxed relative z-10 text-balance">
                 "{aiInsights?.advice || "Your focus peaks mid-morning. Try scheduling deep work between 9 AM and 11 AM, and save routine tasks for later."}"
              </p>
           </div>

@@ -25,7 +25,7 @@ const DesktopNavItem: React.FC<{ item: any; activeView: AppView; setView: (view:
       `}>
         <Icon size={18} fill={isActive ? 'currentColor' : 'none'} />
       </div>
-      <span className={`text-lg transition-colors duration-300 ${isActive ? 'font-bold text-white' : 'text-slate-400 font-medium group-hover:text-slate-200'}`}>
+      <span className={`text-lg transition-colors duration-300 font-display ${isActive ? 'font-bold text-white' : 'text-slate-400 font-medium group-hover:text-slate-200'}`}>
         {item.label}
       </span>
     </button>
@@ -48,7 +48,7 @@ const MobileNavItem: React.FC<{ item: any; activeView: AppView; setView: (view: 
       `}>
         <Icon size={20} fill={isActive ? 'currentColor' : 'none'} />
       </div>
-      <span className={`text-[9px] font-black uppercase tracking-tighter truncate w-full px-1 ${isActive ? 'text-white' : 'text-slate-500'}`}>
+      <span className={`label-caps truncate w-full px-1 ${isActive ? 'text-white' : 'text-slate-500'}`} style={{ fontSize: '7px' }}>
         {item.label}
       </span>
     </button>
@@ -65,7 +65,7 @@ const Navigation: React.FC<Props> = ({ activeView, setView, onLogout }) => {
   ];
 
   const BetaBadge = () => (
-    <span className="px-2 py-0.5 bg-teal-500/20 text-teal-400 text-[10px] font-black tracking-widest rounded-md border border-teal-500/30 ml-2">BETA</span>
+    <span className="px-2 py-0.5 bg-teal-500/20 text-teal-400 label-caps rounded-md border border-teal-500/30 ml-2">BETA</span>
   );
 
   return (
@@ -82,7 +82,7 @@ const Navigation: React.FC<Props> = ({ activeView, setView, onLogout }) => {
             </svg>
           </div>
           <span className="font-black text-slate-900 tracking-tight text-xl font-display">Sanctuary</span>
-          <span className="px-1.5 py-0.5 bg-teal-100 text-teal-700 text-[8px] font-black tracking-widest rounded-md border border-teal-200">BETA</span>
+          <span className="px-1.5 py-0.5 bg-teal-100 text-teal-700 label-caps rounded-md border border-teal-200" style={{fontSize: '6px'}}>BETA</span>
         </button>
         <button 
           onClick={onLogout}
@@ -124,7 +124,7 @@ const Navigation: React.FC<Props> = ({ activeView, setView, onLogout }) => {
         <div className="px-6 space-y-4 pt-10 border-t border-white/10 mt-auto">
           <button 
             onClick={onLogout}
-            className="w-full flex items-center gap-4 px-2 py-3 text-slate-400 hover:text-red-400 transition-colors"
+            className="w-full flex items-center gap-4 px-2 py-3 text-slate-400 hover:text-red-400 transition-colors font-display"
           >
             <div className="w-10 h-10 rounded-full border border-white/20 flex items-center justify-center">
               <LogOut size={18} />
