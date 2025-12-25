@@ -1,0 +1,201 @@
+
+import React, { useState, useEffect, useRef } from 'react';
+import { AppView, UserProfile, SleepData, ActivityData, JournalEntry } from './types';
+import WelcomeJourney from './components/WelcomeJourney';
+import AuthFlow from './components/AuthFlow';
+import Dashboard from './components/Dashboard';
+import Navigation from './components/Navigation';
+import OnboardingTutorial from './components/OnboardingTutorial';
+import { analyzeSleepAndHealth } from './services/geminiService';
+import { Sparkles, Play } from 'lucide-react';
+
+const STORAGE_KEYS = {
+  USER: 'sanctuary_user_profile',
+  JOURNAL: 'sanctuary_journal_entries',
+  SLEEP: 'sanctuary_sleep_data',
+  ACTIVITY: 'sanctuary_activity_data',
+  DRAFT: 'sanctuary_journal_draft'
+};
+
+const App: React.FC = () => {
+  const [hasStarted, setHasStarted] = useState(false);
+  const [view, setView] = useState<AppView>(AppView.WELCOME);
+  const [user, setUser] = useState<UserProfile | null>(() => {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEYS.USER);
+      return saved ? JSON.parse(saved) : null;
+    } catch { return null; }
+  });
+  const [showTutorial, setShowTutorial] = useState(false);
+  const [journalEntries, setJournalEntries] = useState<JournalEntry[]>(() => {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEYS.JOURNAL);
+      return saved ? JSON.parse(saved) : [];
+    } catch { return []; }
+  });
+  const [sleepData, setSleepData] = useState<SleepData[]>(() => {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEYS.SLEEP);
+      return saved ? JSON.parse(saved) : [
+        { date: 'Mon', hours: 6.5, quality: 6, score: 65, label: 'Fair' },
+        { date: 'Tue', hours: 7.2, quality: 8, score: 82, label: 'Good' },
+        { date: 'Wed', hours: 5.8, quality: 4, score: 45, label: 'Poor' },
+        { date: 'Thu', hours: 8.1, quality: 9, score: 88, label: 'Great' },
+        { date: 'Fri', hours: 7.5, quality: 8, score: 79, label: 'Good' },
+      ];
+    } catch { return []; }
+  });
+  const [activity, setActivity] = useState<ActivityData>(() => {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEYS.ACTIVITY);
+      return saved ? JSON.parse(saved) : { steps: 4200, waterIntake: 5 };
+    } catch { return { steps: 0, waterIntake: 0 }; }
+  });
+  const [aiInsights, setAiInsights] = useState<any>(null);
+  const refreshTimerRef = useRef<number | null>(null);
+  const lastAnalyzedJournalCount = useRef<number>(0);
+
+  useEffect(() => {
+    if (user) {
+      localStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(user));
+    }
+  }, [user]);
+
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEYS.JOURNAL, JSON.stringify(journalEntries));
+    
+    // Conservative Refresh to avoid Quota Exhaustion
+    if (refreshTimerRef.current) window.clearTimeout(refreshTimerRef.current);
+    
+    // Only refresh if the count of journal entries changed to avoid unnecessary re-analysis
+    if (journalEntries.length !== lastAnalyzedJournalCount.current) {
+      // Increased debounce to 15s to be more conservative with API quota
+      refreshTimerRef.current = window.setTimeout(() => {
+        if (journalEntries.length > 0) refreshAIInsights();
+      }, 15000); 
+    }
+  }, [journalEntries]);
+
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEYS.SLEEP, JSON.stringify(sleepData));
+  }, [sleepData]);
+
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEYS.ACTIVITY, JSON.stringify(activity));
+  }, [activity]);
+
+  useEffect(() => {
+    if (hasStarted && user && view === AppView.WELCOME) {
+      setView(AppView.DASHBOARD);
+    }
+  }, [hasStarted, user]);
+
+  const handleStartExperience = () => {
+    setHasStarted(true);
+    if (user && view === AppView.WELCOME) {
+      setView(AppView.DASHBOARD);
+    }
+  };
+
+  const handleStart = (profile: UserProfile) => {
+    setUser(profile);
+    setView(AppView.LOGIN);
+  };
+
+  const handleAuthComplete = () => {
+    setView(AppView.DASHBOARD);
+    setShowTutorial(true);
+    refreshAIInsights();
+  };
+
+  const handleTutorialComplete = () => {
+    setShowTutorial(false);
+  };
+
+  const refreshAIInsights = async () => {
+    try {
+      lastAnalyzedJournalCount.current = journalEntries.length;
+      const snippets = journalEntries.slice(0, 5).map(e => e.transcript || "");
+      const result = await analyzeSleepAndHealth(sleepData, snippets);
+      setAiInsights(result);
+    } catch (e) {
+      console.error("AI Insights sync failed", e);
+    }
+  };
+
+  const logout = () => {
+    // Preserve sanctuary history (journal, sleep, activity) 
+    // but clear the current user profile and session-specific drafts
+    localStorage.removeItem(STORAGE_KEYS.USER);
+    localStorage.removeItem(STORAGE_KEYS.DRAFT);
+    
+    setUser(null);
+    setView(AppView.WELCOME);
+    setShowTutorial(false);
+    setHasStarted(false);
+  };
+
+  return (
+    <div className="min-h-screen transition-all duration-1000 relative overflow-x-hidden">
+      <div className="fixed inset-0 z-0 overflow-hidden pointer-events-none">
+        <img 
+          src="https://images.unsplash.com/photo-1518241353330-0f7941c2d9b5?auto=format&fit=crop&q=80&w=2560" 
+          alt="Zen landscape" 
+          className="w-full h-full object-cover opacity-60"
+        />
+        <div className="absolute inset-0 bg-white/40"></div>
+        <div className="absolute inset-0 bg-gradient-to-b from-transparent to-white/95"></div>
+      </div>
+
+      {!hasStarted && (
+        <div className="fixed inset-0 z-[200] flex flex-col items-center justify-center p-6 text-center animate-in fade-in zoom-in-95 duration-1000">
+          <div className="absolute inset-0 bg-slate-900/10 backdrop-blur-md"></div>
+          <div className="relative z-10 glass-card p-10 md:p-24 rounded-[3rem] md:rounded-[5rem] shadow-2xl border-white/60 max-w-2xl w-full space-y-12">
+             <div className="space-y-6">
+                <div className="w-24 h-24 md:w-32 md:h-32 bg-teal-600/10 rounded-full flex items-center justify-center mx-auto mb-6 relative">
+                   <div className="absolute inset-0 border-2 border-teal-600/30 rounded-full animate-ping opacity-20"></div>
+                   <Sparkles size={48} className="text-teal-700 md:w-16 md:h-16" />
+                </div>
+                <h1 className="text-5xl md:text-7xl font-black text-slate-900 tracking-tighter font-display leading-tight">Welcome to <br/>Sanctuary</h1>
+                <p className="text-xl md:text-2xl text-slate-600 font-medium italic">Your mindful space is ready.</p>
+             </div>
+             <button 
+                onClick={handleStartExperience}
+                className="w-full calm-btn-primary py-6 md:py-8 rounded-[1.5rem] md:rounded-[2.5rem] text-2xl md:text-3xl font-black shadow-2xl hover:scale-105 active:scale-95 transition-all flex items-center justify-center gap-4 group"
+              >
+                <Play size={28} className="md:w-9 md:h-9 group-hover:fill-current" fill="none" /> 
+                Enter Sanctuary
+             </button>
+          </div>
+        </div>
+      )}
+
+      <div className={`relative z-10 min-h-screen flex flex-col transition-all duration-1000 ${hasStarted ? 'opacity-100 blur-0 scale-100' : 'opacity-0 blur-xl scale-110 pointer-events-none'}`}>
+        {view === AppView.WELCOME && <WelcomeJourney onComplete={handleStart} />}
+        {view === AppView.LOGIN && user && <AuthFlow onAuthComplete={handleAuthComplete} userName={user.name} />}
+        {view !== AppView.WELCOME && view !== AppView.LOGIN && (
+          <div className="flex flex-col md:flex-row min-h-screen">
+            <Navigation activeView={view} setView={setView} onLogout={logout} />
+            <main className="flex-1 w-full transition-all duration-500 relative px-4 sm:px-8 pb-32 pt-24 md:pt-16 md:pb-16 md:pl-[260px] max-w-[1600px] mx-auto">
+              <Dashboard 
+                view={view}
+                setView={setView}
+                user={user} 
+                sleepData={sleepData} 
+                activity={activity}
+                setActivity={setActivity}
+                journalEntries={journalEntries}
+                setJournalEntries={setJournalEntries}
+                aiInsights={aiInsights}
+                setSleepData={setSleepData}
+              />
+            </main>
+            {showTutorial && user && <OnboardingTutorial userName={user.name} onComplete={handleTutorialComplete} onViewChange={setView} />}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+export default App;

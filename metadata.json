@@ -1,0 +1,7 @@
+{
+  "name": "Sanctuary: Your AI Mindfulness Space",
+  "description": "A holistic mindfulness application for stressed tech professionals, featuring AI-powered sleep tracking, gratitude journaling with an empathetic companion, and immersive nature-based meditation music.",
+  "requestFramePermissions": [
+    "microphone"
+  ]
+}
