@@ -4,7 +4,7 @@ import {
   Play, Pause, SkipBack, SkipForward, Sparkles, 
   ChevronLeft, Loader2, Volume2, VolumeX, Timer, Brain, 
   WavesIcon, Wind, Cloud, Moon,
-  Target, Heart, Sun, Activity, Music, Droplets, Stars, Maximize2
+  Target, Heart, Sun, Activity, Music, Droplets, Stars, Maximize2, Zap, Coffee
 } from 'lucide-react';
 
 interface Props {
@@ -22,28 +22,27 @@ const CATEGORIES = [
 ];
 
 const TRACKS = [
-  { id: 'p1', cat: 'piano', name: 'Nocturnal Nocturne', genre: 'Midnight Piano', icon: Music, color: 'from-slate-900 to-blue-950', url: 'GEN_PIANO_MIDNIGHT', benefit: 'Deep, minor-key melodies for late-night reflection.' },
-  { id: 'p2', cat: 'piano', name: 'Dawn Prelude', genre: 'Morning Ivory', icon: Sun, color: 'from-amber-50 to-orange-100', url: 'GEN_PIANO_MORNING', benefit: 'Uplifting major scales to energize your morning ritual.' },
-  { id: 'p3', cat: 'piano', name: 'Monsoon Sonata', genre: 'Rainy Keys', icon: Droplets, color: 'from-blue-100 to-slate-400', url: 'GEN_PIANO_RAIN', benefit: 'Melancholic keys layered with a soft procedural rainfall.' },
-  { id: 'p4', cat: 'piano', name: 'Nebula Waltz', genre: 'Ethereal Grand', icon: Sparkles, color: 'from-purple-50 to-indigo-200', url: 'GEN_PIANO_ETHEREAL', benefit: 'Slow, drifting chords that feel like floating through space.' },
-  { id: 'p5', cat: 'piano', name: 'Emerald Grove', genre: 'Lyrical Piano', icon: Wind, color: 'from-emerald-50 to-teal-100', url: 'GEN_PIANO_LYRICAL', benefit: 'Flowing Lydian melodies for creative inspiration and joy.' },
-  { id: 'p6', cat: 'piano', name: 'Glass Reflection', genre: 'Minimalist Keys', icon: Activity, color: 'from-slate-50 to-blue-50', url: 'GEN_PIANO_GLASS', benefit: 'A precise, rhythmic arpeggio pattern for focused deep work.' },
+  { id: 'p1', cat: 'piano', name: 'Midnight Debug', genre: 'Felt Reflection', icon: Music, color: 'from-slate-950 to-indigo-950', url: 'GEN_PIANO_MIDNIGHT', benefit: 'Deep, felt-damped melodies designed to slow down your racing thoughts after a long sprint.' },
+  { id: 'p2', cat: 'piano', name: 'Solar Syntax', genre: 'Bright Prelude', icon: Sun, color: 'from-amber-100 to-orange-200', url: 'GEN_PIANO_MORNING', benefit: 'High-frequency major scales to clear cognitive fog and reset your morning flow state.' },
+  { id: 'p3', cat: 'piano', name: 'Monsoon Logic', genre: 'Rainy Resonance', icon: Droplets, color: 'from-blue-200 to-slate-400', url: 'GEN_PIANO_RAIN', benefit: 'A steady rhythmic downpour paired with low-octave chords to drown out office chatter.' },
+  { id: 'p4', cat: 'piano', name: 'Latency Void', genre: 'Ambient Grand', icon: Zap, color: 'from-slate-900 via-slate-800 to-slate-950', url: 'GEN_PIANO_VOID', benefit: 'Ultra-slow, drifting harmonies that create a mental buffer between work and rest.' },
+  { id: 'p5', cat: 'piano', name: 'Coffee Lake Prelude', genre: 'Rhythmic Focus', icon: Coffee, color: 'from-amber-600/20 to-amber-900/40', url: 'GEN_PIANO_COFFEE', benefit: 'A driving, focused tempo to maintain high-velocity output during deep work blocks.' },
+  { id: 'p6', cat: 'piano', name: 'Glass Focus', genre: 'Minimalist Zen', icon: Activity, color: 'from-blue-50 to-teal-100', url: 'GEN_PIANO_GLASS', benefit: 'Precision-timed, minimal notes for entering a state of high-performance flow.' },
   { id: 'f1', cat: 'focus', name: 'Deep Work', genre: 'Calm Waves', icon: WavesIcon, color: 'from-blue-50 to-teal-300', url: 'GEN_CALM_WAVES', benefit: 'Rhythmic shore waves for cognitive clarity.' },
   { id: 'f7', cat: 'focus', name: 'Raag Bilawal', genre: 'Energizing', icon: Sun, color: 'from-yellow-400 to-orange-400', url: 'GEN_RAAG_BILAWAL', benefit: 'A bright, major-scale Raga to energize your focus.' },
-  { id: 'f4', cat: 'focus', name: 'Raag Yaman', genre: 'Evening', icon: Music, color: 'from-orange-200 to-amber-600', url: 'GEN_RAAG_YAMAN', benefit: 'Cultivates peace and romantic devotion.' },
-  { id: 'f6', cat: 'focus', name: 'Logic Reeds', genre: 'Reed Focus', icon: Wind, color: 'from-amber-100 to-orange-300', url: 'GEN_HARMONIUM_FOCUS', benefit: 'Steady reed drone for rhythmic cognitive flow.' },
+  { id: 'f4', cat: 'focus', name: 'Raag Yaman', genre: 'Evening Devotion', icon: Music, color: 'from-orange-200 to-amber-600', url: 'GEN_RAAG_YAMAN', benefit: 'Lydian melodies that cultivate peace and creative devotion.' },
+  { id: 'f6', cat: 'focus', name: 'Logic Reeds', genre: 'Harmonium Focus', icon: Wind, color: 'from-amber-100 to-orange-300', url: 'GEN_HARMONIUM_FOCUS', benefit: 'Steady reed drone for rhythmic cognitive flow.' },
   { id: 'm5', cat: 'meditate', name: 'Celestial Voyage', genre: 'Astro-Ambient', icon: Stars, color: 'from-slate-900 via-indigo-950 to-purple-900', url: 'GEN_SPACE_ASTRO', benefit: 'Ethereal cosmic melodies and deep stardust frequencies.' },
-  { id: 'm6', cat: 'meditate', name: 'Sacred Bellows', genre: 'Reed Zen', icon: Wind, color: 'from-amber-200 to-orange-700', url: 'GEN_HARMONIUM_MEDITATE', benefit: 'Traditional harmonium drone for spiritual depth.' },
-  { id: 'r3', cat: 'relax', name: 'Raag Bhairavi', genre: 'Healing', icon: Heart, color: 'from-rose-100 to-teal-400', url: 'GEN_RAAG_BHAIRAVI', benefit: 'The Queen of Ragas. Healing vibrations suited for any time of day.' },
-  { id: 'r4', cat: 'relax', name: 'Raag Malhar', genre: 'Monsoon', icon: Cloud, color: 'from-slate-700 to-blue-900', url: 'GEN_RAAG_MALHAR', benefit: 'The Raga of Rain. Majestic, surging melodies like a storm.' },
-  { id: 'r5', cat: 'relax', name: 'Raag Bihag', genre: 'Sweet, Dreamy', icon: Heart, color: 'from-pink-100 to-amber-200', url: 'GEN_RAAG_BIHAG', benefit: 'Best suited for Evening. Evokes a sweet, romantic, and dreamy atmosphere.' },
-  { id: 'r2', cat: 'relax', name: 'Raag Darbari', genre: 'Regal', icon: Moon, color: 'from-indigo-900 to-blue-950', url: 'GEN_RAAG_DARBARI', benefit: 'Grave, regal, and deeply grounding.' },
+  { id: 'm6', cat: 'meditate', name: 'Sacred Bellows', genre: 'Reed Zen', icon: Wind, color: 'from-amber-200 to-orange-700', url: 'GEN_HARMONIUM_MEDITATE', benefit: 'Traditional harmonium drone for spiritual depth and centering.' },
+  { id: 'r3', cat: 'relax', name: 'Raag Bhairavi', genre: 'Healing', icon: Heart, color: 'from-rose-100 to-teal-400', url: 'GEN_RAAG_BHAIRAVI', benefit: 'The Queen of Ragas. A soul-stirring healing vibration suited for any time of day.' },
+  { id: 'r4', cat: 'relax', name: 'Raag Malhar', genre: 'Monsoon Rain', icon: Cloud, color: 'from-slate-700 to-blue-900', url: 'GEN_RAAG_MALHAR', benefit: 'The Raga of Rain. Majestic, surging melodies like a storm over the plains.' },
+  { id: 'r5', cat: 'relax', name: 'Raag Bihag', genre: 'Dreamy Evening', icon: Heart, color: 'from-pink-100 to-amber-200', url: 'GEN_RAAG_BIHAG', benefit: 'Best suited for late evening. Evokes a sweet, romantic, and dreamy atmosphere.' },
+  { id: 'r2', cat: 'relax', name: 'Raag Darbari', genre: 'Regal Night', icon: Moon, color: 'from-indigo-900 to-blue-950', url: 'GEN_RAAG_DARBARI', benefit: 'Grave, regal, and deeply grounding melodies for late-night reflection.' },
   { id: 's1', cat: 'sleep', name: 'Lunar Tide', genre: 'Sleep Delta', icon: WavesIcon, color: 'from-[#0b1d2e] to-[#1e3a8a]', url: 'GEN_SLEEP_WAVES', benefit: 'Gentle, slow-moving oceanic rhythms tuned to Delta sleep frequencies.' },
-  { id: 's2', cat: 'sleep', name: 'Midnight Rainfall', genre: 'Nature Sleep', icon: Droplets, color: 'from-[#1e1e2e] to-[#312e81]', url: 'GEN_SLEEP_RAIN', benefit: 'A soft, consistent downpour designed to mask distracting corporate noise.' },
   { id: 's4', cat: 'sleep', name: 'Velvet Void', genre: 'Deep Space', icon: Stars, color: 'from-black to-[#111827]', url: 'GEN_SLEEP_SPACE', benefit: 'Warm, low-frequency cosmic hums designed for total mental surrender.' },
 ];
 
-const CROSSFADE_TIME = 1.8; // Seconds
+const CROSSFADE_TIME = 2.0; 
 
 interface AudioVoice {
   id: string;
@@ -53,7 +52,7 @@ interface AudioVoice {
 
 const MusicPlayer: React.FC<Props> = ({ setView, setIsAnyTrackPlaying }) => {
   const [activeCat, setActiveCat] = useState('focus');
-  const [currentTrack, setCurrentTrack] = useState(TRACKS[14]); // Default to Raag Bihag
+  const [currentTrack, setCurrentTrack] = useState(TRACKS[0]);
   const [isPlaying, setIsPlaying] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [volume, setVolume] = useState(0.5);
@@ -68,7 +67,6 @@ const MusicPlayer: React.FC<Props> = ({ setView, setIsAnyTrackPlaying }) => {
   const masterGainRef = useRef<GainNode | null>(null);
   const reverbNodeRef = useRef<ConvolverNode | null>(null);
   
-  // Track all currently playing synthesis voices for crossfading
   const activeVoicesRef = useRef<AudioVoice[]>([]);
 
   const filteredTracks = useMemo(() => {
@@ -84,7 +82,7 @@ const MusicPlayer: React.FC<Props> = ({ setView, setIsAnyTrackPlaying }) => {
       }
       const ctx = audioContextRef.current;
       if (ctx.state === 'suspended') {
-        try { await ctx.resume(); } catch (e) { console.warn("AudioContext resume interrupted", e); }
+        await ctx.resume();
       }
       if (!masterGainRef.current) {
         masterGainRef.current = ctx.createGain();
@@ -94,30 +92,30 @@ const MusicPlayer: React.FC<Props> = ({ setView, setIsAnyTrackPlaying }) => {
       if (!reverbNodeRef.current) {
         const reverb = ctx.createConvolver();
         const sampleRate = ctx.sampleRate;
-        const length = sampleRate * 4.5;
+        const length = sampleRate * 4.0;
         const impulse = ctx.createBuffer(2, length, sampleRate);
         const left = impulse.getChannelData(0);
         const right = impulse.getChannelData(1);
         for (let i = 0; i < length; i++) {
-          const envelope = Math.pow(1 - i / length, 3.5);
+          const envelope = Math.pow(1 - i / length, 4.0);
           left[i] = (Math.random() * 2 - 1) * envelope;
           right[i] = (Math.random() * 2 - 1) * envelope;
         }
         reverb.buffer = impulse;
         const reverbGain = ctx.createGain();
-        reverbGain.gain.setValueAtTime(0.35, ctx.currentTime); 
+        reverbGain.gain.setValueAtTime(0.4, ctx.currentTime); 
         reverb.connect(reverbGain).connect(masterGainRef.current);
         reverbNodeRef.current = reverb;
       }
       if (!analyzerRef.current) {
         const analyzer = ctx.createAnalyser();
-        analyzer.fftSize = 256;
-        analyzer.smoothingTimeConstant = 0.75;
+        analyzer.fftSize = 512;
+        analyzer.smoothingTimeConstant = 0.8;
         analyzer.connect(masterGainRef.current);
         analyzerRef.current = analyzer;
       }
       return true;
-    } catch (err) { console.warn("Audio Engine Initialization failed:", err); return false; }
+    } catch (err) { return false; }
   }, [volume, isMuted]);
 
   const stopAllVoices = useCallback((fade = true) => {
@@ -157,167 +155,219 @@ const MusicPlayer: React.FC<Props> = ({ setView, setIsAnyTrackPlaying }) => {
     const now = ctx.currentTime;
     const voiceGain = ctx.createGain();
     voiceGain.gain.setValueAtTime(0, now);
-    // Start fading in
     voiceGain.gain.linearRampToValueAtTime(1, now + CROSSFADE_TIME);
     voiceGain.connect(analyzerRef.current);
 
     const extraNodes: any[] = [];
     let mainNode: AudioNode;
 
-    // PROCEDURAL ENGINE WRAPPER
     if (type.startsWith('GEN_PIANO')) {
       const mainGain = ctx.createGain();
       mainGain.connect(voiceGain);
       if (reverbNodeRef.current) mainGain.connect(reverbNodeRef.current);
       
       const playPianoNote = (freq: number, startTime: number, duration: number, vel: number) => {
-        const hammerBuffer = ctx.createBuffer(1, ctx.sampleRate * 0.1, ctx.sampleRate);
+        // Felt/Hammer noise
+        const hammerBuffer = ctx.createBuffer(1, ctx.sampleRate * 0.15, ctx.sampleRate);
         const hammerData = hammerBuffer.getChannelData(0);
-        for(let i=0; i<hammerData.length; i++) hammerData[i] = (Math.random() * 2 - 1) * Math.pow(1 - i/hammerData.length, 5);
+        for(let i=0; i<hammerData.length; i++) hammerData[i] = (Math.random() * 2 - 1) * Math.pow(1 - i/hammerData.length, 6);
         const hammerSource = ctx.createBufferSource();
         hammerSource.buffer = hammerBuffer;
+        const hFilter = ctx.createBiquadFilter();
+        hFilter.type = 'lowpass'; hFilter.frequency.setValueAtTime(200, startTime);
         const hGain = ctx.createGain();
-        hGain.gain.setValueAtTime(0.05 * vel, startTime);
-        hGain.gain.exponentialRampToValueAtTime(0.001, startTime + 0.05);
-        hammerSource.connect(hGain).connect(mainGain);
+        hGain.gain.setValueAtTime(0.08 * vel, startTime);
+        hGain.gain.exponentialRampToValueAtTime(0.0001, startTime + 0.08);
+        hammerSource.connect(hFilter).connect(hGain).connect(mainGain);
         hammerSource.start(startTime);
-        extraNodes.push(hammerSource, hGain);
-        const harmonicRatios = [1, 2, 3.01, 4, 5];
+        extraNodes.push(hammerSource, hFilter, hGain);
+
+        // Core Tones
+        const harmonicRatios = [1, 2, 3.01, 4, 5.02];
         harmonicRatios.forEach((ratio, idx) => {
           const osc = ctx.createOscillator();
-          osc.type = idx === 0 ? 'triangle' : 'sine';
+          osc.type = 'sine';
           osc.frequency.setValueAtTime(freq * ratio, startTime);
+          osc.detune.setValueAtTime((Math.random() - 0.5) * 5, startTime);
+          
           const g = ctx.createGain();
           g.gain.setValueAtTime(0, startTime);
-          g.gain.linearRampToValueAtTime((0.25 / (idx + 1)) * vel, startTime + 0.005);
-          g.gain.exponentialRampToValueAtTime(0.0001, startTime + (duration * (1.2 - idx * 0.1)));
-          osc.connect(g).connect(mainGain);
+          g.gain.linearRampToValueAtTime((0.3 / (idx + 1)) * vel, startTime + 0.005);
+          
+          const decay = duration * (1.5 - idx * 0.15);
+          g.gain.exponentialRampToValueAtTime(0.0001, startTime + decay);
+          
+          const vFilter = ctx.createBiquadFilter();
+          vFilter.type = 'lowpass';
+          vFilter.frequency.setValueAtTime(freq * 3, startTime);
+          vFilter.frequency.exponentialRampToValueAtTime(freq * 0.5, startTime + decay);
+
+          osc.connect(vFilter).connect(g).connect(mainGain);
           osc.start(startTime);
-          osc.stop(startTime + duration + 1);
-          extraNodes.push(osc, g);
+          osc.stop(startTime + decay + 0.5);
+          extraNodes.push(osc, vFilter, g);
         });
       };
 
       const isMidnight = type.includes('MIDNIGHT');
       const isMorning = type.includes('MORNING');
       const isRain = type.includes('RAIN');
-      const isEthereal = type.includes('ETHEREAL');
-      const isLyrical = type.includes('LYRICAL');
+      const isVoid = type.includes('VOID');
+      const isCoffee = type.includes('COFFEE');
       const isGlass = type.includes('GLASS');
+
       const scale = isMidnight ? [0, 3, 7, 8, 10, 12] : 
                    isMorning ? [0, 2, 4, 7, 9, 12] : 
                    isRain ? [0, 2, 3, 7, 9, 12] : 
-                   isLyrical ? [0, 2, 4, 6, 7, 9, 11, 12] : 
-                   isGlass ? [0, 2, 7, 9, 12, 14] : 
-                   [0, 4, 7, 11, 14, 18]; 
-      const baseTonic = isMidnight ? 110 : isMorning ? 146.83 : isRain ? 130.81 : isLyrical ? 174.61 : isGlass ? 196.00 : 98.00;
+                   isVoid ? [0, 7, 12, 14, 19] :
+                   isCoffee ? [0, 2, 4, 7, 9, 12, 14] :
+                   [0, 2, 7, 9, 12, 14]; 
 
-      if (isRain) {
-        const rainBuff = ctx.createBuffer(1, ctx.sampleRate * 5, ctx.sampleRate);
-        const rData = rainBuff.getChannelData(0);
-        for(let i=0; i<rainBuff.length; i++) rData[i] = Math.random() * 2 - 1;
-        const rSrc = ctx.createBufferSource();
-        rSrc.buffer = rainBuff; rSrc.loop = true;
-        const rg = ctx.createGain(); rg.gain.setValueAtTime(0.12, ctx.currentTime);
-        rSrc.connect(rg).connect(mainGain);
-        rSrc.start();
-        extraNodes.push(rSrc, rg);
-      }
+      const baseTonic = isMidnight ? 110 : isMorning ? 146.83 : isRain ? 130.81 : isVoid ? 82.41 : isCoffee ? 164.81 : 196.00;
+      const seqInterval = isMidnight ? 4500 : isMorning ? 3000 : isRain ? 5000 : isVoid ? 12000 : isCoffee ? 800 : 1200;
 
-      const seqInterval = isMidnight ? 5000 : isMorning ? 3500 : isRain ? 6000 : isLyrical ? 2500 : isGlass ? 1200 : 8000;
-      let glassIndex = 0;
+      let nextNoteTime = ctx.currentTime;
       const runSequence = () => {
-        let interval;
-        if (isGlass) { interval = scale[glassIndex % scale.length]; glassIndex++; }
-        else { interval = scale[Math.floor(Math.random() * scale.length)]; }
-        const oct = isGlass ? (glassIndex % 3) : Math.floor(Math.random() * 2) + (isEthereal ? 1 : 0);
-        const f = baseTonic * Math.pow(2, (interval + oct * 12) / 12);
-        playPianoNote(f, ctx.currentTime, isEthereal ? 12 : (isGlass ? 3 : 5), 0.7 + Math.random() * 0.3);
+        while (nextNoteTime < ctx.currentTime + 1.0) {
+          const interval = scale[Math.floor(Math.random() * scale.length)];
+          const oct = isVoid ? (Math.random() > 0.5 ? -1 : 0) : (isCoffee ? 1 : Math.floor(Math.random() * 2));
+          const f = baseTonic * Math.pow(2, (interval + oct * 12) / 12);
+          playPianoNote(f, nextNoteTime, isVoid ? 15 : (isCoffee ? 1.5 : 5), 0.6 + Math.random() * 0.4);
+          nextNoteTime += (seqInterval / 1000) + (isGlass || isCoffee ? 0 : Math.random() * 2.0);
+        }
       };
-      const seqId = setInterval(runSequence, seqInterval + (isGlass ? 0 : Math.random() * 2000));
+
+      const schedulerId = setInterval(runSequence, 200);
       runSequence();
-      extraNodes.push({ stop: () => clearInterval(seqId) });
+      extraNodes.push({ stop: () => clearInterval(schedulerId) });
       mainNode = mainGain;
     }
     else if (type.startsWith('GEN_RAAG')) {
       const mainGain = ctx.createGain();
       mainGain.connect(voiceGain);
       if (reverbNodeRef.current) mainGain.connect(reverbNodeRef.current);
+      
       const isBhairavi = type.includes('BHAIRAVI');
       const isMalhar = type.includes('MALHAR');
       const isYaman = type.includes('YAMAN');
       const isDarbari = type.includes('DARBARI');
       const isBihag = type.includes('BIHAG');
       const isBilawal = type.includes('BILAWAL');
-      const baseTonic = isDarbari ? 110 : isBhairavi ? 130.81 : (isMalhar || isYaman || isBihag || isBilawal) ? 146.83 : 146.83; 
+
+      const baseTonic = isDarbari ? 110 : isBhairavi ? 130.81 : 146.83; 
       const scaleBhairavi = [0, 1, 3, 5, 7, 8, 10, 12];
       const scaleMalhar = [0, 2, 5, 7, 10, 12];
       const scaleYaman = [0, 2, 4, 6, 7, 9, 11, 12];
       const scaleDarbari = [0, 2, 3, 5, 7, 8, 10, 12];
       const scaleBihag = [0, 4, 5, 6, 7, 11, 12];
       const scaleBilawal = [0, 2, 4, 5, 7, 9, 11, 12];
-      const activeScale = isBhairavi ? scaleBhairavi : isMalhar ? scaleMalhar : isYaman ? scaleYaman : isDarbari ? scaleDarbari : isBihag ? scaleBihag : isBilawal ? scaleBilawal : scaleYaman;
+      
+      const activeScale = isBhairavi ? scaleBhairavi : 
+                         isMalhar ? scaleMalhar : 
+                         isYaman ? scaleYaman : 
+                         isDarbari ? scaleDarbari : 
+                         isBihag ? scaleBihag : 
+                         isBilawal ? scaleBilawal : scaleYaman;
+
+      // Add Tanpura-like Drone
       const droneG = ctx.createGain();
-      droneG.gain.setValueAtTime(0.2, ctx.currentTime);
+      droneG.gain.setValueAtTime(0.18, ctx.currentTime);
       droneG.connect(mainGain);
-      [1, 1.5, 2, 3].forEach((h, i) => {
+      
+      // For Bhairavi, add a healing 528Hz sub-layer
+      if (isBhairavi) {
+        const healingOsc = ctx.createOscillator();
+        healingOsc.frequency.setValueAtTime(528 / 8, ctx.currentTime); // Sub-octave of Solfeggio 528Hz
+        const hg = ctx.createGain();
+        hg.gain.setValueAtTime(0.05, ctx.currentTime);
+        healingOsc.connect(hg).connect(droneG);
+        healingOsc.start();
+        extraNodes.push(healingOsc, hg);
+      }
+
+      [1, 1.5, 2].forEach((h, i) => {
         const osc = ctx.createOscillator();
-        osc.type = (i % 2 === 0 || isBilawal) ? 'sine' : 'triangle';
+        osc.type = 'sine';
         osc.frequency.setValueAtTime(baseTonic * h, ctx.currentTime);
         const g = ctx.createGain();
-        g.gain.setValueAtTime(0.08 / (i + 1), ctx.currentTime);
-        osc.detune.setValueAtTime(Math.random() * 10 - 5, ctx.currentTime);
+        g.gain.setValueAtTime(0.06 / (i + 1), ctx.currentTime);
         const lfo = ctx.createOscillator();
         lfo.frequency.setValueAtTime(0.05 + (i * 0.02), ctx.currentTime);
         const lfoG = ctx.createGain();
-        lfoG.gain.setValueAtTime(0.02, ctx.currentTime);
+        lfoG.gain.setValueAtTime(0.015, ctx.currentTime);
         lfo.connect(lfoG).connect(g.gain);
         osc.connect(g).connect(droneG);
         osc.start(); lfo.start();
         extraNodes.push(osc, lfo, g);
       });
-      if (isMalhar) {
-        const rainBuff = ctx.createBuffer(1, ctx.sampleRate * 3, ctx.sampleRate);
-        const rData = rainBuff.getChannelData(0);
-        for(let i=0; i<rainBuff.length; i++) rData[i] = Math.random() * 2 - 1;
-        const rSrc = ctx.createBufferSource();
-        rSrc.buffer = rainBuff; rSrc.loop = true;
-        const rFilter = ctx.createBiquadFilter();
-        rFilter.type = 'lowpass'; rFilter.frequency.setValueAtTime(400, ctx.currentTime);
-        const rg = ctx.createGain(); rg.gain.setValueAtTime(0.06, ctx.currentTime);
-        rSrc.connect(rFilter).connect(rg).connect(mainGain);
-        rSrc.start();
-        extraNodes.push(rSrc, rFilter, rg);
-      }
+      extraNodes.push(droneG);
+
       const playRaagNote = () => {
         const now = ctx.currentTime;
         const interval = activeScale[Math.floor(Math.random() * activeScale.length)];
-        const oct = Math.floor(Math.random() * (isDarbari || isBihag || isBilawal ? 1 : 2));
+        const oct = Math.random() > 0.8 ? 2 : 1;
         const freq = baseTonic * Math.pow(2, (interval + oct * 12) / 12);
         const osc = ctx.createOscillator();
-        osc.type = (isBhairavi || isBihag || isBilawal) ? 'sine' : 'triangle';
+        osc.type = isBhairavi ? 'sine' : 'triangle'; // Softer tone for Bhairavi
         osc.frequency.setValueAtTime(freq, now);
+        
         const g = ctx.createGain();
         g.gain.setValueAtTime(0, now);
-        g.gain.linearRampToValueAtTime(isMalhar || isBihag || isBilawal ? 0.12 : 0.08, now + (isMalhar ? 0.5 : (isBihag || isBilawal ? 1.0 : 2)));
-        g.gain.exponentialRampToValueAtTime(0.0001, now + (isMalhar ? 6 : (isBihag ? 10 : 8)));
-        if (Math.random() > 0.4 && !isBilawal) {
-          const targetInterval = activeScale[Math.floor(Math.random() * activeScale.length)];
-          const targetFreq = baseTonic * Math.pow(2, (targetInterval + oct * 12) / 12);
-          osc.frequency.exponentialRampToValueAtTime(targetFreq, now + (isBihag ? 1.2 : 1.5));
+        g.gain.linearRampToValueAtTime(isBhairavi ? 0.12 : 0.08, now + (isBhairavi ? 2.5 : 1.5));
+        g.gain.exponentialRampToValueAtTime(0.0001, now + (isBhairavi ? 12 : 8));
+        
+        // Glide/Meend - Enhanced for Bhairavi's healing quality
+        if (Math.random() > (isBhairavi ? 0.3 : 0.5)) {
+          const nextInt = activeScale[Math.floor(Math.random() * activeScale.length)];
+          const nextFreq = baseTonic * Math.pow(2, (nextInt + oct * 12) / 12);
+          osc.frequency.exponentialRampToValueAtTime(nextFreq, now + (isBhairavi ? 3.0 : 2.0));
         }
+
         osc.connect(g).connect(mainGain);
         osc.start(now); osc.stop(now + 13);
         extraNodes.push(osc, g);
       };
-      const noteInterval = isMalhar ? 4000 : (isBilawal ? 3000 : (isBihag ? 5000 : (isBhairavi ? 8000 : 6000)));
-      const raagSeqId = setInterval(playRaagNote, noteInterval + (isBilawal ? Math.random() * 1500 : Math.random() * 3000));
+
+      const noteInterval = isBhairavi ? 7000 : (isMalhar ? 4000 : (isBilawal ? 3000 : 6000));
+      const raagSeqId = setInterval(playRaagNote, noteInterval);
       playRaagNote();
       extraNodes.push({ stop: () => clearInterval(raagSeqId) });
       mainNode = mainGain;
     }
-    else if (type.startsWith('GEN_WHITE') || type.startsWith('GEN_BROWN') || type === 'GEN_CALM_WAVES' || type === 'GEN_SLEEP_WAVES') {
-      const buffer = ctx.createBuffer(1, ctx.sampleRate * 10, ctx.sampleRate);
+    else if (type.startsWith('GEN_HARMONIUM')) {
+      const mainGain = ctx.createGain();
+      mainGain.connect(voiceGain);
+      if (reverbNodeRef.current) mainGain.connect(reverbNodeRef.current);
+      
+      const isMeditate = type.includes('MEDITATE');
+      const baseFreq = isMeditate ? 110 : 146.83;
+      
+      // Multiphonic Reed Simulation
+      [1, 1.002, 2, 2.004, 3].forEach((ratio, i) => {
+        const osc = ctx.createOscillator();
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(baseFreq * ratio, ctx.currentTime);
+        
+        const filter = ctx.createBiquadFilter();
+        filter.type = 'lowpass';
+        filter.frequency.setValueAtTime(400 + (i * 100), ctx.currentTime);
+        
+        const g = ctx.createGain();
+        const lfo = ctx.createOscillator();
+        lfo.frequency.setValueAtTime(0.1 + (i * 0.05), ctx.currentTime);
+        const lfoG = ctx.createGain();
+        lfoG.gain.setValueAtTime(0.05, ctx.currentTime);
+        lfo.connect(lfoG).connect(g.gain);
+        
+        g.gain.setValueAtTime(0.1 / (i + 1), ctx.currentTime);
+        osc.connect(filter).connect(g).connect(mainGain);
+        osc.start(); lfo.start();
+        extraNodes.push(osc, filter, g, lfo, lfoG);
+      });
+      mainNode = mainGain;
+    }
+    else if (type.startsWith('GEN_CALM_WAVES') || type === 'GEN_SLEEP_WAVES') {
+      const buffer = ctx.createBuffer(1, ctx.sampleRate * 8, ctx.sampleRate);
       const data = buffer.getChannelData(0);
       let lastOut = 0;
       for (let i = 0; i < buffer.length; i++) {
@@ -327,46 +377,23 @@ const MusicPlayer: React.FC<Props> = ({ setView, setIsAnyTrackPlaying }) => {
       }
       const source = ctx.createBufferSource();
       source.buffer = buffer; source.loop = true;
-      const isSleep = type === 'GEN_SLEEP_WAVES';
       const waveGain = ctx.createGain();
       const lfo = ctx.createOscillator();
-      lfo.frequency.setValueAtTime(isSleep ? 0.05 : 0.12, ctx.currentTime); 
+      lfo.frequency.setValueAtTime(type.includes('SLEEP') ? 0.05 : 0.1, ctx.currentTime); 
       const lfoGain = ctx.createGain();
-      lfoGain.gain.setValueAtTime(isSleep ? 0.25 : 0.45, ctx.currentTime);
+      lfoGain.gain.setValueAtTime(0.4, ctx.currentTime);
       lfo.connect(lfoGain).connect(waveGain.gain);
       waveGain.gain.setValueAtTime(0.4, ctx.currentTime);
-      const filter = ctx.createBiquadFilter();
-      filter.type = 'lowpass';
-      filter.frequency.setValueAtTime(isSleep ? 250 : 800, ctx.currentTime);
-      source.connect(filter).connect(waveGain).connect(voiceGain);
+      source.connect(waveGain).connect(voiceGain);
       source.start(); lfo.start();
-      extraNodes.push(lfo, source, filter);
+      extraNodes.push(lfo, source);
       mainNode = waveGain;
     } 
-    else if (type === 'GEN_SLEEP_RAIN') {
-      const rainMainGain = ctx.createGain();
-      rainMainGain.connect(voiceGain);
-      const buffer = ctx.createBuffer(1, ctx.sampleRate * 5, ctx.sampleRate);
-      const data = buffer.getChannelData(0);
-      for (let i = 0; i < buffer.length; i++) data[i] = Math.random() * 2 - 1;
-      const source = ctx.createBufferSource();
-      source.buffer = buffer; source.loop = true;
-      const filter = ctx.createBiquadFilter();
-      filter.type = 'lowpass'; filter.frequency.setValueAtTime(350, ctx.currentTime);
-      const rumble = ctx.createOscillator();
-      rumble.frequency.setValueAtTime(55, ctx.currentTime);
-      const rumbleG = ctx.createGain();
-      rumbleG.gain.setValueAtTime(0.08, ctx.currentTime);
-      rumble.connect(rumbleG).connect(rainMainGain);
-      const rainG = ctx.createGain(); rainG.gain.setValueAtTime(0.15, ctx.currentTime);
-      source.connect(filter).connect(rainG).connect(rainMainGain);
-      source.start(); rumble.start();
-      extraNodes.push(source, filter, rainG, rumble);
-      mainNode = rainMainGain;
-    }
     else {
-      const osc = ctx.createOscillator(); osc.frequency.setValueAtTime(432, ctx.currentTime);
-      osc.connect(voiceGain); osc.start();
+      const osc = ctx.createOscillator(); 
+      osc.frequency.setValueAtTime(432, ctx.currentTime);
+      osc.connect(voiceGain); 
+      osc.start();
       mainNode = osc;
     }
 
@@ -410,11 +437,11 @@ const MusicPlayer: React.FC<Props> = ({ setView, setIsAnyTrackPlaying }) => {
     const centerX = canvas.width / 2;
     const centerY = canvas.height / 2;
     const radiusBase = Math.min(centerX, centerY) * 0.45;
-    [0.7, 0.5, 0.3].forEach((opacity, layer) => {
-      ctx.beginPath(); ctx.lineWidth = 1.5 + (layer * 0.5);
+    [0.7, 0.4, 0.2].forEach((opacity, layer) => {
+      ctx.beginPath(); ctx.lineWidth = 2 + (layer * 1);
       ctx.strokeStyle = `rgba(255, 255, 255, ${opacity})`;
       for (let i = 0; i < bufferLength; i++) {
-        const barHeight = (dataArray[i] / 255) * (radiusBase * (0.2 + layer * 0.3));
+        const barHeight = (dataArray[i] / 255) * (radiusBase * (0.3 + layer * 0.4));
         const angle = (i / bufferLength) * Math.PI * 2;
         const x = centerX + Math.cos(angle) * (radiusBase + barHeight);
         const y = centerY + Math.sin(angle) * (radiusBase + barHeight);
@@ -443,20 +470,16 @@ const MusicPlayer: React.FC<Props> = ({ setView, setIsAnyTrackPlaying }) => {
 
   const handleTrackSelect = async (track: any) => {
     if (isLoading) return;
-    
     const success = await initAudioEngine();
     if (!success) return;
     const ctx = audioContextRef.current!;
 
-    // Case: Toggle Off
     if (activeVoicesRef.current.some(v => v.id === track.id) && isPlaying && !isMuted) {
       stopAllVoices(true);
       return;
     }
 
     setIsLoading(true);
-
-    // Fade out previous voices
     if (activeVoicesRef.current.length > 0) {
       activeVoicesRef.current.forEach(voice => {
         const now = ctx.currentTime;
@@ -517,50 +540,49 @@ const MusicPlayer: React.FC<Props> = ({ setView, setIsAnyTrackPlaying }) => {
           </div>
         </div>
       </div>
+      
       <div className="relative h-[450px] md:h-[650px] rounded-[3.5rem] md:rounded-[6rem] overflow-hidden group shadow-[0_40px_100px_-20px_rgba(0,0,0,0.35)] transition-all duration-1000 ring-1 ring-white/15">
         <div className={`absolute inset-0 bg-gradient-to-br ${currentTrack.color} transition-all duration-[2500ms] scale-105 group-hover:scale-100`}></div>
-        <div className="absolute inset-0 bg-black/45 backdrop-blur-[1px]"></div>
-        <canvas ref={canvasRef} width={1000} height={1000} className="absolute inset-0 w-full h-full opacity-60 pointer-events-none mix-blend-screen" />
+        <div className="absolute inset-0 bg-black/45 backdrop-blur-[2px]"></div>
+        <canvas ref={canvasRef} width={1000} height={1000} className="absolute inset-0 w-full h-full opacity-70 pointer-events-none mix-blend-screen" />
         <div className="absolute inset-0 flex flex-col items-center justify-center p-8 md:p-16 z-10 text-center">
           <div className="space-y-6 md:space-y-8 animate-in zoom-in-95 duration-1000 max-w-4xl">
              <div className="inline-flex items-center gap-2 px-6 py-2 bg-white/10 backdrop-blur-3xl rounded-full border border-white/20 mx-auto">
                <Sparkles size={16} className="text-teal-300" />
-               <p className="text-[11px] md:text-sm font-black uppercase tracking-[0.4em] text-white/90">Environment: {currentTrack.genre}</p>
+               <p className="text-[11px] md:text-sm font-black uppercase tracking-[0.4em] text-white/90">Mode: {currentTrack.genre}</p>
              </div>
              <div className="space-y-4">
-               <h2 className="text-5xl sm:text-6xl md:text-9xl font-black tracking-tighter drop-shadow-2xl text-white leading-[0.85]">{currentTrack.name}</h2>
-               {currentTrack.benefit && <p className="text-xl md:text-3xl text-teal-50 font-medium italic drop-shadow-lg opacity-90 leading-relaxed max-w-2xl mx-auto">"{currentTrack.benefit}"</p>}
+               <h2 className="text-6xl sm:text-7xl md:text-9xl font-black tracking-tighter drop-shadow-2xl text-white leading-[0.85]">{currentTrack.name}</h2>
+               {currentTrack.benefit && <p className="text-xl md:text-3xl text-teal-50 font-medium italic drop-shadow-lg opacity-90 leading-relaxed max-w-3xl mx-auto">"{currentTrack.benefit}"</p>}
              </div>
           </div>
           <div className="absolute bottom-10 md:bottom-16 left-1/2 -translate-x-1/2">
-            <div className="flex items-center gap-4 md:gap-8 px-8 py-3 bg-white/10 backdrop-blur-3xl rounded-full border border-white/20 shadow-2xl animate-in slide-in-from-bottom-6 duration-700">
-              <button className="text-white/30 hover:text-white transition-all hover:scale-110 active:scale-90 p-2"><SkipBack size={20} fill="currentColor" /></button>
-              <button onClick={() => handleTrackSelect(currentTrack)} disabled={isLoading} className={`w-14 h-14 md:w-16 md:h-16 bg-white text-teal-950 rounded-full flex items-center justify-center shadow-xl hover:scale-110 active:scale-95 transition-all ${isLoading ? 'opacity-50' : ''}`}>
-                {isLoading ? <Loader2 size={24} className="animate-spin text-teal-700" /> : isPlaying && !isMuted ? <Pause size={24} fill="currentColor" /> : <Play size={24} className="ml-1" fill="currentColor" />}
+            <div className="flex items-center gap-4 md:gap-8 px-8 py-3 bg-white/10 backdrop-blur-3xl rounded-full border border-white/20 shadow-2xl">
+              <button className="text-white/30 hover:text-white transition-all hover:scale-110 p-2"><SkipBack size={20} fill="currentColor" /></button>
+              <button onClick={() => handleTrackSelect(currentTrack)} disabled={isLoading} className={`w-14 h-14 md:w-20 md:h-20 bg-white text-teal-950 rounded-full flex items-center justify-center shadow-xl hover:scale-110 active:scale-95 transition-all ${isLoading ? 'opacity-50' : ''}`}>
+                {isLoading ? <Loader2 size={24} className="animate-spin text-teal-700" /> : isPlaying && !isMuted ? <Pause size={32} fill="currentColor" /> : <Play size={32} className="ml-1" fill="currentColor" />}
               </button>
-              <button className="text-white/30 hover:text-white transition-all hover:scale-110 active:scale-90 p-2"><SkipForward size={20} fill="currentColor" /></button>
+              <button className="text-white/30 hover:text-white transition-all hover:scale-110 p-2"><SkipForward size={20} fill="currentColor" /></button>
             </div>
           </div>
-          <button className="absolute top-10 right-10 p-4 bg-white/10 backdrop-blur-md rounded-2xl text-white/20 hover:text-white transition-all hover:bg-white/20 hidden md:block"><Maximize2 size={20} /></button>
-        </div>
-        <div className="absolute inset-0 pointer-events-none z-0 opacity-15 mix-blend-overlay">
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(255,255,255,0.2),transparent_70%)]"></div>
         </div>
       </div>
+
       <div className="space-y-10">
         <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6 px-4 md:px-6">
           <div className="space-y-2">
             <h3 className="text-3xl md:text-5xl font-black text-slate-900 tracking-tight leading-none">Meditation Library</h3>
-            <p className="text-slate-500 font-bold text-sm md:text-lg max-w-xl">Hand-crafted procedural audio with seamless crossfades.</p>
+            <p className="text-slate-500 font-bold text-sm md:text-lg max-w-xl">Clinical-grade procedural audio for cognitive restoration.</p>
           </div>
           <div className="flex p-1.5 bg-slate-100/80 backdrop-blur-3xl rounded-2xl gap-1 border border-white shadow-inner flex-wrap">
             {CATEGORIES.map((cat) => (
-              <button key={cat.id} onClick={() => setActiveCat(cat.id)} className={`flex items-center gap-2 px-4 py-2 rounded-xl text-[9px] md:text-[10px] font-black uppercase tracking-widest transition-all ${activeCat === cat.id ? 'bg-white text-slate-900 shadow-md' : 'text-slate-500 hover:text-slate-800'}`}>
+              <button key={cat.id} onClick={() => setActiveCat(cat.id)} className={`flex items-center gap-2 px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeCat === cat.id ? 'bg-white text-slate-900 shadow-md' : 'text-slate-500 hover:text-slate-800'}`}>
                 <cat.icon size={14} className={activeCat === cat.id ? cat.color : ''} />{cat.label}
               </button>
             ))}
           </div>
         </div>
+        
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 px-4 md:px-6">
           {filteredTracks.map(item => {
             const isActive = currentTrack.id === item.id;
@@ -571,7 +593,7 @@ const MusicPlayer: React.FC<Props> = ({ setView, setIsAnyTrackPlaying }) => {
                 </div>
                 <div className="space-y-0.5 min-w-0 flex-1">
                   <div className="flex items-center justify-between gap-2">
-                    <p className="text-base md:text-lg font-black tracking-tight leading-tight truncate">{item.name}</p>
+                    <p className="text-base font-black tracking-tight leading-tight truncate">{item.name}</p>
                     {isActive && isPlaying && !isMuted && <PlayingIndicator />}
                   </div>
                   <p className={`text-[10px] uppercase font-black tracking-[0.2em] ${isActive && !isMuted ? 'text-teal-400' : 'text-slate-400'}`}>{item.genre}</p>
