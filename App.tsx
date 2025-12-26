@@ -79,10 +79,10 @@ const App: React.FC = () => {
     
     if (journalEntries.length !== lastAnalyzedJournalCount.current) {
       refreshTimerRef.current = window.setTimeout(() => {
-        if (journalEntries.length > 0) refreshAIInsights();
+        if (journalEntries.length > 0 || user) refreshAIInsights();
       }, 15000); 
     }
-  }, [journalEntries]);
+  }, [journalEntries, user]);
 
   useEffect(() => {
     localStorage.setItem(STORAGE_KEYS.SLEEP, JSON.stringify(sleepData));
@@ -124,7 +124,7 @@ const App: React.FC = () => {
     try {
       lastAnalyzedJournalCount.current = journalEntries.length;
       const snippets = journalEntries.slice(0, 5).map(e => e.transcript || "");
-      const result = await analyzeSleepAndHealth(sleepData, snippets);
+      const result = await analyzeSleepAndHealth(sleepData, snippets, user);
       setAiInsights(result);
     } catch (e) {
       console.error("AI Insights sync failed", e);

@@ -1,7 +1,7 @@
 import React from 'react';
 import { UserProfile, SleepData, ActivityData, AppView } from '../types';
 import { Tooltip, ResponsiveContainer, AreaChart, Area } from 'recharts';
-import { Droplets, Footprints, Moon, Sparkles, Wind, ArrowUpRight, Brain, BookHeart, Compass, ChevronRight } from 'lucide-react';
+import { Droplets, Footprints, Moon, Sparkles, Wind, ArrowUpRight, Brain, BookHeart, Compass, ChevronRight, Quote } from 'lucide-react';
 
 interface Props {
   user: UserProfile | null;
@@ -84,7 +84,32 @@ const HomeView: React.FC<Props> = ({ user, sleepData, activity, setActivity, aiI
         </div>
       </section>
 
-      {/* 1. Daily Insight Card - Moved to top priority */}
+      {/* Daily Affirmation Mantra */}
+      <section className="px-1 md:px-0">
+        <div className="relative glass-card p-10 md:p-14 rounded-[3rem] md:rounded-[4rem] border-none shadow-2xl overflow-hidden group">
+           <div className="absolute inset-0 bg-gradient-to-br from-teal-500/5 to-blue-600/5 group-hover:scale-105 transition-transform duration-1000"></div>
+           <div className="absolute -top-10 -right-10 opacity-[0.03] rotate-12 group-hover:rotate-0 transition-transform duration-1000">
+             <Quote size={240} className="text-teal-900" />
+           </div>
+           
+           <div className="relative z-10 flex flex-col items-center text-center space-y-6">
+              <div className="inline-flex items-center gap-2 px-4 py-1 bg-teal-50 text-teal-700 rounded-full label-caps border border-teal-100/50">
+                 <Sparkles size={14} className="animate-pulse" />
+                 <span>Mantra for Today</span>
+              </div>
+              <h3 className="text-3xl md:text-6xl font-black text-slate-900 tracking-tight leading-[1.1] text-balance max-w-4xl italic">
+                {aiInsights?.affirmation ? `"${aiInsights.affirmation}"` : '"I am the calm center in the stream of logic."'}
+              </h3>
+              <div className="flex items-center gap-4 pt-2">
+                 <div className="w-1.5 h-1.5 rounded-full bg-teal-300"></div>
+                 <div className="w-1.5 h-1.5 rounded-full bg-teal-500 animate-pulse"></div>
+                 <div className="w-1.5 h-1.5 rounded-full bg-teal-300"></div>
+              </div>
+           </div>
+        </div>
+      </section>
+
+      {/* Daily Insight Card */}
       <section className="px-1 md:px-0">
         <div className="glass-card p-8 md:p-12 rounded-[2.5rem] md:rounded-[3.5rem] bg-slate-900 text-white border-none flex flex-col md:flex-row items-center justify-between relative overflow-hidden shadow-2xl group ring-1 ring-white/10 transition-all hover:scale-[1.01]">
           <div className="absolute top-[-20px] right-[-20px] opacity-[0.05] text-white rotate-12 transition-transform group-hover:rotate-0 duration-1000">
@@ -109,7 +134,7 @@ const HomeView: React.FC<Props> = ({ user, sleepData, activity, setActivity, aiI
         </div>
       </section>
 
-      {/* 2. Restfulness Section */}
+      {/* Restfulness Section */}
       <section className="space-y-6">
         <div className="px-4 md:px-2 flex items-center justify-between">
           <h3 className="text-2xl md:text-4xl font-black text-slate-900 tracking-tight">Restfulness</h3>
@@ -161,7 +186,7 @@ const HomeView: React.FC<Props> = ({ user, sleepData, activity, setActivity, aiI
         </div>
       </section>
 
-      {/* 3. Hydration & Steps Section */}
+      {/* Hydration & Steps Section */}
       <section className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
         {/* Hydration Card */}
         <div className="glass-card p-8 rounded-[2.5rem] md:rounded-[3.5rem] flex items-center justify-between hover:shadow-2xl transition-all ring-1 ring-slate-100/50 group">

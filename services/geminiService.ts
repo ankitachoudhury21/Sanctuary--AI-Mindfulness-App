@@ -1,5 +1,5 @@
 import { GoogleGenAI, Type, GenerateContentResponse } from "@google/genai";
-import { SleepData } from "../types";
+import { SleepData, UserProfile } from "../types";
 
 const getAI = () => new GoogleGenAI({ apiKey: process.env.API_KEY });
 
@@ -46,18 +46,19 @@ export const analyzeGratitudeJournal = async (transcript: string) => {
   }
 };
 
-export const analyzeSleepAndHealth = async (sleepHistory: SleepData[], journalHistory: string[]) => {
+export const analyzeSleepAndHealth = async (sleepHistory: SleepData[], journalHistory: string[], user: UserProfile | null) => {
   const ai = getAI();
   const sleepContext = JSON.stringify(sleepHistory.slice(-7)); 
   const journalContext = journalHistory.slice(0, 5).join(" | ");
+  const userContext = user ? `User Profile: Stress Level ${user.stressLevel}/10, Goals: ${user.goals?.join(', ')}` : "User Profile: Not available";
 
   try {
-    // Upgraded to gemini-3-pro-preview for complex reasoning on health patterns
     const response = await withRetry<GenerateContentResponse>(() => ai.models.generateContent({
       model: "gemini-3-pro-preview",
       contents: `You are a holistic wellness consultant for corporate tech professionals. 
       Analyze the following biometric and qualitative data to provide a health insight report.
       
+      ${userContext}
       Sleep Data (last 7 days): ${sleepContext}
       Journal Mood Snippets: ${journalContext}
       
@@ -65,6 +66,7 @@ export const analyzeSleepAndHealth = async (sleepHistory: SleepData[], journalHi
       1. Calculate an overall Sleep/Wellness Score (0-100) based on consistency, quality, and duration.
       2. Identify 3 potential health concerns/patterns (e.g., Cognitive Fatigue, Social Burnout, Circadian Misalignment).
       3. Provide 1 piece of high-impact, actionable advice for a high-stress professional.
+      4. Generate a brief, powerful mindfulness affirmation (mantra) under 12 words that specifically addresses their current state.
       
       Return ONLY valid JSON.`,
       config: {
@@ -80,9 +82,10 @@ export const analyzeSleepAndHealth = async (sleepHistory: SleepData[], journalHi
               items: { type: Type.STRING },
               description: "List of 3 specific patterns or health risks detected"
             },
-            advice: { type: Type.STRING, description: "One concise sentence of professional advice" }
+            advice: { type: Type.STRING, description: "One concise sentence of professional advice" },
+            affirmation: { type: Type.STRING, description: "A poetic, grounding mantra under 12 words." }
           },
-          required: ["score", "label", "predictions", "advice"]
+          required: ["score", "label", "predictions", "advice", "affirmation"]
         }
       }
     }));
@@ -102,7 +105,8 @@ export const analyzeSleepAndHealth = async (sleepHistory: SleepData[], journalHi
       score: baseScore,
       label: baseScore > 80 ? "Restorative" : baseScore > 60 ? "Balanced" : "Fatigued",
       predictions: ["Establishing baseline patterns", "Data accumulation in progress", "Personalized insights pending"],
-      advice: "Focus on maintaining a consistent 15-minute screen-free window before sleep tonight."
+      advice: "Focus on maintaining a consistent 15-minute screen-free window before sleep tonight.",
+      affirmation: "I am the steady silence beneath the noise of logic."
     };
   }
 };

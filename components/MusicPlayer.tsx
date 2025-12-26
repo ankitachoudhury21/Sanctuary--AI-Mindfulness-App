@@ -41,8 +41,10 @@ const TRACKS = [
   { id: 'r4', cat: 'relax', name: 'Raag Malhar', genre: 'Monsoon Rain', icon: Cloud, color: 'from-slate-700 to-blue-900', url: 'GEN_RAAG_MALHAR', benefit: 'The Raga of Rain. Majestic, surging melodies like a storm over the plains.' },
   { id: 'r5', cat: 'relax', name: 'Raag Bihag', genre: 'Dreamy Evening', icon: Heart, color: 'from-pink-100 to-amber-200', url: 'GEN_RAAG_BIHAG', benefit: 'Best suited for late evening. Evokes a sweet, romantic, and dreamy atmosphere.' },
   { id: 'r2', cat: 'relax', name: 'Raag Darbari', genre: 'Regal Night', icon: Moon, color: 'from-indigo-900 to-blue-950', url: 'GEN_RAAG_DARBARI', benefit: 'Grave, regal, and deeply grounding melodies for late-night reflection.' },
-  { id: 's1', cat: 'sleep', name: 'Lunar Tide', genre: 'Sleep Delta', icon: WavesIcon, color: 'from-[#0b1d2e] to-[#1e3a8a]', url: 'GEN_SLEEP_WAVES', benefit: 'Gentle, slow-moving oceanic rhythms tuned to Delta sleep frequencies.' },
-  { id: 's4', cat: 'sleep', name: 'Velvet Void', genre: 'Deep Space', icon: Stars, color: 'from-black to-[#111827]', url: 'GEN_SLEEP_SPACE', benefit: 'Warm, low-frequency cosmic hums designed for total mental surrender.' },
+  { id: 's1', cat: 'sleep', name: 'Lunar Tide', genre: 'Ocean Delta', icon: WavesIcon, color: 'from-[#0b1d2e] to-[#1e3a8a]', url: 'GEN_SLEEP_WAVES', benefit: 'Gentle, slow-moving oceanic rhythms tuned to Delta sleep frequencies.' },
+  { id: 's2', cat: 'sleep', name: 'Starlight Drift', genre: 'Binaural Pad', icon: Stars, color: 'from-[#1e1b4b] to-[#312e81]', url: 'GEN_SLEEP_DRIFT', benefit: 'Soft ethereal pads layered with a 2Hz binaural beat for deep REM induction.' },
+  { id: 's3', cat: 'sleep', name: 'Rain on Glass', genre: 'ASMR Rain', icon: Droplets, color: 'from-[#172554] to-[#1e3a8a]', url: 'GEN_SLEEP_RAIN', benefit: 'A soothing, warm rainfall designed to mask environmental noise and racing thoughts.' },
+  { id: 's4', cat: 'sleep', name: 'Velvet Void', genre: 'Deep Space', icon: Moon, color: 'from-black to-[#111827]', url: 'GEN_SLEEP_SPACE', benefit: 'Warm, low-frequency cosmic hums designed for total mental surrender.' },
 ];
 
 const CROSSFADE_TIME = 2.0; 
@@ -248,7 +250,6 @@ const MusicPlayer: React.FC<Props> = ({ setView, setIsAnyTrackPlaying }) => {
       mainGain.connect(voiceGain);
       if (reverbNodeRef.current) mainGain.connect(reverbNodeRef.current);
       
-      // Steady low-frequency temple drone
       const droneOsc = ctx.createOscillator();
       droneOsc.type = 'sine';
       droneOsc.frequency.setValueAtTime(55, ctx.currentTime);
@@ -299,10 +300,9 @@ const MusicPlayer: React.FC<Props> = ({ setView, setIsAnyTrackPlaying }) => {
       const playFlute = () => {
         const now = ctx.currentTime;
         const root = 220;
-        const scale = [0, 3, 5, 7, 10]; // Minor Pentatonic
+        const scale = [0, 3, 5, 7, 10]; 
         const freq = root * Math.pow(2, scale[Math.floor(Math.random() * scale.length)] / 12);
         
-        // Breathy component
         const noise = ctx.createBufferSource();
         const buffer = ctx.createBuffer(1, ctx.sampleRate * 5, ctx.sampleRate);
         const data = buffer.getChannelData(0);
@@ -319,7 +319,6 @@ const MusicPlayer: React.FC<Props> = ({ setView, setIsAnyTrackPlaying }) => {
         nGain.gain.linearRampToValueAtTime(0.25, now + 1.2);
         nGain.gain.linearRampToValueAtTime(0, now + 6);
         
-        // Tonal component
         const osc = ctx.createOscillator();
         osc.type = 'triangle';
         osc.frequency.setValueAtTime(freq, now);
@@ -333,7 +332,6 @@ const MusicPlayer: React.FC<Props> = ({ setView, setIsAnyTrackPlaying }) => {
         oGain.gain.linearRampToValueAtTime(0.15, now + 1.5);
         oGain.gain.exponentialRampToValueAtTime(0.0001, now + 5.8);
         
-        // Vibrato
         const vibrato = ctx.createOscillator();
         vibrato.frequency.setValueAtTime(4.5 + Math.random(), now);
         const vibratoG = ctx.createGain();
@@ -362,18 +360,17 @@ const MusicPlayer: React.FC<Props> = ({ setView, setIsAnyTrackPlaying }) => {
       
       const playGlass = () => {
         const now = ctx.currentTime;
-        const scale = [0, 4, 7, 11, 14, 19]; // Lydian flavors
+        const scale = [0, 4, 7, 11, 14, 19]; 
         const root = 440;
         const freq = root * Math.pow(2, scale[Math.floor(Math.random() * scale.length)] / 12);
         
-        // FM Synthesis for Glassy tone
         const carrier = ctx.createOscillator();
         carrier.type = 'sine';
         carrier.frequency.setValueAtTime(freq, now);
         
         const modulator = ctx.createOscillator();
         modulator.type = 'sine';
-        modulator.frequency.setValueAtTime(freq * 2.01, now); // Ratio for brightness
+        modulator.frequency.setValueAtTime(freq * 2.01, now); 
         
         const modGain = ctx.createGain();
         modGain.gain.setValueAtTime(freq * 1.5, now);
@@ -386,7 +383,6 @@ const MusicPlayer: React.FC<Props> = ({ setView, setIsAnyTrackPlaying }) => {
         g.gain.linearRampToValueAtTime(0.08, now + 0.05);
         g.gain.exponentialRampToValueAtTime(0.0001, now + 4.5);
         
-        // Add random glimmers (high frequency sparks)
         if (Math.random() > 0.5) {
           const shimmer = ctx.createOscillator();
           shimmer.frequency.setValueAtTime(freq * 8, now);
@@ -408,6 +404,123 @@ const MusicPlayer: React.FC<Props> = ({ setView, setIsAnyTrackPlaying }) => {
       const glassId = setInterval(playGlass, 2500);
       playGlass();
       extraNodes.push({ stop: () => clearInterval(glassId) });
+      mainNode = mainGain;
+    }
+    else if (type === 'GEN_SLEEP_WAVES') {
+      const bufferSize = ctx.sampleRate * 10;
+      const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+      const data = buffer.getChannelData(0);
+      let lastOut = 0;
+      for (let i = 0; i < bufferSize; i++) {
+        const white = Math.random() * 2 - 1;
+        // Brownian noise for a smoother, deep ocean feel
+        lastOut = (lastOut + (0.02 * white)) / 1.02;
+        data[i] = lastOut * 3.5;
+      }
+      const source = ctx.createBufferSource();
+      source.buffer = buffer; source.loop = true;
+      const filter = ctx.createBiquadFilter();
+      filter.type = 'lowpass';
+      filter.frequency.setValueAtTime(400, ctx.currentTime);
+      const waveGain = ctx.createGain();
+      const lfo = ctx.createOscillator();
+      lfo.frequency.setValueAtTime(0.06, ctx.currentTime); 
+      const lfoGain = ctx.createGain();
+      lfoGain.gain.setValueAtTime(0.35, ctx.currentTime);
+      lfo.connect(lfoGain).connect(waveGain.gain);
+      waveGain.gain.setValueAtTime(0.3, ctx.currentTime);
+      source.connect(filter).connect(waveGain).connect(voiceGain);
+      source.start(); lfo.start();
+      extraNodes.push(source, filter, waveGain, lfo, lfoGain);
+      mainNode = waveGain;
+    }
+    else if (type === 'GEN_SLEEP_DRIFT') {
+      const mainGain = ctx.createGain();
+      mainGain.connect(voiceGain);
+      if (reverbNodeRef.current) mainGain.connect(reverbNodeRef.current);
+      
+      // 2Hz Delta Binaural Beat (100Hz and 102Hz)
+      const leftOsc = ctx.createOscillator();
+      leftOsc.frequency.setValueAtTime(100, ctx.currentTime);
+      const leftPanner = ctx.createStereoPanner();
+      leftPanner.pan.setValueAtTime(-1, ctx.currentTime);
+      const leftGain = ctx.createGain();
+      leftGain.gain.setValueAtTime(0.1, ctx.currentTime);
+      leftOsc.connect(leftPanner).connect(leftGain).connect(mainGain);
+      
+      const rightOsc = ctx.createOscillator();
+      rightOsc.frequency.setValueAtTime(102, ctx.currentTime);
+      const rightPanner = ctx.createStereoPanner();
+      rightPanner.pan.setValueAtTime(1, ctx.currentTime);
+      const rightGain = ctx.createGain();
+      rightGain.gain.setValueAtTime(0.1, ctx.currentTime);
+      rightOsc.connect(rightPanner).connect(rightGain).connect(mainGain);
+      
+      leftOsc.start(); rightOsc.start();
+      extraNodes.push(leftOsc, rightOsc, leftPanner, rightPanner, leftGain, rightGain);
+
+      // Ethereal Pad
+      const playPad = () => {
+        const now = ctx.currentTime;
+        const freqs = [200, 300, 400, 600];
+        freqs.forEach((f, i) => {
+          const osc = ctx.createOscillator();
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(f + (Math.random() * 2), now);
+          const g = ctx.createGain();
+          g.gain.setValueAtTime(0, now);
+          g.gain.linearRampToValueAtTime(0.03, now + 4);
+          g.gain.linearRampToValueAtTime(0, now + 12);
+          osc.connect(g).connect(mainGain);
+          osc.start(now); osc.stop(now + 12.1);
+          extraNodes.push(osc, g);
+        });
+      };
+      const padId = setInterval(playPad, 8000);
+      playPad();
+      extraNodes.push({ stop: () => clearInterval(padId) });
+      mainNode = mainGain;
+    }
+    else if (type === 'GEN_SLEEP_RAIN') {
+      const buffer = ctx.createBuffer(1, ctx.sampleRate * 5, ctx.sampleRate);
+      const data = buffer.getChannelData(0);
+      for (let i = 0; i < buffer.length; i++) data[i] = Math.random() * 2 - 1;
+      const source = ctx.createBufferSource();
+      source.buffer = buffer; source.loop = true;
+      
+      const lp = ctx.createBiquadFilter();
+      lp.type = 'lowpass'; lp.frequency.setValueAtTime(800, ctx.currentTime);
+      const hp = ctx.createBiquadFilter();
+      hp.type = 'highpass'; hp.frequency.setValueAtTime(100, ctx.currentTime);
+      
+      const rainGain = ctx.createGain();
+      rainGain.gain.setValueAtTime(0.2, ctx.currentTime);
+      source.connect(lp).connect(hp).connect(rainGain).connect(voiceGain);
+      source.start();
+      extraNodes.push(source, lp, hp, rainGain);
+      mainNode = rainGain;
+    }
+    else if (type === 'GEN_SLEEP_SPACE') {
+      const mainGain = ctx.createGain();
+      mainGain.connect(voiceGain);
+      if (reverbNodeRef.current) mainGain.connect(reverbNodeRef.current);
+      
+      const osc1 = ctx.createOscillator();
+      osc1.type = 'sine'; osc1.frequency.setValueAtTime(40, ctx.currentTime);
+      const osc2 = ctx.createOscillator();
+      osc2.type = 'sine'; osc2.frequency.setValueAtTime(60.2, ctx.currentTime);
+      const g = ctx.createGain();
+      const lfo = ctx.createOscillator();
+      lfo.frequency.setValueAtTime(0.04, ctx.currentTime);
+      const lfoG = ctx.createGain();
+      lfoG.gain.setValueAtTime(0.1, ctx.currentTime);
+      lfo.connect(lfoG).connect(g.gain);
+      g.gain.setValueAtTime(0.15, ctx.currentTime);
+      
+      osc1.connect(g); osc2.connect(g);
+      g.connect(mainGain);
+      osc1.start(); osc2.start(); lfo.start();
+      extraNodes.push(osc1, osc2, g, lfo, lfoG);
       mainNode = mainGain;
     }
     else if (type.startsWith('GEN_RAAG')) {
@@ -530,7 +643,7 @@ const MusicPlayer: React.FC<Props> = ({ setView, setIsAnyTrackPlaying }) => {
       });
       mainNode = mainGain;
     }
-    else if (type.startsWith('GEN_CALM_WAVES') || type === 'GEN_SLEEP_WAVES') {
+    else if (type.startsWith('GEN_CALM_WAVES')) {
       const buffer = ctx.createBuffer(1, ctx.sampleRate * 8, ctx.sampleRate);
       const data = buffer.getChannelData(0);
       let lastOut = 0;
@@ -543,7 +656,7 @@ const MusicPlayer: React.FC<Props> = ({ setView, setIsAnyTrackPlaying }) => {
       source.buffer = buffer; source.loop = true;
       const waveGain = ctx.createGain();
       const lfo = ctx.createOscillator();
-      lfo.frequency.setValueAtTime(type.includes('SLEEP') ? 0.05 : 0.1, ctx.currentTime); 
+      lfo.frequency.setValueAtTime(0.1, ctx.currentTime); 
       const lfoGain = ctx.createGain();
       lfoGain.gain.setValueAtTime(0.4, ctx.currentTime);
       lfo.connect(lfoGain).connect(waveGain.gain);
