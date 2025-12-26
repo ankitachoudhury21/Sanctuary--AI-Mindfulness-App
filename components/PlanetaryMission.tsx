@@ -1,8 +1,8 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { AppView } from '../types';
 import { 
-  ChevronLeft, Play, Pause, Rocket, Sun as SunIcon, Globe, Moon, 
-  Stars, Loader2, Volume2, VolumeX, Timer, Sparkles, Activity, Shield, Zap, Music
+  ChevronLeft, Play, Pause, Rocket, Loader2, Volume2, VolumeX, 
+  Timer, Sparkles, Activity, Shield, Zap, Music, Radio, Map, Eye
 } from 'lucide-react';
 
 interface Planet {
@@ -19,21 +19,22 @@ interface Planet {
     temp: string;
     distance: string;
     hazard: string;
+    diameter: string;
   };
 }
 
 const PLANETS: Planet[] = [
   { 
     id: 'sun', 
-    name: 'Sun', 
+    name: 'The Sun', 
     desc: 'Solar Core: G-Type Star', 
     color: 'from-orange-500 to-yellow-600', 
     videoUrl: 'https://cdn.pixabay.com/vimeo/312061265/sun-1358.mp4?width=1280', 
     imageUrl: 'https://images.unsplash.com/photo-1541185933-ef5d8ed016c2?auto=format&fit=crop&q=80&w=2000',
     synthesis: 'SUN', 
     mission: 'Harness the raw energy of existence.', 
-    audioTrackName: 'Solar Flare',
-    metrics: { temp: '5,500°C', distance: '0.0 AU', hazard: 'EXTREME' } 
+    audioTrackName: 'Solar Flare Resonance',
+    metrics: { temp: '5,500°C', distance: '0.0 AU', hazard: 'EXTREME', diameter: '1.39M km' } 
   },
   { 
     id: 'mercury', 
@@ -44,32 +45,32 @@ const PLANETS: Planet[] = [
     imageUrl: 'https://images.unsplash.com/photo-1614728263952-84ea256f9679?auto=format&fit=crop&q=80&w=2000',
     synthesis: 'MERCURY', 
     mission: 'Endure the extremes of the inner circle.', 
-    audioTrackName: 'Core Resonance',
-    metrics: { temp: '430°C', distance: '0.39 AU', hazard: 'HIGH' } 
+    audioTrackName: 'Core Vibrations',
+    metrics: { temp: '430°C', distance: '0.39 AU', hazard: 'HIGH', diameter: '4,879 km' } 
   },
   { 
     id: 'venus', 
     name: 'Venus', 
     desc: 'Dense: Sulfuric Greenhouse', 
-    color: 'from-pink-300 to-rose-400', 
+    color: 'from-orange-300 to-amber-600', 
     videoUrl: 'https://cdn.pixabay.com/vimeo/186596918/venus-5743.mp4?width=1280', 
     imageUrl: 'https://images.unsplash.com/photo-1614313913007-2b4ae8ce32d6?auto=format&fit=crop&q=80&w=2000',
     synthesis: 'VENUS', 
     mission: 'Navigate the pressure of the eternal storm.', 
-    audioTrackName: "Acid Rain's Whisper",
-    metrics: { temp: '462°C', distance: '0.72 AU', hazard: 'CRITICAL' } 
+    audioTrackName: "Acid Cloud Echo",
+    metrics: { temp: '462°C', distance: '0.72 AU', hazard: 'CRITICAL', diameter: '12,104 km' } 
   },
   { 
     id: 'earth', 
     name: 'Earth', 
     desc: 'Organic: Pale Blue Dot', 
-    color: 'from-blue-500 to-emerald-600', 
+    color: 'from-blue-400 to-emerald-500', 
     videoUrl: 'https://cdn.pixabay.com/vimeo/158300267/earth-2384.mp4?width=1280', 
     imageUrl: 'https://images.unsplash.com/photo-1614730321146-b6fa6a46bac4?auto=format&fit=crop&q=80&w=2000',
     synthesis: 'EARTH', 
     mission: 'Rediscover the heartbeat of home.', 
     audioTrackName: "Gaia's Resonant Heartbeat",
-    metrics: { temp: '15°C', distance: '1.0 AU', hazard: 'MINIMAL' } 
+    metrics: { temp: '15°C', distance: '1.0 AU', hazard: 'MINIMAL', diameter: '12,742 km' } 
   },
   { 
     id: 'moon', 
@@ -80,8 +81,8 @@ const PLANETS: Planet[] = [
     imageUrl: 'https://images.unsplash.com/photo-1446941611759-ad1672d58dd3?auto=format&fit=crop&q=80&w=2000',
     synthesis: 'MOON', 
     mission: 'Embrace the silence of the cosmic mirror.', 
-    audioTrackName: 'Lunar Echo',
-    metrics: { temp: '-173°C', distance: '384k km', hazard: 'LOW' } 
+    audioTrackName: 'Regolith Echo',
+    metrics: { temp: '-173°C', distance: '384k km', hazard: 'LOW', diameter: '3,474 km' } 
   },
   { 
     id: 'mars', 
@@ -92,8 +93,8 @@ const PLANETS: Planet[] = [
     imageUrl: 'https://images.unsplash.com/photo-1614728894747-a83421e2b9c9?auto=format&fit=crop&q=80&w=2000',
     synthesis: 'MARS', 
     mission: 'Chart the path across the crimson dust.', 
-    audioTrackName: 'Crimson Winds',
-    metrics: { temp: '-63°C', distance: '1.52 AU', hazard: 'MODERATE' } 
+    audioTrackName: 'Sol 1 Winds',
+    metrics: { temp: '-63°C', distance: '1.52 AU', hazard: 'MODERATE', diameter: '6,779 km' } 
   },
   { 
     id: 'jupiter', 
@@ -105,7 +106,7 @@ const PLANETS: Planet[] = [
     synthesis: 'JUPITER', 
     mission: 'Witness the majesty of the Great Red Spot.', 
     audioTrackName: 'Great Red Resonance',
-    metrics: { temp: '-108°C', distance: '5.20 AU', hazard: 'HIGH' } 
+    metrics: { temp: '-108°C', distance: '5.20 AU', hazard: 'HIGH', diameter: '139,820 km' } 
   },
   { 
     id: 'saturn', 
@@ -116,8 +117,8 @@ const PLANETS: Planet[] = [
     imageUrl: 'https://images.unsplash.com/photo-1614727503920-561b3658510a?auto=format&fit=crop&q=80&w=2000',
     synthesis: 'SATURN', 
     mission: 'Listen to the shimmering songs of the rings.', 
-    audioTrackName: 'Ring Resonance',
-    metrics: { temp: '-138°C', distance: '9.58 AU', hazard: 'MODERATE' } 
+    audioTrackName: 'Orbital Crystalline Chant',
+    metrics: { temp: '-138°C', distance: '9.58 AU', hazard: 'MODERATE', diameter: '116,460 km' } 
   },
   { 
     id: 'uranus', 
@@ -129,7 +130,7 @@ const PLANETS: Planet[] = [
     synthesis: 'URANUS', 
     mission: 'Plunge into the crystalline turquoise depths.', 
     audioTrackName: 'Azure Ice Echo',
-    metrics: { temp: '-195°C', distance: '19.2 AU', hazard: 'HIGH' } 
+    metrics: { temp: '-195°C', distance: '19.2 AU', hazard: 'HIGH', diameter: '50,724 km' } 
   },
   { 
     id: 'neptune', 
@@ -140,20 +141,20 @@ const PLANETS: Planet[] = [
     imageUrl: 'https://images.unsplash.com/photo-1614314104100-20516766624e?auto=format&fit=crop&q=80&w=2000',
     synthesis: 'NEPTUNE', 
     mission: 'Surrender to the ultra-sonic azure winds.', 
-    audioTrackName: 'Supersonic Azure Winds',
-    metrics: { temp: '-201°C', distance: '30.1 AU', hazard: 'HIGH' } 
+    audioTrackName: 'Great Dark Spot Hums',
+    metrics: { temp: '-201°C', distance: '30.1 AU', hazard: 'HIGH', diameter: '49,244 km' } 
   },
   { 
     id: 'pluto', 
     name: 'Pluto', 
     desc: 'Dwarf: Glacial Heart', 
-    color: 'from-slate-800 to-black', 
+    color: 'from-slate-700 to-slate-900', 
     videoUrl: '', 
-    imageUrl: 'https://images.unsplash.com/photo-1614728263952-84ea256f9679?auto=format&fit=crop&q=80&w=2000',
+    imageUrl: 'https://images.unsplash.com/photo-1502139173938-c782ad215302?auto=format&fit=crop&q=80&w=2000',
     synthesis: 'PLUTO', 
     mission: 'Reflect at the final frontier of home.', 
-    audioTrackName: 'Glacial Void Stillness',
-    metrics: { temp: '-232°C', distance: '39.5 AU', hazard: 'LOW' } 
+    audioTrackName: 'Kuiper Belt Void',
+    metrics: { temp: '-232°C', distance: '39.5 AU', hazard: 'LOW', diameter: '2,376 km' } 
   },
 ];
 
@@ -538,13 +539,14 @@ const PLANET_SYNTHESIZERS: Record<string, SynthesizerFunc> = {
 };
 
 const PlanetaryMission: React.FC<{ setView: (v: AppView) => void; setIsAnyTrackPlaying: (playing: boolean) => void }> = ({ setView, setIsAnyTrackPlaying }) => {
-  const [activePlanet, setActivePlanet] = useState<Planet>(PLANETS[0]);
+  const [activePlanet, setActivePlanet] = useState<Planet>(PLANETS[3]); // Default to Earth
   const [isPlaying, setIsPlaying] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [sessionTime, setSessionTime] = useState(0);
   const [volume, setVolume] = useState(0.5);
   const [isMuted, setIsMuted] = useState(false);
   const [videoError, setVideoError] = useState(false);
+  const [isScanning, setIsScanning] = useState(false);
 
   const audioContextRef = useRef<AudioContext | null>(null);
   const gainNodeRef = useRef<GainNode | null>(null);
@@ -645,7 +647,10 @@ const PlanetaryMission: React.FC<{ setView: (v: AppView) => void; setIsAnyTrackP
   const handlePlanetSelect = async (p: Planet) => {
     if (isLoading) return;
     setIsLoading(true);
+    setIsScanning(true);
     setVideoError(false); 
+
+    setTimeout(() => setIsScanning(false), 2000);
 
     if (activePlanet.id === p.id && isPlaying && !isMuted) {
       stopSynthesis();
@@ -674,32 +679,33 @@ const PlanetaryMission: React.FC<{ setView: (v: AppView) => void; setIsAnyTrackP
   };
 
   return (
-    <div className="space-y-6 md:space-y-10 animate-in slide-in-from-bottom-8 duration-1000 pb-40 px-2 md:px-0">
-      <div className="flex justify-between items-center">
-        <button 
-          onClick={() => { stopSynthesis(); setView(AppView.DASHBOARD); }}
-          className="flex items-center gap-2 text-amber-700 label-caps text-[10px] md:text-xs hover:gap-3 transition-all"
-        >
-          <ChevronLeft size={16} /> Return to Home
-        </button>
+    <div className="space-y-8 md:space-y-12 animate-in slide-in-from-bottom-8 duration-1000 pb-40 px-2 md:px-0 max-w-7xl mx-auto">
+      <div className="flex justify-between items-center px-4">
+        <div className="space-y-1">
+          <button 
+            onClick={() => { stopSynthesis(); setView(AppView.DASHBOARD); }}
+            className="flex items-center gap-2 text-teal-800 label-caps text-[10px] md:text-xs hover:gap-3 transition-all mb-2"
+          >
+            <ChevronLeft size={16} /> Exit Observation Deck
+          </button>
+          <h2 className="text-3xl md:text-6xl font-black text-slate-950 tracking-tighter leading-none">Observation Deck</h2>
+        </div>
         <div className="flex items-center gap-4">
-           <div className="bg-white/60 backdrop-blur-md px-4 py-2 rounded-2xl border border-white shadow-sm flex items-center gap-3">
-             <div className="flex items-center gap-2">
-                <Timer size={14} className="text-amber-600" />
-                <span className="text-[10px] md:text-xs font-black uppercase tracking-widest font-display text-slate-900">{formatTime(sessionTime)}</span>
-             </div>
+           <div className="hidden sm:flex bg-white/90 backdrop-blur-md px-5 py-2.5 rounded-2xl border border-slate-200 shadow-xl items-center gap-3">
+             <Radio size={14} className="text-teal-600 animate-pulse" />
+             <span className="text-[10px] md:text-xs font-black uppercase tracking-widest font-display text-slate-900">Spectral Link: ACTIVE</span>
            </div>
-           <div className="bg-white/80 backdrop-blur-md px-4 py-2 rounded-2xl border border-white shadow-sm flex items-center gap-3">
+           <div className="bg-white/90 backdrop-blur-md px-5 py-2.5 rounded-2xl border border-slate-200 shadow-xl flex items-center gap-3">
             <button 
               onClick={toggleMute}
-              className={`transition-colors outline-none ${isMuted ? 'text-slate-400' : 'text-amber-700'}`}
+              className={`transition-all hover:scale-110 active:scale-95 outline-none ${isMuted ? 'text-slate-400' : 'text-teal-700'}`}
               title={isMuted ? "Unmute" : "Mute & Stop Audio"}
             >
-              {isMuted ? <VolumeX size={16} /> : <Volume2 size={16} />}
+              {isMuted ? <VolumeX size={18} /> : <Volume2 size={18} />}
             </button>
             <input 
               type="range" min="0" max="1" step="0.01" 
-              className="w-20 md:w-32 h-1 bg-amber-100 rounded-full appearance-none cursor-pointer accent-amber-700"
+              className="w-16 md:w-32 h-1 bg-teal-100 rounded-full appearance-none cursor-pointer accent-teal-700"
               value={volume}
               onChange={(e) => {
                 const val = parseFloat(e.target.value);
@@ -713,12 +719,12 @@ const PlanetaryMission: React.FC<{ setView: (v: AppView) => void; setIsAnyTrackP
         </div>
       </div>
 
-      <div className="relative h-[320px] md:h-[480px] rounded-[2.5rem] md:rounded-[4rem] overflow-hidden group shadow-[0_30px_80px_-15px_rgba(0,0,0,0.4)] ring-1 ring-white/10">
+      <div className="relative h-[420px] md:h-[650px] rounded-[3.5rem] md:rounded-[5rem] overflow-hidden group shadow-[0_50px_120px_-30px_rgba(0,0,0,0.6)] ring-1 ring-white/30 border-4 border-white/15">
         <div className="absolute inset-0 bg-black">
           <img 
             src={activePlanet.imageUrl} 
             alt={activePlanet.name}
-            className={`absolute inset-0 w-full h-full object-cover transition-transform duration-[40000ms] scale-125 group-hover:scale-100 ease-linear opacity-70`}
+            className={`absolute inset-0 w-full h-full object-cover transition-all duration-[80000ms] ${isPlaying ? 'scale-125 rotate-1' : 'scale-110'} ease-linear opacity-90`}
           />
           {activePlanet.videoUrl && !videoError && (
             <video 
@@ -729,104 +735,163 @@ const PlanetaryMission: React.FC<{ setView: (v: AppView) => void; setIsAnyTrackP
               muted 
               playsInline
               preload="auto"
-              onError={() => {
-                console.warn("Media source failed to load for planet:", activePlanet.id);
-                setVideoError(true);
-              }}
-              className="absolute inset-0 w-full h-full object-cover opacity-70 transition-transform duration-[40000ms] scale-125 group-hover:scale-100 ease-linear"
+              onError={() => setVideoError(true)}
+              className="absolute inset-0 w-full h-full object-cover opacity-90"
             />
           )}
         </div>
-        <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-black/40"></div>
-        <div className="absolute inset-0 flex flex-col items-center justify-between text-white p-6 md:p-12 z-10 text-center">
-          <div className="space-y-2 pt-4 md:pt-6">
-            <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-amber-500/10 backdrop-blur-3xl rounded-full border border-amber-500/30">
-              <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse"></span>
-              <p className="text-[9px] md:text-xs font-black uppercase tracking-[0.3em] text-amber-200">Celestial Data Feed</p>
+        
+        {/* Advanced HUD Overlays */}
+        <div className="absolute inset-0 pointer-events-none overflow-hidden z-20">
+          <div className="absolute top-12 left-12 w-40 h-40 border-l-2 border-t-2 border-white/40 rounded-tl-[3rem] opacity-60"></div>
+          <div className="absolute top-12 right-12 w-40 h-40 border-r-2 border-t-2 border-white/40 rounded-tr-[3rem] opacity-60"></div>
+          <div className="absolute bottom-12 left-12 w-40 h-40 border-l-2 border-b-2 border-white/40 rounded-bl-[3rem] opacity-60"></div>
+          <div className="absolute bottom-12 right-12 w-40 h-40 border-r-2 border-b-2 border-white/40 rounded-br-[3rem] opacity-60"></div>
+          
+          {/* Scanning Effect */}
+          {isScanning && (
+            <div className="absolute inset-0 z-30">
+               <div className="w-full h-24 bg-gradient-to-b from-teal-500/0 via-teal-500/30 to-teal-500/0 blur-xl absolute top-0 animate-[scan_2.5s_ease-in-out_infinite]"></div>
+               <div className="w-full h-[2px] bg-teal-400/80 absolute top-0 animate-[scan_2.5s_ease-in-out_infinite] shadow-[0_0_20px_rgba(45,212,191,1)]"></div>
             </div>
-            <h2 className="text-5xl md:text-8xl font-black tracking-tighter drop-shadow-2xl text-white leading-none">{activePlanet.name}</h2>
-            <div className="flex flex-col items-center gap-1">
-              <p className="text-sm md:text-xl text-amber-200 font-bold italic tracking-wide max-w-xl mx-auto drop-shadow-lg opacity-90">"{activePlanet.mission}"</p>
-              <div className="flex items-center gap-2 px-4 py-2 bg-white/10 backdrop-blur-3xl rounded-full border border-white/20 mt-2 shadow-2xl">
-                <Music size={14} className="text-amber-400" />
-                <span className="text-[10px] md:text-xs font-black uppercase tracking-[0.2em] text-white">Track: {activePlanet.audioTrackName}</span>
+          )}
+
+          {/* Compass Rose HUD */}
+          <div className="absolute top-1/2 left-8 -translate-y-1/2 flex flex-col gap-8 opacity-40">
+             {[0, 90, 180, 270].map(deg => (
+               <div key={deg} className="w-1 bg-white h-4 rounded-full"></div>
+             ))}
+          </div>
+        </div>
+
+        <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-transparent to-black/40 z-10"></div>
+        
+        <div className="absolute inset-0 flex flex-col items-center justify-between text-white p-10 md:p-20 z-30 text-center">
+          <div className="space-y-6 pt-6">
+            <div className="inline-flex items-center gap-3 px-6 py-2.5 bg-white/10 backdrop-blur-3xl rounded-full border border-white/25 shadow-2xl animate-pulse">
+              <Sparkles size={16} className="text-teal-300" />
+              <p className="text-[10px] md:text-sm font-black uppercase tracking-[0.5em] text-white">Spectral Telemetry Feed</p>
+            </div>
+            <h2 className="text-7xl md:text-[11rem] font-black tracking-tighter drop-shadow-[0_20px_50px_rgba(0,0,0,0.8)] text-white leading-none uppercase select-none italic">{activePlanet.name}</h2>
+            <div className="flex flex-col items-center gap-4">
+              <p className="text-sm md:text-3xl text-teal-50 font-medium italic tracking-wide max-w-3xl mx-auto drop-shadow-2xl opacity-95 leading-relaxed">"{activePlanet.mission}"</p>
+              <div className="flex items-center gap-4 px-8 py-3 bg-teal-950/60 backdrop-blur-2xl rounded-full border border-teal-500/40 mt-4 shadow-[0_0_40px_rgba(45,212,191,0.2)] transition-all hover:bg-teal-950/80 group pointer-events-auto cursor-help">
+                <Radio size={20} className="text-teal-400 group-hover:rotate-12 transition-transform" />
+                <span className="text-xs md:text-lg font-black uppercase tracking-[0.3em] text-white">X-Band Audio: {activePlanet.audioTrackName}</span>
               </div>
             </div>
           </div>
-          <div className="flex flex-col md:flex-row items-center gap-8 md:gap-16 w-full justify-center">
-            <div className="hidden lg:flex flex-col items-end gap-4 text-right">
-               <div className="space-y-0.5">
-                 <p className="text-[8px] uppercase tracking-widest text-white/40 font-black">Temp</p>
-                 <p className="text-xl font-black text-white font-display">{activePlanet.metrics.temp}</p>
+
+          <div className="flex flex-col md:flex-row items-center gap-12 md:gap-32 w-full justify-center">
+            <div className="hidden lg:grid grid-cols-1 gap-10 text-right">
+               <div className="space-y-1">
+                 <p className="text-xs uppercase tracking-[0.3em] text-white/50 font-black flex items-center justify-end gap-3"><Activity size={14} className="text-orange-400"/> Surface Temp</p>
+                 <p className="text-4xl font-black text-white font-display uppercase tracking-tight">{activePlanet.metrics.temp}</p>
                </div>
-               <div className="space-y-0.5">
-                 <p className="text-[8px] uppercase tracking-widest text-white/40 font-black">Hazard</p>
-                 <p className={`text-sm font-black font-display ${activePlanet.metrics.hazard === 'EXTREME' || activePlanet.metrics.hazard === 'CRITICAL' ? 'text-red-500' : 'text-emerald-500'}`}>{activePlanet.metrics.hazard}</p>
+               <div className="space-y-1">
+                 <p className="text-xs uppercase tracking-[0.3em] text-white/50 font-black flex items-center justify-end gap-3"><Shield size={14} className="text-rose-400"/> Toxicity Level</p>
+                 <p className={`text-2xl font-black font-display uppercase drop-shadow-[0_0_10px_rgba(255,255,255,0.2)] ${activePlanet.metrics.hazard === 'EXTREME' || activePlanet.metrics.hazard === 'CRITICAL' ? 'text-rose-500' : 'text-emerald-400'}`}>{activePlanet.metrics.hazard}</p>
                </div>
             </div>
+
             <button 
               onClick={() => handlePlanetSelect(activePlanet)}
               disabled={isLoading}
-              className="w-20 h-20 md:w-24 md:h-24 bg-white text-black rounded-full flex items-center justify-center shadow-[0_0_40px_rgba(255,255,255,0.25)] hover:scale-110 active:scale-95 transition-all z-20"
+              className="w-28 h-28 md:w-40 md:h-40 bg-white text-slate-950 rounded-full flex items-center justify-center shadow-[0_0_100px_rgba(255,255,255,0.6)] hover:scale-110 active:scale-90 transition-all z-40 group pointer-events-auto"
             >
-              {isLoading ? <Loader2 size={32} className="animate-spin text-amber-600" /> : isPlaying && !isMuted ? <Pause size={36} fill="currentColor" /> : <Play size={36} fill="currentColor" className="ml-1.5" />}
+              {isLoading ? (
+                <Loader2 size={50} className="animate-spin text-teal-600" />
+              ) : isPlaying && !isMuted ? (
+                <Pause size={64} fill="currentColor" className="group-hover:scale-110 transition-transform" />
+              ) : (
+                <Play size={64} fill="currentColor" className="ml-3 group-hover:scale-110 transition-transform" />
+              )}
             </button>
-            <div className="hidden lg:flex flex-col items-start gap-4 text-left">
-               <div className="space-y-0.5">
-                 <p className="text-[8px] uppercase tracking-widest text-white/40 font-black">Distance</p>
-                 <p className="text-xl font-black text-white font-display">{activePlanet.metrics.distance}</p>
+
+            <div className="hidden lg:grid grid-cols-1 gap-10 text-left">
+               <div className="space-y-1">
+                 <p className="text-xs uppercase tracking-[0.3em] text-white/50 font-black flex items-center gap-3"><Map size={14} className="text-blue-400"/> Geodesic Distance</p>
+                 <p className="text-4xl font-black text-white font-display uppercase tracking-tight">{activePlanet.metrics.distance}</p>
                </div>
-               <div className="space-y-0.5">
-                 <p className="text-[8px] uppercase tracking-widest text-white/40 font-black">Frequency</p>
-                 <p className="text-sm font-black text-amber-400 font-display">8.42 kHz</p>
+               <div className="space-y-1">
+                 <p className="text-xs uppercase tracking-[0.3em] text-white/50 font-black flex items-center gap-3"><Eye size={14} className="text-teal-400"/> Core Diameter</p>
+                 <p className="text-2xl font-black text-teal-400 font-display uppercase">{activePlanet.metrics.diameter}</p>
                </div>
             </div>
           </div>
-          <div className="pb-2">
-             <div className="flex items-center gap-6 justify-center">
-                <div className="flex items-center gap-2">
-                  <Activity size={12} className="text-amber-400" />
-                  <span className="text-[8px] font-black uppercase tracking-widest opacity-60">Neural Pulse Synced</span>
+
+          <div className="w-full flex justify-between items-end px-6 opacity-80 pointer-events-none">
+             <div className="flex flex-col items-start gap-1">
+               <p className="text-[10px] font-black uppercase tracking-[0.3em] text-white/40">Chronometer</p>
+               <p className="text-3xl font-black display-number text-teal-300 drop-shadow-[0_0_10px_rgba(45,212,191,0.5)]">{formatTime(sessionTime)}</p>
+             </div>
+             <div className="flex items-center gap-10">
+                <div className="flex items-center gap-3">
+                  <Activity size={18} className="text-teal-400 animate-pulse" />
+                  <span className="text-[10px] font-black uppercase tracking-[0.2em]">Neural Integration: 99.4%</span>
                 </div>
-                <div className="flex items-center gap-2">
-                  <Shield size={12} className="text-emerald-400" />
-                  <span className="text-[8px] font-black uppercase tracking-widest opacity-60">Atmosphere Filtered</span>
+                <div className="flex items-center gap-3">
+                  <Shield size={18} className="text-emerald-400" />
+                  <span className="text-[10px] font-black uppercase tracking-[0.2em]">Atmospheric Scrub: ON</span>
                 </div>
              </div>
           </div>
         </div>
-        <div className="absolute inset-0 pointer-events-none z-0">
-          <div className="absolute top-0 left-0 w-full h-1/2 bg-gradient-to-b from-black/40 to-transparent"></div>
-          <div className="absolute inset-0 opacity-10 mix-blend-screen bg-[url('https://www.transparenttextures.com/patterns/stardust.png')]"></div>
-          <div className="absolute inset-0 opacity-10 bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.25)_50%),linear-gradient(90deg,rgba(255,0,0,0.06),rgba(0,255,0,0.02),rgba(0,0,255,0.06))] bg-[length:100%_2px,3px_100%]"></div>
+      </div>
+
+      <div className="space-y-12 px-4">
+        <div className="flex flex-col md:flex-row justify-between items-end gap-6 border-b-2 border-slate-100 pb-10">
+          <div className="space-y-2">
+            <h3 className="text-4xl md:text-5xl font-black text-slate-950 tracking-tighter leading-none">Celestial Navigation</h3>
+            <p className="text-slate-500 font-bold text-lg md:text-2xl italic max-w-2xl leading-relaxed">Initiate neural-sync by selecting a high-fidelity planetary target for spectral meditation.</p>
+          </div>
+          <div className="flex items-center gap-4 px-6 py-3 bg-slate-100 rounded-2xl text-slate-600 text-xs font-black uppercase tracking-[0.25em] shadow-inner">
+             <Radio size={16} className="animate-pulse text-teal-600" /> Deep Space Network v4.2
+          </div>
+        </div>
+
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-8">
+          {PLANETS.map(p => {
+            const isActive = activePlanet.id === p.id;
+            return (
+              <button 
+                key={p.id}
+                onClick={() => handlePlanetSelect(p)}
+                className={`group relative flex flex-col items-center justify-center p-8 rounded-[3.5rem] transition-all duration-700 overflow-hidden outline-none ${isActive ? 'bg-slate-950 text-white shadow-[0_30px_60px_-15px_rgba(0,0,0,0.5)] scale-105 ring-4 ring-teal-500/50 translate-y-[-8px]' : 'bg-white hover:bg-slate-50 border border-slate-200 hover:shadow-2xl hover:translate-y-[-4px]'}`}
+              >
+                {/* Scientifically Accurate Planet Thumbnail */}
+                <div className={`w-28 h-28 rounded-full mb-6 relative overflow-hidden transition-all duration-700 ring-2 ring-transparent ${isActive ? 'ring-teal-400 ring-offset-4 ring-offset-slate-950 scale-110 shadow-[0_0_40px_rgba(45,212,191,0.4)]' : 'group-hover:scale-105'}`}>
+                  <img src={p.imageUrl} alt={p.name} className={`w-full h-full object-cover transition-transform duration-[20000ms] group-hover:scale-150 ${isActive ? 'animate-[spin_60s_linear_infinite]' : ''}`} />
+                  <div className={`absolute inset-0 bg-gradient-to-br ${p.color} opacity-30 mix-blend-overlay`}></div>
+                  <div className="absolute inset-0 shadow-[inset_0_0_20px_rgba(0,0,0,0.4)]"></div>
+                </div>
+
+                <div className="text-center space-y-2">
+                  <h4 className="font-black text-xl tracking-tight leading-none uppercase group-hover:text-teal-600 transition-colors">{p.name}</h4>
+                  <p className={`text-[10px] uppercase tracking-[0.3em] font-black ${isActive ? 'text-teal-400' : 'text-slate-400'}`}>{p.desc.split(':')[0]}</p>
+                </div>
+
+                {isActive && (
+                  <div className="absolute top-4 right-4">
+                    <div className="w-3 h-3 rounded-full bg-teal-400 shadow-[0_0_10px_rgba(45,212,191,1)]"></div>
+                  </div>
+                )}
+                
+                <div className="absolute bottom-0 left-0 w-full h-1.5 bg-gradient-to-r from-transparent via-teal-500/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+              </button>
+            );
+          })}
         </div>
       </div>
 
-      <div className="space-y-6">
-        <div className="flex flex-col md:flex-row justify-between items-end gap-4">
-          <div className="space-y-1">
-            <h3 className="text-2xl md:text-4xl font-black text-slate-900 tracking-tighter leading-none">Celestial Exploration</h3>
-            <p className="text-slate-500 font-bold text-xs md:text-sm">Escape the atmosphere. Select your next meditation orbit.</p>
-          </div>
-        </div>
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">
-          {PLANETS.map(p => (
-            <button 
-              key={p.id}
-              onClick={() => handlePlanetSelect(p)}
-              className={`group relative flex flex-col items-center justify-center p-4 rounded-[2rem] transition-all duration-500 overflow-hidden outline-none ${activePlanet.id === p.id ? 'bg-slate-950 text-white shadow-xl scale-105 ring-4 ring-amber-500/50' : 'bg-white hover:bg-slate-50 border border-slate-100 hover:scale-105'}`}
-            >
-              <div className={`w-12 h-12 rounded-full flex items-center justify-center mb-3 transition-all duration-500 ${activePlanet.id === p.id ? 'bg-amber-500 text-slate-950 shadow-[0_0_15px_rgba(245,158,11,0.4)] scale-110' : 'bg-slate-100 text-slate-400 group-hover:bg-amber-100 group-hover:text-amber-600'}`}>
-                {p.id === 'sun' ? <SunIcon size={24} /> : p.id === 'moon' ? <Moon size={24} /> : p.id === 'earth' ? <Globe size={24} /> : <Stars size={24} />}
-              </div>
-              <div className="text-center space-y-0.5">
-                <h4 className="font-black text-sm tracking-tight leading-none">{p.name}</h4>
-                <p className={`text-[8px] uppercase tracking-widest font-black ${activePlanet.id === p.id ? 'text-amber-400' : 'text-slate-400'}`}>{p.desc}</p>
-              </div>
-            </button>
-          ))}
-        </div>
-      </div>
+      <style>{`
+        @keyframes scan {
+          0% { top: -10%; opacity: 0; }
+          10% { opacity: 1; }
+          90% { opacity: 1; }
+          100% { top: 110%; opacity: 0; }
+        }
+      `}</style>
     </div>
   );
 };
