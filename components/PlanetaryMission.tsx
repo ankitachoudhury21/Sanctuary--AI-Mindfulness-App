@@ -214,55 +214,42 @@ const PLANET_SYNTHESIZERS: Record<string, SynthesizerFunc> = {
     mainGain.gain.setValueAtTime(0.18, ctx.currentTime);
     mainGain.connect(dest);
     const nodes: any[] = [mainGain];
-    
-    // Solid Metallic Core (Fundamental)
     const core = ctx.createOscillator();
     core.type = 'sine';
-    core.frequency.setValueAtTime(48.99, ctx.currentTime); // Low G
+    core.frequency.setValueAtTime(48.99, ctx.currentTime); 
     const coreG = ctx.createGain();
     coreG.gain.setValueAtTime(0.35, ctx.currentTime);
     core.connect(coreG).connect(mainGain);
     core.start();
     nodes.push(core, coreG);
-
-    // Resonant Metallic "Overtones" simulating a dense iron interior
     [2.01, 3.52, 5.03, 7.91].forEach((ratio, i) => {
       const harmonic = ctx.createOscillator();
       harmonic.type = 'sine';
       harmonic.frequency.setValueAtTime(48.99 * ratio, ctx.currentTime);
-      
       const hGain = ctx.createGain();
       const hLfo = ctx.createOscillator();
       hLfo.frequency.setValueAtTime(0.1 + (i * 0.05), ctx.currentTime);
       const hLfoG = ctx.createGain();
       hLfoG.gain.setValueAtTime(0.05, ctx.currentTime);
       hLfo.connect(hLfoG).connect(hGain.gain);
-      
       hGain.gain.setValueAtTime(0.1 / (i + 1), ctx.currentTime);
       harmonic.connect(hGain).connect(mainGain);
-      
       harmonic.start(); hLfo.start();
       nodes.push(harmonic, hGain, hLfo, hLfoG);
     });
-
-    // Craters & Thin Exosphere: Shimmering Noise
     const noiseBuffer = ctx.createBuffer(1, ctx.sampleRate * 2, ctx.sampleRate);
     const nData = noiseBuffer.getChannelData(0);
     for (let i = 0; i < noiseBuffer.length; i++) nData[i] = Math.random() * 2 - 1;
     const noiseSrc = ctx.createBufferSource();
     noiseSrc.buffer = noiseBuffer; noiseSrc.loop = true;
-    
     const hpFilter = ctx.createBiquadFilter();
     hpFilter.type = 'highpass';
     hpFilter.frequency.setValueAtTime(6000, ctx.currentTime);
-    
     const nGain = ctx.createGain();
     nGain.gain.setValueAtTime(0.04, ctx.currentTime);
-    
     noiseSrc.connect(hpFilter).connect(nGain).connect(mainGain);
     noiseSrc.start();
     nodes.push(noiseSrc, hpFilter, nGain);
-    
     return nodes;
   },
   VENUS: (ctx, dest) => {
@@ -424,49 +411,36 @@ const PLANET_SYNTHESIZERS: Record<string, SynthesizerFunc> = {
     mainGain.gain.setValueAtTime(0.15, ctx.currentTime);
     mainGain.connect(dest);
     const nodes: any[] = [mainGain];
-    
-    // Icy FM Synthesis
     const carrier = ctx.createOscillator();
     carrier.type = 'sine';
     carrier.frequency.setValueAtTime(110, ctx.currentTime);
-    
     const modulator = ctx.createOscillator();
     modulator.type = 'sine';
     modulator.frequency.setValueAtTime(2.5, ctx.currentTime);
-    
     const modGain = ctx.createGain();
     modGain.gain.setValueAtTime(30, ctx.currentTime);
-    
     modulator.connect(modGain).connect(carrier.frequency);
-    
     const cGain = ctx.createGain();
     cGain.gain.setValueAtTime(0.2, ctx.currentTime);
     carrier.connect(cGain).connect(mainGain);
-    
     carrier.start(); modulator.start();
     nodes.push(carrier, modulator, modGain, cGain);
-    
-    // Shimmering High-Pass Noise
     const noiseBuffer = ctx.createBuffer(1, ctx.sampleRate * 2, ctx.sampleRate);
     const noiseData = noiseBuffer.getChannelData(0);
     for (let i = 0; i < noiseBuffer.length; i++) noiseData[i] = Math.random() * 2 - 1;
     const noiseSrc = ctx.createBufferSource();
     noiseSrc.buffer = noiseBuffer; noiseSrc.loop = true;
-    
     const filter = ctx.createBiquadFilter();
     filter.type = 'highpass';
     filter.frequency.setValueAtTime(8000, ctx.currentTime);
-    
     const nGain = ctx.createGain();
     const lfo = ctx.createOscillator();
     lfo.frequency.setValueAtTime(0.1, ctx.currentTime);
     lfo.connect(nGain.gain);
     nGain.gain.setValueAtTime(0.05, ctx.currentTime);
-    
     noiseSrc.connect(filter).connect(nGain).connect(mainGain);
     noiseSrc.start(); lfo.start();
     nodes.push(noiseSrc, filter, nGain, lfo);
-    
     return nodes;
   },
   NEPTUNE: (ctx, dest) => {
@@ -474,43 +448,33 @@ const PLANET_SYNTHESIZERS: Record<string, SynthesizerFunc> = {
     mainGain.gain.setValueAtTime(0.18, ctx.currentTime);
     mainGain.connect(dest);
     const nodes: any[] = [mainGain];
-    
-    // Supersonic Wind Layers
     const buffer = ctx.createBuffer(1, ctx.sampleRate * 4, ctx.sampleRate);
     const data = buffer.getChannelData(0);
     for (let i = 0; i < buffer.length; i++) data[i] = Math.random() * 2 - 1;
     const wind = ctx.createBufferSource();
     wind.buffer = buffer; wind.loop = true;
-    
     const bpFilter = ctx.createBiquadFilter();
     bpFilter.type = 'bandpass';
     bpFilter.frequency.setValueAtTime(1500, ctx.currentTime);
     bpFilter.Q.setValueAtTime(5, ctx.currentTime);
-    
     const sweepLfo = ctx.createOscillator();
     sweepLfo.frequency.setValueAtTime(0.08, ctx.currentTime);
     const sweepG = ctx.createGain();
     sweepG.gain.setValueAtTime(1200, ctx.currentTime);
     sweepLfo.connect(sweepG).connect(bpFilter.frequency);
-    
     const windG = ctx.createGain();
     windG.gain.setValueAtTime(0.12, ctx.currentTime);
     wind.connect(bpFilter).connect(windG).connect(mainGain);
-    
     wind.start(); sweepLfo.start();
     nodes.push(wind, bpFilter, sweepLfo, sweepG, windG);
-    
-    // Abyssal Sub-Bass Rumble
     const sub = ctx.createOscillator();
     sub.type = 'sine';
-    sub.frequency.setValueAtTime(27.5, ctx.currentTime); // A0
+    sub.frequency.setValueAtTime(27.5, ctx.currentTime); 
     const subG = ctx.createGain();
     subG.gain.setValueAtTime(0.25, ctx.currentTime);
     sub.connect(subG).connect(mainGain);
     sub.start();
     nodes.push(sub, subG);
-    
-    // Ultra-Sonic Flutter
     const flutter = ctx.createOscillator();
     flutter.type = 'sine';
     flutter.frequency.setValueAtTime(14000, ctx.currentTime);
@@ -522,7 +486,6 @@ const PLANET_SYNTHESIZERS: Record<string, SynthesizerFunc> = {
     flutter.connect(fG).connect(mainGain);
     flutter.start(); fLfo.start();
     nodes.push(flutter, fG, fLfo);
-    
     return nodes;
   },
   PLUTO: (ctx, dest) => {
@@ -644,7 +607,6 @@ const PlanetaryMission: React.FC<{ setView: (v: AppView) => void; setIsAnyTrackP
     } catch (e) { console.error("Synthesis failed", e); } finally { setIsLoading(false); }
   }, [initAudio, isMuted, setIsAnyTrackPlaying]);
 
-  // Handle Video Guard and source errors
   useEffect(() => {
     const video = videoRef.current;
     if (!video) return;
@@ -712,7 +674,7 @@ const PlanetaryMission: React.FC<{ setView: (v: AppView) => void; setIsAnyTrackP
   };
 
   return (
-    <div className="space-y-8 md:space-y-12 animate-in slide-in-from-bottom-8 duration-1000 pb-40 px-2 md:px-0">
+    <div className="space-y-6 md:space-y-10 animate-in slide-in-from-bottom-8 duration-1000 pb-40 px-2 md:px-0">
       <div className="flex justify-between items-center">
         <button 
           onClick={() => { stopSynthesis(); setView(AppView.DASHBOARD); }}
@@ -751,7 +713,7 @@ const PlanetaryMission: React.FC<{ setView: (v: AppView) => void; setIsAnyTrackP
         </div>
       </div>
 
-      <div className="relative h-[450px] md:h-[650px] rounded-[3rem] md:rounded-[5rem] overflow-hidden group shadow-[0_40px_100px_-20px_rgba(0,0,0,0.4)] ring-1 ring-white/10">
+      <div className="relative h-[320px] md:h-[480px] rounded-[2.5rem] md:rounded-[4rem] overflow-hidden group shadow-[0_30px_80px_-15px_rgba(0,0,0,0.4)] ring-1 ring-white/10">
         <div className="absolute inset-0 bg-black">
           <img 
             src={activePlanet.imageUrl} 
@@ -776,59 +738,59 @@ const PlanetaryMission: React.FC<{ setView: (v: AppView) => void; setIsAnyTrackP
           )}
         </div>
         <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-black/40"></div>
-        <div className="absolute inset-0 flex flex-col items-center justify-between text-white p-8 md:p-16 z-10 text-center">
-          <div className="space-y-3 pt-6 md:pt-10">
-            <div className="inline-flex items-center gap-3 px-6 py-2 bg-amber-500/10 backdrop-blur-3xl rounded-full border border-amber-500/30">
-              <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
-              <p className="text-[10px] md:text-xs font-black uppercase tracking-[0.3em] text-amber-200">Celestial Data Feed</p>
+        <div className="absolute inset-0 flex flex-col items-center justify-between text-white p-6 md:p-12 z-10 text-center">
+          <div className="space-y-2 pt-4 md:pt-6">
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-amber-500/10 backdrop-blur-3xl rounded-full border border-amber-500/30">
+              <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse"></span>
+              <p className="text-[9px] md:text-xs font-black uppercase tracking-[0.3em] text-amber-200">Celestial Data Feed</p>
             </div>
-            <h2 className="text-6xl md:text-[10rem] font-black tracking-tighter drop-shadow-2xl text-white leading-none">{activePlanet.name}</h2>
-            <div className="flex flex-col items-center gap-2">
-              <p className="text-base md:text-2xl text-amber-200 font-bold italic tracking-wide max-w-2xl mx-auto drop-shadow-lg opacity-90">"{activePlanet.mission}"</p>
-              <div className="flex items-center gap-3 px-5 py-2.5 bg-white/10 backdrop-blur-3xl rounded-full border border-white/20 mt-4 shadow-2xl">
-                <Music size={18} className="text-amber-400" />
-                <span className="text-xs md:text-sm font-black uppercase tracking-[0.2em] text-white">Track: {activePlanet.audioTrackName}</span>
+            <h2 className="text-5xl md:text-8xl font-black tracking-tighter drop-shadow-2xl text-white leading-none">{activePlanet.name}</h2>
+            <div className="flex flex-col items-center gap-1">
+              <p className="text-sm md:text-xl text-amber-200 font-bold italic tracking-wide max-w-xl mx-auto drop-shadow-lg opacity-90">"{activePlanet.mission}"</p>
+              <div className="flex items-center gap-2 px-4 py-2 bg-white/10 backdrop-blur-3xl rounded-full border border-white/20 mt-2 shadow-2xl">
+                <Music size={14} className="text-amber-400" />
+                <span className="text-[10px] md:text-xs font-black uppercase tracking-[0.2em] text-white">Track: {activePlanet.audioTrackName}</span>
               </div>
             </div>
           </div>
-          <div className="flex flex-col md:flex-row items-center gap-10 md:gap-20 w-full justify-center">
-            <div className="hidden lg:flex flex-col items-end gap-6 text-right">
-               <div className="space-y-1">
-                 <p className="label-caps text-white/40">Temperature</p>
-                 <p className="text-3xl font-black text-white font-display">{activePlanet.metrics.temp}</p>
+          <div className="flex flex-col md:flex-row items-center gap-8 md:gap-16 w-full justify-center">
+            <div className="hidden lg:flex flex-col items-end gap-4 text-right">
+               <div className="space-y-0.5">
+                 <p className="text-[8px] uppercase tracking-widest text-white/40 font-black">Temp</p>
+                 <p className="text-xl font-black text-white font-display">{activePlanet.metrics.temp}</p>
                </div>
-               <div className="space-y-1">
-                 <p className="label-caps text-white/40">Hazard Rating</p>
-                 <p className={`text-xl font-black font-display ${activePlanet.metrics.hazard === 'EXTREME' || activePlanet.metrics.hazard === 'CRITICAL' ? 'text-red-500' : 'text-emerald-500'}`}>{activePlanet.metrics.hazard}</p>
+               <div className="space-y-0.5">
+                 <p className="text-[8px] uppercase tracking-widest text-white/40 font-black">Hazard</p>
+                 <p className={`text-sm font-black font-display ${activePlanet.metrics.hazard === 'EXTREME' || activePlanet.metrics.hazard === 'CRITICAL' ? 'text-red-500' : 'text-emerald-500'}`}>{activePlanet.metrics.hazard}</p>
                </div>
             </div>
             <button 
               onClick={() => handlePlanetSelect(activePlanet)}
               disabled={isLoading}
-              className="w-28 h-28 md:w-36 md:h-36 bg-white text-black rounded-full flex items-center justify-center shadow-[0_0_50px_rgba(255,255,255,0.3)] hover:scale-110 active:scale-95 transition-all z-20"
+              className="w-20 h-20 md:w-24 md:h-24 bg-white text-black rounded-full flex items-center justify-center shadow-[0_0_40px_rgba(255,255,255,0.25)] hover:scale-110 active:scale-95 transition-all z-20"
             >
-              {isLoading ? <Loader2 size={40} className="animate-spin text-amber-600" /> : isPlaying && !isMuted ? <Pause size={48} fill="currentColor" /> : <Play size={48} fill="currentColor" className="ml-2" />}
+              {isLoading ? <Loader2 size={32} className="animate-spin text-amber-600" /> : isPlaying && !isMuted ? <Pause size={36} fill="currentColor" /> : <Play size={36} fill="currentColor" className="ml-1.5" />}
             </button>
-            <div className="hidden lg:flex flex-col items-start gap-6 text-left">
-               <div className="space-y-1">
-                 <p className="label-caps text-white/40">Distance from Earth</p>
-                 <p className="text-3xl font-black text-white font-display">{activePlanet.metrics.distance}</p>
+            <div className="hidden lg:flex flex-col items-start gap-4 text-left">
+               <div className="space-y-0.5">
+                 <p className="text-[8px] uppercase tracking-widest text-white/40 font-black">Distance</p>
+                 <p className="text-xl font-black text-white font-display">{activePlanet.metrics.distance}</p>
                </div>
-               <div className="space-y-1">
-                 <p className="label-caps text-white/40">Scan Frequency</p>
-                 <p className="text-xl font-black text-amber-400 font-display">8.42 kHz</p>
+               <div className="space-y-0.5">
+                 <p className="text-[8px] uppercase tracking-widest text-white/40 font-black">Frequency</p>
+                 <p className="text-sm font-black text-amber-400 font-display">8.42 kHz</p>
                </div>
             </div>
           </div>
-          <div className="pb-4">
-             <div className="flex items-center gap-8 justify-center">
+          <div className="pb-2">
+             <div className="flex items-center gap-6 justify-center">
                 <div className="flex items-center gap-2">
-                  <Activity size={16} className="text-amber-400" />
-                  <span className="text-[10px] font-black uppercase tracking-widest opacity-60">Neural Pulse Synced</span>
+                  <Activity size={12} className="text-amber-400" />
+                  <span className="text-[8px] font-black uppercase tracking-widest opacity-60">Neural Pulse Synced</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <Shield size={16} className="text-emerald-400" />
-                  <span className="text-[10px] font-black uppercase tracking-widest opacity-60">Atmosphere Filtered</span>
+                  <Shield size={12} className="text-emerald-400" />
+                  <span className="text-[8px] font-black uppercase tracking-widest opacity-60">Atmosphere Filtered</span>
                 </div>
              </div>
           </div>
@@ -840,29 +802,26 @@ const PlanetaryMission: React.FC<{ setView: (v: AppView) => void; setIsAnyTrackP
         </div>
       </div>
 
-      <div className="space-y-8">
-        <div className="flex flex-col md:flex-row justify-between items-end gap-6">
-          <div className="space-y-2">
-            <h3 className="text-4xl md:text-6xl font-black text-slate-900 tracking-tighter leading-none">Celestial Exploration</h3>
-            <p className="text-slate-500 font-bold text-lg md:text-2xl">Escape the atmosphere. Select your next meditation orbit.</p>
+      <div className="space-y-6">
+        <div className="flex flex-col md:flex-row justify-between items-end gap-4">
+          <div className="space-y-1">
+            <h3 className="text-2xl md:text-4xl font-black text-slate-900 tracking-tighter leading-none">Celestial Exploration</h3>
+            <p className="text-slate-500 font-bold text-xs md:text-sm">Escape the atmosphere. Select your next meditation orbit.</p>
           </div>
         </div>
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-6">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">
           {PLANETS.map(p => (
             <button 
               key={p.id}
               onClick={() => handlePlanetSelect(p)}
-              className={`group relative flex flex-col items-center justify-center p-6 rounded-[2.5rem] transition-all duration-500 overflow-hidden outline-none ${activePlanet.id === p.id ? 'bg-slate-950 text-white shadow-2xl scale-105 ring-4 ring-amber-500/50' : 'bg-white hover:bg-slate-50 border border-slate-100 hover:scale-105'}`}
+              className={`group relative flex flex-col items-center justify-center p-4 rounded-[2rem] transition-all duration-500 overflow-hidden outline-none ${activePlanet.id === p.id ? 'bg-slate-950 text-white shadow-xl scale-105 ring-4 ring-amber-500/50' : 'bg-white hover:bg-slate-50 border border-slate-100 hover:scale-105'}`}
             >
-              <div className={`w-16 h-16 rounded-full flex items-center justify-center mb-4 transition-all duration-500 ${activePlanet.id === p.id ? 'bg-amber-500 text-slate-950 shadow-[0_0_20px_rgba(245,158,11,0.5)] scale-110' : 'bg-slate-100 text-slate-400 group-hover:bg-amber-100 group-hover:text-amber-600'}`}>
-                {p.id === 'sun' ? <SunIcon size={28} /> : p.id === 'moon' ? <Moon size={28} /> : p.id === 'earth' ? <Globe size={28} /> : <Stars size={28} />}
+              <div className={`w-12 h-12 rounded-full flex items-center justify-center mb-3 transition-all duration-500 ${activePlanet.id === p.id ? 'bg-amber-500 text-slate-950 shadow-[0_0_15px_rgba(245,158,11,0.4)] scale-110' : 'bg-slate-100 text-slate-400 group-hover:bg-amber-100 group-hover:text-amber-600'}`}>
+                {p.id === 'sun' ? <SunIcon size={24} /> : p.id === 'moon' ? <Moon size={24} /> : p.id === 'earth' ? <Globe size={24} /> : <Stars size={24} />}
               </div>
-              <div className="text-center space-y-1">
-                <h4 className="font-black text-lg tracking-tight leading-none">{p.name}</h4>
-                <p className={`text-[9px] uppercase tracking-widest font-black ${activePlanet.id === p.id ? 'text-amber-400' : 'text-slate-400'}`}>{p.desc}</p>
-              </div>
-              <div className="mt-6 w-full h-1 bg-slate-200/20 rounded-full overflow-hidden">
-                 <div className={`h-full bg-amber-500 transition-all duration-1000 ${activePlanet.id === p.id ? 'w-full' : 'w-0'}`}></div>
+              <div className="text-center space-y-0.5">
+                <h4 className="font-black text-sm tracking-tight leading-none">{p.name}</h4>
+                <p className={`text-[8px] uppercase tracking-widest font-black ${activePlanet.id === p.id ? 'text-amber-400' : 'text-slate-400'}`}>{p.desc}</p>
               </div>
             </button>
           ))}

@@ -167,7 +167,6 @@ const MusicPlayer: React.FC<Props> = ({ setView, setIsAnyTrackPlaying }) => {
       if (reverbNodeRef.current) mainGain.connect(reverbNodeRef.current);
       
       const playPianoNote = (freq: number, startTime: number, duration: number, vel: number) => {
-        // Felt/Hammer noise
         const hammerBuffer = ctx.createBuffer(1, ctx.sampleRate * 0.15, ctx.sampleRate);
         const hammerData = hammerBuffer.getChannelData(0);
         for(let i=0; i<hammerData.length; i++) hammerData[i] = (Math.random() * 2 - 1) * Math.pow(1 - i/hammerData.length, 6);
@@ -182,7 +181,6 @@ const MusicPlayer: React.FC<Props> = ({ setView, setIsAnyTrackPlaying }) => {
         hammerSource.start(startTime);
         extraNodes.push(hammerSource, hFilter, hGain);
 
-        // Core Tones
         const harmonicRatios = [1, 2, 3.01, 4, 5.02];
         harmonicRatios.forEach((ratio, idx) => {
           const osc = ctx.createOscillator();
@@ -269,15 +267,13 @@ const MusicPlayer: React.FC<Props> = ({ setView, setIsAnyTrackPlaying }) => {
                          isBihag ? scaleBihag : 
                          isBilawal ? scaleBilawal : scaleYaman;
 
-      // Add Tanpura-like Drone
       const droneG = ctx.createGain();
       droneG.gain.setValueAtTime(0.18, ctx.currentTime);
       droneG.connect(mainGain);
       
-      // For Bhairavi, add a healing 528Hz sub-layer
       if (isBhairavi) {
         const healingOsc = ctx.createOscillator();
-        healingOsc.frequency.setValueAtTime(528 / 8, ctx.currentTime); // Sub-octave of Solfeggio 528Hz
+        healingOsc.frequency.setValueAtTime(528 / 8, ctx.currentTime); 
         const hg = ctx.createGain();
         hg.gain.setValueAtTime(0.05, ctx.currentTime);
         healingOsc.connect(hg).connect(droneG);
@@ -308,7 +304,7 @@ const MusicPlayer: React.FC<Props> = ({ setView, setIsAnyTrackPlaying }) => {
         const oct = Math.random() > 0.8 ? 2 : 1;
         const freq = baseTonic * Math.pow(2, (interval + oct * 12) / 12);
         const osc = ctx.createOscillator();
-        osc.type = isBhairavi ? 'sine' : 'triangle'; // Softer tone for Bhairavi
+        osc.type = isBhairavi ? 'sine' : 'triangle'; 
         osc.frequency.setValueAtTime(freq, now);
         
         const g = ctx.createGain();
@@ -316,7 +312,6 @@ const MusicPlayer: React.FC<Props> = ({ setView, setIsAnyTrackPlaying }) => {
         g.gain.linearRampToValueAtTime(isBhairavi ? 0.12 : 0.08, now + (isBhairavi ? 2.5 : 1.5));
         g.gain.exponentialRampToValueAtTime(0.0001, now + (isBhairavi ? 12 : 8));
         
-        // Glide/Meend - Enhanced for Bhairavi's healing quality
         if (Math.random() > (isBhairavi ? 0.3 : 0.5)) {
           const nextInt = activeScale[Math.floor(Math.random() * activeScale.length)];
           const nextFreq = baseTonic * Math.pow(2, (nextInt + oct * 12) / 12);
@@ -342,7 +337,6 @@ const MusicPlayer: React.FC<Props> = ({ setView, setIsAnyTrackPlaying }) => {
       const isMeditate = type.includes('MEDITATE');
       const baseFreq = isMeditate ? 110 : 146.83;
       
-      // Multiphonic Reed Simulation
       [1, 1.002, 2, 2.004, 3].forEach((ratio, i) => {
         const osc = ctx.createOscillator();
         osc.type = 'sawtooth';
@@ -515,7 +509,7 @@ const MusicPlayer: React.FC<Props> = ({ setView, setIsAnyTrackPlaying }) => {
   );
 
   return (
-    <div className="space-y-8 md:space-y-12 animate-in slide-in-from-bottom-8 duration-1000 px-2 md:px-0 pb-40">
+    <div className="space-y-6 md:space-y-10 animate-in slide-in-from-bottom-8 duration-1000 px-2 md:px-0 pb-40">
       <div className="flex justify-between items-center px-4 md:px-0">
         <button onClick={() => { stopAllVoices(true); setView(AppView.DASHBOARD); }} className="flex items-center gap-2 text-teal-800 label-caps text-[10px] md:text-xs hover:gap-3 transition-all outline-none">
           <ChevronLeft size={16} /> Exit Sanctuary
@@ -541,62 +535,62 @@ const MusicPlayer: React.FC<Props> = ({ setView, setIsAnyTrackPlaying }) => {
         </div>
       </div>
       
-      <div className="relative h-[450px] md:h-[650px] rounded-[3.5rem] md:rounded-[6rem] overflow-hidden group shadow-[0_40px_100px_-20px_rgba(0,0,0,0.35)] transition-all duration-1000 ring-1 ring-white/15">
+      <div className="relative h-[320px] md:h-[480px] rounded-[2.5rem] md:rounded-[4rem] overflow-hidden group shadow-[0_30px_80px_-15px_rgba(0,0,0,0.3)] transition-all duration-1000 ring-1 ring-white/15">
         <div className={`absolute inset-0 bg-gradient-to-br ${currentTrack.color} transition-all duration-[2500ms] scale-105 group-hover:scale-100`}></div>
         <div className="absolute inset-0 bg-black/45 backdrop-blur-[2px]"></div>
         <canvas ref={canvasRef} width={1000} height={1000} className="absolute inset-0 w-full h-full opacity-70 pointer-events-none mix-blend-screen" />
-        <div className="absolute inset-0 flex flex-col items-center justify-center p-8 md:p-16 z-10 text-center">
-          <div className="space-y-6 md:space-y-8 animate-in zoom-in-95 duration-1000 max-w-4xl">
-             <div className="inline-flex items-center gap-2 px-6 py-2 bg-white/10 backdrop-blur-3xl rounded-full border border-white/20 mx-auto">
-               <Sparkles size={16} className="text-teal-300" />
-               <p className="text-[11px] md:text-sm font-black uppercase tracking-[0.4em] text-white/90">Mode: {currentTrack.genre}</p>
+        <div className="absolute inset-0 flex flex-col items-center justify-center p-6 md:p-12 z-10 text-center">
+          <div className="space-y-4 md:space-y-6 animate-in zoom-in-95 duration-1000 max-w-4xl">
+             <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-white/10 backdrop-blur-3xl rounded-full border border-white/20 mx-auto">
+               <Sparkles size={14} className="text-teal-300" />
+               <p className="text-[10px] md:text-xs font-black uppercase tracking-[0.3em] text-white/90">Mode: {currentTrack.genre}</p>
              </div>
-             <div className="space-y-4">
-               <h2 className="text-6xl sm:text-7xl md:text-9xl font-black tracking-tighter drop-shadow-2xl text-white leading-[0.85]">{currentTrack.name}</h2>
-               {currentTrack.benefit && <p className="text-xl md:text-3xl text-teal-50 font-medium italic drop-shadow-lg opacity-90 leading-relaxed max-w-3xl mx-auto">"{currentTrack.benefit}"</p>}
+             <div className="space-y-2">
+               <h2 className="text-4xl sm:text-6xl md:text-7xl font-black tracking-tighter drop-shadow-2xl text-white leading-[0.9]">{currentTrack.name}</h2>
+               {currentTrack.benefit && <p className="text-sm md:text-xl text-teal-50 font-medium italic drop-shadow-lg opacity-90 leading-relaxed max-w-2xl mx-auto">"{currentTrack.benefit}"</p>}
              </div>
           </div>
-          <div className="absolute bottom-10 md:bottom-16 left-1/2 -translate-x-1/2">
-            <div className="flex items-center gap-4 md:gap-8 px-8 py-3 bg-white/10 backdrop-blur-3xl rounded-full border border-white/20 shadow-2xl">
-              <button className="text-white/30 hover:text-white transition-all hover:scale-110 p-2"><SkipBack size={20} fill="currentColor" /></button>
-              <button onClick={() => handleTrackSelect(currentTrack)} disabled={isLoading} className={`w-14 h-14 md:w-20 md:h-20 bg-white text-teal-950 rounded-full flex items-center justify-center shadow-xl hover:scale-110 active:scale-95 transition-all ${isLoading ? 'opacity-50' : ''}`}>
-                {isLoading ? <Loader2 size={24} className="animate-spin text-teal-700" /> : isPlaying && !isMuted ? <Pause size={32} fill="currentColor" /> : <Play size={32} className="ml-1" fill="currentColor" />}
+          <div className="mt-8 md:mt-12">
+            <div className="flex items-center gap-4 md:gap-8 px-6 py-2.5 bg-white/10 backdrop-blur-3xl rounded-full border border-white/20 shadow-2xl">
+              <button className="text-white/30 hover:text-white transition-all hover:scale-110 p-2"><SkipBack size={18} fill="currentColor" /></button>
+              <button onClick={() => handleTrackSelect(currentTrack)} disabled={isLoading} className={`w-12 h-12 md:w-16 md:h-16 bg-white text-teal-950 rounded-full flex items-center justify-center shadow-xl hover:scale-110 active:scale-95 transition-all ${isLoading ? 'opacity-50' : ''}`}>
+                {isLoading ? <Loader2 size={20} className="animate-spin text-teal-700" /> : isPlaying && !isMuted ? <Pause size={28} fill="currentColor" /> : <Play size={28} className="ml-1" fill="currentColor" />}
               </button>
-              <button className="text-white/30 hover:text-white transition-all hover:scale-110 p-2"><SkipForward size={20} fill="currentColor" /></button>
+              <button className="text-white/30 hover:text-white transition-all hover:scale-110 p-2"><SkipForward size={18} fill="currentColor" /></button>
             </div>
           </div>
         </div>
       </div>
 
-      <div className="space-y-10">
-        <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6 px-4 md:px-6">
-          <div className="space-y-2">
-            <h3 className="text-3xl md:text-5xl font-black text-slate-900 tracking-tight leading-none">Meditation Library</h3>
-            <p className="text-slate-500 font-bold text-sm md:text-lg max-w-xl">Clinical-grade procedural audio for cognitive restoration.</p>
+      <div className="space-y-8">
+        <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-4 px-4 md:px-6">
+          <div className="space-y-1">
+            <h3 className="text-2xl md:text-4xl font-black text-slate-900 tracking-tight leading-none">Meditation Library</h3>
+            <p className="text-slate-500 font-bold text-xs md:text-sm max-w-xl">Clinical-grade procedural audio for cognitive restoration.</p>
           </div>
-          <div className="flex p-1.5 bg-slate-100/80 backdrop-blur-3xl rounded-2xl gap-1 border border-white shadow-inner flex-wrap">
+          <div className="flex p-1 bg-slate-100/80 backdrop-blur-3xl rounded-xl gap-0.5 border border-white shadow-inner flex-wrap">
             {CATEGORIES.map((cat) => (
-              <button key={cat.id} onClick={() => setActiveCat(cat.id)} className={`flex items-center gap-2 px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeCat === cat.id ? 'bg-white text-slate-900 shadow-md' : 'text-slate-500 hover:text-slate-800'}`}>
-                <cat.icon size={14} className={activeCat === cat.id ? cat.color : ''} />{cat.label}
+              <button key={cat.id} onClick={() => setActiveCat(cat.id)} className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all ${activeCat === cat.id ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-800'}`}>
+                <cat.icon size={12} className={activeCat === cat.id ? cat.color : ''} />{cat.label}
               </button>
             ))}
           </div>
         </div>
         
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 px-4 md:px-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 px-4 md:px-6">
           {filteredTracks.map(item => {
             const isActive = currentTrack.id === item.id;
             return (
-              <button key={item.id} onClick={() => handleTrackSelect(item)} className={`group relative flex items-center gap-4 p-5 rounded-3xl transition-all duration-300 text-left overflow-hidden outline-none ${isActive && !isMuted ? 'bg-slate-950 text-white shadow-xl ring-2 ring-teal-500/30' : 'bg-white hover:bg-slate-50 border border-slate-100'}`}>
-                <div className={`w-14 h-14 rounded-2xl flex items-center justify-center flex-shrink-0 transition-all duration-300 ${isActive && !isMuted ? 'bg-teal-600/20' : `bg-gradient-to-br ${item.color} text-white shadow-sm group-hover:scale-105`}`}>
-                  {isActive && isLoading ? <Loader2 size={24} className="animate-spin text-teal-400" /> : isActive && isPlaying && !isMuted ? <Pause size={24} fill="currentColor" className="text-teal-400" /> : <item.icon size={24} />}
+              <button key={item.id} onClick={() => handleTrackSelect(item)} className={`group relative flex items-center gap-3 p-4 rounded-2xl transition-all duration-300 text-left overflow-hidden outline-none ${isActive && !isMuted ? 'bg-slate-950 text-white shadow-lg ring-2 ring-teal-500/30' : 'bg-white hover:bg-slate-50 border border-slate-100'}`}>
+                <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 transition-all duration-300 ${isActive && !isMuted ? 'bg-teal-600/20' : `bg-gradient-to-br ${item.color} text-white shadow-sm group-hover:scale-105`}`}>
+                  {isActive && isLoading ? <Loader2 size={18} className="animate-spin text-teal-400" /> : isActive && isPlaying && !isMuted ? <Pause size={18} fill="currentColor" className="text-teal-400" /> : <item.icon size={18} />}
                 </div>
                 <div className="space-y-0.5 min-w-0 flex-1">
                   <div className="flex items-center justify-between gap-2">
-                    <p className="text-base font-black tracking-tight leading-tight truncate">{item.name}</p>
+                    <p className="text-sm font-black tracking-tight leading-tight truncate">{item.name}</p>
                     {isActive && isPlaying && !isMuted && <PlayingIndicator />}
                   </div>
-                  <p className={`text-[10px] uppercase font-black tracking-[0.2em] ${isActive && !isMuted ? 'text-teal-400' : 'text-slate-400'}`}>{item.genre}</p>
+                  <p className={`text-[8px] uppercase font-black tracking-[0.2em] ${isActive && !isMuted ? 'text-teal-400' : 'text-slate-400'}`}>{item.genre}</p>
                 </div>
               </button>
             );
