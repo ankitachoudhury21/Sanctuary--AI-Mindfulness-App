@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { AppView, UserProfile, SleepData, ActivityData, JournalEntry } from '../types';
 import Journal from './Journal';
@@ -42,6 +43,8 @@ const Dashboard: React.FC<Props> = ({
           entries={journalEntries} 
           setEntries={setJournalEntries} 
           setView={setView}
+          // Passing user prop to Journal
+          user={user}
         />
       );
     case AppView.SLEEP:

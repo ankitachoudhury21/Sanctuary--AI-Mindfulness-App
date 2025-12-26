@@ -1,4 +1,3 @@
-
 import { GoogleGenAI, Type, GenerateContentResponse } from "@google/genai";
 import { SleepData } from "../types";
 
@@ -53,31 +52,35 @@ export const analyzeSleepAndHealth = async (sleepHistory: SleepData[], journalHi
   const journalContext = journalHistory.slice(0, 5).join(" | ");
 
   try {
-    // Switched to gemini-3-flash-preview for higher throughput and better quota management
+    // Upgraded to gemini-3-pro-preview for complex reasoning on health patterns
     const response = await withRetry<GenerateContentResponse>(() => ai.models.generateContent({
-      model: "gemini-3-flash-preview",
-      contents: `Analyze this user's sleep data and gratitude journal snippets to provide a health insight report.
-      Sleep Data: ${sleepContext}
+      model: "gemini-3-pro-preview",
+      contents: `You are a holistic wellness consultant for corporate tech professionals. 
+      Analyze the following biometric and qualitative data to provide a health insight report.
+      
+      Sleep Data (last 7 days): ${sleepContext}
       Journal Mood Snippets: ${journalContext}
       
       Task: 
-      1. Calculate an overall Sleep Score (0-100).
-      2. Identify potential patterns suggesting health concerns (e.g., Burnout, Anxiety, Restlessness).
-      3. Provide actionable advice for a corporate tech professional.
+      1. Calculate an overall Sleep/Wellness Score (0-100) based on consistency, quality, and duration.
+      2. Identify 3 potential health concerns/patterns (e.g., Cognitive Fatigue, Social Burnout, Circadian Misalignment).
+      3. Provide 1 piece of high-impact, actionable advice for a high-stress professional.
       
-      Format the response in JSON.`,
+      Return ONLY valid JSON.`,
       config: {
+        thinkingConfig: { thinkingBudget: 4000 },
         responseMimeType: "application/json",
         responseSchema: {
           type: Type.OBJECT,
           properties: {
-            score: { type: Type.NUMBER },
-            label: { type: Type.STRING },
+            score: { type: Type.NUMBER, description: "A number between 0-100" },
+            label: { type: Type.STRING, description: "One word summary: Optimal, Restorative, Fair, or Fatigued" },
             predictions: {
               type: Type.ARRAY,
-              items: { type: Type.STRING }
+              items: { type: Type.STRING },
+              description: "List of 3 specific patterns or health risks detected"
             },
-            advice: { type: Type.STRING }
+            advice: { type: Type.STRING, description: "One concise sentence of professional advice" }
           },
           required: ["score", "label", "predictions", "advice"]
         }
@@ -89,10 +92,7 @@ export const analyzeSleepAndHealth = async (sleepHistory: SleepData[], journalHi
   } catch (error: any) {
     console.error("Health Analysis failed permanently:", error);
     
-    if (error?.message?.includes("quota") || error?.message?.includes("429") || error?.message?.includes("RESOURCE_EXHAUSTED")) {
-      console.warn("API Quota exceeded. Using local calculation heuristics.");
-    }
-
+    // Heuristic fallback for offline/quota issues
     const avgSleep = sleepHistory.length > 0 
       ? sleepHistory.reduce((acc, s) => acc + s.hours, 0) / sleepHistory.length 
       : 7;
@@ -101,8 +101,8 @@ export const analyzeSleepAndHealth = async (sleepHistory: SleepData[], journalHi
     return {
       score: baseScore,
       label: baseScore > 80 ? "Restorative" : baseScore > 60 ? "Balanced" : "Fatigued",
-      predictions: ["Continue logging for personalized AI insights"],
-      advice: "Try to maintain a consistent sleep schedule while your AI companion recharges."
+      predictions: ["Establishing baseline patterns", "Data accumulation in progress", "Personalized insights pending"],
+      advice: "Focus on maintaining a consistent 15-minute screen-free window before sleep tonight."
     };
   }
 };

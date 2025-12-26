@@ -1,7 +1,6 @@
-
 import React, { useEffect, useRef, useState } from 'react';
 import { GoogleGenAI, Modality, LiveServerMessage } from '@google/genai';
-import { X, Mic, MicOff, Save, Sparkles, MessageCircle } from 'lucide-react';
+import { X, Mic, MicOff, Save, Sparkles, MessageCircle, AlertCircle } from 'lucide-react';
 import { TranscriptionMessage } from '../types';
 
 interface Props {
@@ -10,7 +9,7 @@ interface Props {
   userName: string;
 }
 
-// Helper functions for PCM Audio as per guidelines
+// Manual encoding/decoding for PCM as per high-quality guidelines
 function decodeBase64(base64: string) {
   const binaryString = atob(base64);
   const len = binaryString.length;
@@ -54,6 +53,7 @@ const LiveVoiceSession: React.FC<Props> = ({ onClose, onSave, userName }) => {
   const [messages, setMessages] = useState<TranscriptionMessage[]>([]);
   const [isMuted, setIsMuted] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
+  const [errorState, setErrorState] = useState<string | null>(null);
 
   const sessionRef = useRef<any>(null);
   const audioContextInRef = useRef<AudioContext | null>(null);
@@ -61,6 +61,7 @@ const LiveVoiceSession: React.FC<Props> = ({ onClose, onSave, userName }) => {
   const nextStartTimeRef = useRef<number>(0);
   const sourcesRef = useRef<Set<AudioBufferSourceNode>>(new Set());
   const transcriptionRef = useRef<{ user: string; model: string }>({ user: '', model: '' });
+  const scriptProcessorRef = useRef<ScriptProcessorNode | null>(null);
   
   // Track messages for auto-save on close
   const messagesRef = useRef<TranscriptionMessage[]>([]);
@@ -89,13 +90,15 @@ const LiveVoiceSession: React.FC<Props> = ({ onClose, onSave, userName }) => {
             outputAudioTranscription: {},
             systemInstruction: `You are a supportive, warm, and professional mindfulness companion for ${userName}, a tech professional. 
             Help them through their journaling process by listening intently and providing empathetic, short reflections. 
-            Keep your responses concise and focused on their well-being.`,
+            Keep your responses concise and focused on their well-being. If they seem stressed, offer a small grounding exercise.`,
           },
           callbacks: {
             onopen: () => {
               setIsConnected(true);
+              setErrorState(null);
               const source = audioContextInRef.current!.createMediaStreamSource(stream);
               const scriptProcessor = audioContextInRef.current!.createScriptProcessor(4096, 1, 1);
+              scriptProcessorRef.current = scriptProcessor;
               
               scriptProcessor.onaudioprocess = (e) => {
                 if (isMuted) return;
@@ -107,10 +110,12 @@ const LiveVoiceSession: React.FC<Props> = ({ onClose, onSave, userName }) => {
                 const pcmBase64 = encodeBase64(new Uint8Array(int16.buffer));
                 
                 sessionPromise.then(session => {
-                  session.sendRealtimeInput({
-                    media: { data: pcmBase64, mimeType: 'audio/pcm;rate=16000' }
-                  });
-                });
+                  if (session) {
+                    session.sendRealtimeInput({
+                      media: { data: pcmBase64, mimeType: 'audio/pcm;rate=16000' }
+                    });
+                  }
+                }).catch(() => {});
               };
 
               source.connect(scriptProcessor);
@@ -151,41 +156,62 @@ const LiveVoiceSession: React.FC<Props> = ({ onClose, onSave, userName }) => {
                 const ctx = audioContextOutRef.current;
                 nextStartTimeRef.current = Math.max(nextStartTimeRef.current, ctx.currentTime);
                 
-                const buffer = await decodeAudioData(decodeBase64(audioBase64), ctx, 24000, 1);
-                const source = ctx.createBufferSource();
-                source.buffer = buffer;
-                source.connect(ctx.destination);
-                source.onended = () => {
-                  sourcesRef.current.delete(source);
-                  if (sourcesRef.current.size === 0) setIsSpeaking(false);
-                };
-                source.start(nextStartTimeRef.current);
-                nextStartTimeRef.current += buffer.duration;
-                sourcesRef.current.add(source);
+                try {
+                  const buffer = await decodeAudioData(decodeBase64(audioBase64), ctx, 24000, 1);
+                  const source = ctx.createBufferSource();
+                  source.buffer = buffer;
+                  source.connect(ctx.destination);
+                  source.onended = () => {
+                    sourcesRef.current.delete(source);
+                    if (sourcesRef.current.size === 0) setIsSpeaking(false);
+                  };
+                  source.start(nextStartTimeRef.current);
+                  nextStartTimeRef.current += buffer.duration;
+                  sourcesRef.current.add(source);
+                } catch (e) {
+                  console.error("PCM Decoding failed", e);
+                }
               }
 
               if (message.serverContent?.interrupted) {
-                sourcesRef.current.forEach(s => s.stop());
+                sourcesRef.current.forEach(s => {
+                  try { s.stop(); } catch (e) {}
+                  s.disconnect();
+                });
                 sourcesRef.current.clear();
                 nextStartTimeRef.current = 0;
                 setIsSpeaking(false);
               }
             },
             onclose: () => setIsConnected(false),
-            onerror: (e) => console.error("Live session error:", e),
+            onerror: (e) => {
+              console.error("Live session error:", e);
+              setErrorState("A connection error occurred. Reconnecting...");
+            },
           },
         });
 
         sessionRef.current = await sessionPromise;
-      } catch (err) {
+      } catch (err: any) {
         console.error("Failed to connect to Live API", err);
+        setErrorState("Could not initialize secure session. Please check your mic permissions.");
       }
     };
 
     initSession();
 
     return () => {
-      if (sessionRef.current) sessionRef.current.close();
+      // Robust Cleanup
+      if (sessionRef.current) {
+        try { sessionRef.current.close(); } catch (e) {}
+      }
+      if (scriptProcessorRef.current) {
+        scriptProcessorRef.current.disconnect();
+      }
+      sourcesRef.current.forEach(s => {
+        try { s.stop(); } catch (e) {}
+        s.disconnect();
+      });
       if (audioContextInRef.current) audioContextInRef.current.close();
       if (audioContextOutRef.current) audioContextOutRef.current.close();
     };
@@ -200,7 +226,7 @@ const LiveVoiceSession: React.FC<Props> = ({ onClose, onSave, userName }) => {
   };
 
   const handleCloseRequest = () => {
-    // Auto-save if there's significant content when X is clicked
+    // Auto-save session summary on explicit close
     if (messagesRef.current.length > 0) {
       const fullTranscript = messagesRef.current.map(m => `${m.role === 'user' ? 'Me' : 'Companion'}: ${m.text}`).join('\n');
       onSave(fullTranscript);
@@ -209,66 +235,77 @@ const LiveVoiceSession: React.FC<Props> = ({ onClose, onSave, userName }) => {
   };
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 md:p-10">
-      <div className="absolute inset-0 bg-teal-950/60 backdrop-blur-2xl animate-in fade-in duration-500" />
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-2 md:p-10">
+      <div className="absolute inset-0 bg-teal-950/70 backdrop-blur-2xl animate-in fade-in duration-500" />
       
-      <div className="relative w-full max-w-4xl h-[85vh] glass-card rounded-[3rem] md:rounded-[4rem] shadow-2xl flex flex-col overflow-hidden border border-white/20">
-        <div className="p-8 md:p-12 flex justify-between items-center border-b border-teal-100/10">
+      <div className="relative w-full max-w-5xl h-[90vh] glass-card rounded-[3rem] md:rounded-[4.5rem] shadow-2xl flex flex-col overflow-hidden border border-white/20">
+        <div className="p-8 md:p-12 flex justify-between items-center border-b border-white/10 bg-white/5">
           <div className="flex items-center gap-4">
-            <div className={`w-4 h-4 rounded-full ${isConnected ? 'bg-emerald-500 animate-pulse' : 'bg-red-500 shadow-lg'}`}></div>
+            <div className={`w-4 h-4 rounded-full ${isConnected ? 'bg-emerald-500 animate-pulse shadow-[0_0_10px_rgba(16,185,129,0.5)]' : 'bg-red-500 shadow-lg'}`}></div>
             <div>
-              <h2 className="text-2xl md:text-3xl font-black text-teal-950">Conversational Journal</h2>
-              <p className="text-sm font-bold text-teal-700 tracking-wide uppercase">{isConnected ? 'Sanctuary is listening...' : 'Connecting...'}</p>
+              <h2 className="text-2xl md:text-4xl font-black text-teal-950 tracking-tight">Reflective Dialogue</h2>
+              <p className="text-[10px] md:text-sm font-black text-teal-700 tracking-[0.2em] uppercase">{isConnected ? 'Sanctuary is listening...' : 'Initializing Secure Stream...'}</p>
             </div>
           </div>
-          <button onClick={handleCloseRequest} className="p-4 rounded-full bg-teal-100 text-teal-800 hover:scale-110 transition-all">
+          <button onClick={handleCloseRequest} className="p-4 rounded-full bg-teal-100/80 text-teal-900 hover:scale-110 active:scale-95 transition-all shadow-md">
             <X size={24} />
           </button>
         </div>
 
-        <div className="flex-1 overflow-y-auto p-8 md:p-16 space-y-8 scroll-smooth custom-scrollbar">
-          {messages.length === 0 ? (
-            <div className="h-full flex flex-col items-center justify-center text-center space-y-6 opacity-60">
-              <div className="p-8 bg-teal-50 rounded-[3rem]">
-                <Sparkles size={64} className="text-teal-600 animate-bounce" />
+        <div className="flex-1 overflow-y-auto p-8 md:p-16 space-y-10 scroll-smooth custom-scrollbar bg-slate-50/20">
+          {errorState && (
+            <div className="flex items-center gap-3 p-6 bg-red-50 text-red-700 rounded-3xl border border-red-100 animate-in fade-in zoom-in-95">
+              <AlertCircle size={24} />
+              <p className="font-bold text-lg">{errorState}</p>
+            </div>
+          )}
+          
+          {messages.length === 0 && !errorState ? (
+            <div className="h-full flex flex-col items-center justify-center text-center space-y-8 opacity-40">
+              <div className="p-10 bg-teal-50 rounded-[4rem] shadow-inner">
+                <Sparkles size={80} className="text-teal-600 animate-pulse" />
               </div>
-              <p className="text-2xl font-medium text-teal-900 italic">"Say hello to your companion when you're ready..."</p>
+              <p className="text-2xl md:text-4xl font-medium text-teal-900 italic tracking-tight leading-snug">"Your companion is ready. <br/>Take a breath and share your thoughts..."</p>
             </div>
           ) : (
             messages.map((msg, i) => (
-              <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'} animate-in slide-in-from-bottom-2`}>
-                <div className={`max-w-[80%] p-6 md:p-8 rounded-[2rem] shadow-lg ${msg.role === 'user' ? 'bg-teal-700 text-white rounded-tr-none' : 'bg-white/80 backdrop-blur-md text-teal-950 rounded-tl-none border border-teal-100'}`}>
-                  <div className="flex items-center gap-2 mb-2 opacity-60">
+              <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'} animate-in slide-in-from-bottom-4 duration-500`}>
+                <div className={`max-w-[85%] md:max-w-[75%] p-8 md:p-10 rounded-[2.5rem] shadow-xl ${msg.role === 'user' ? 'bg-teal-800 text-white rounded-tr-none' : 'bg-white/95 backdrop-blur-md text-teal-950 rounded-tl-none border border-teal-100'}`}>
+                  <div className="flex items-center gap-2 mb-3 opacity-60">
                     {msg.role === 'user' ? <MessageCircle size={14} /> : <Sparkles size={14} />}
-                    <span className="text-[10px] font-black uppercase tracking-widest">{msg.role === 'user' ? 'Your Voice' : 'Companion'}</span>
+                    <span className="text-[10px] font-black uppercase tracking-widest">{msg.role === 'user' ? 'Direct Reflection' : 'Sanctuary Guide'}</span>
                   </div>
-                  <p className="text-xl md:text-2xl font-medium leading-relaxed">{msg.text}</p>
+                  <p className="text-xl md:text-3xl font-medium leading-[1.4] tracking-tight text-balance">{msg.text}</p>
                 </div>
               </div>
             ))
           )}
         </div>
 
-        <div className="p-8 md:p-12 bg-teal-50/50 backdrop-blur-xl border-t border-teal-100/20 flex flex-col md:flex-row items-center justify-between gap-8">
-          <div className="flex items-center gap-6">
+        <div className="p-8 md:p-14 bg-white/40 backdrop-blur-3xl border-t border-white/20 flex flex-col md:flex-row items-center justify-between gap-8">
+          <div className="flex items-center gap-8">
             <button 
               onClick={() => setIsMuted(!isMuted)}
-              className={`w-20 h-20 md:w-24 md:h-24 rounded-full flex items-center justify-center shadow-2xl transition-all hover:scale-105 active:scale-95 ${isMuted ? 'bg-red-100 text-red-600' : 'bg-teal-700 text-white'}`}
+              className={`w-20 h-20 md:w-28 md:h-28 rounded-[2.5rem] flex items-center justify-center shadow-2xl transition-all hover:scale-105 active:scale-95 ${isMuted ? 'bg-red-50 text-red-600' : 'bg-teal-700 text-white shadow-teal-500/20'}`}
+              aria-label={isMuted ? "Unmute microphone" : "Mute microphone"}
             >
-              {isMuted ? <MicOff size={36} /> : <Mic size={36} className={!isSpeaking ? 'animate-pulse' : ''} />}
+              {isMuted ? <MicOff size={40} /> : <Mic size={40} className={!isSpeaking && isConnected ? 'animate-pulse' : ''} />}
             </button>
             <div className="hidden md:block">
-              <p className="text-lg font-black text-teal-900">{isSpeaking ? 'Companion Speaking...' : isMuted ? 'Muted' : 'Listening...'}</p>
-              <p className="text-sm font-bold text-teal-600 italic">Conversational mode active</p>
+              <p className="text-2xl font-black text-teal-950 tracking-tight">{isSpeaking ? 'Companion Speaking...' : isMuted ? 'Muted' : isConnected ? 'Listening Intently' : 'Connecting...'}</p>
+              <div className="flex items-center gap-2 text-teal-600 font-bold italic text-lg mt-1">
+                <div className="w-2 h-2 bg-teal-500 rounded-full animate-ping"></div>
+                Secure Neural Feedback
+              </div>
             </div>
           </div>
 
           <button 
             onClick={handleFinish}
             disabled={messages.length === 0}
-            className="w-full md:w-auto px-12 py-6 rounded-[2rem] bg-teal-950 text-white font-black text-xl flex items-center justify-center gap-4 shadow-2xl hover:bg-teal-900 transition-all disabled:opacity-30 active:scale-95"
+            className="w-full md:w-auto px-16 py-7 rounded-[2.5rem] bg-teal-950 text-white font-black text-2xl flex items-center justify-center gap-4 shadow-2xl hover:bg-black transition-all disabled:opacity-30 active:scale-95 shadow-teal-950/20"
           >
-            <Save size={24} /> Save & Finish
+            <Save size={28} /> Complete Session
           </button>
         </div>
       </div>
