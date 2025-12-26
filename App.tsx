@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { AppView, UserProfile, SleepData, ActivityData, JournalEntry } from './types';
 import WelcomeJourney from './components/WelcomeJourney';
@@ -6,6 +5,7 @@ import AuthFlow from './components/AuthFlow';
 import Dashboard from './components/Dashboard';
 import Navigation from './components/Navigation';
 import OnboardingTutorial from './components/OnboardingTutorial';
+import BackgroundAmbience from './components/BackgroundAmbience';
 import { analyzeSleepAndHealth } from './services/geminiService';
 import { Sparkles, Play } from 'lucide-react';
 
@@ -14,12 +14,19 @@ const STORAGE_KEYS = {
   JOURNAL: 'sanctuary_journal_entries',
   SLEEP: 'sanctuary_sleep_data',
   ACTIVITY: 'sanctuary_activity_data',
-  DRAFT: 'sanctuary_journal_draft'
+  DRAFT: 'sanctuary_journal_draft',
+  AMBIENT_MUTED: 'sanctuary_ambient_muted'
 };
 
 const App: React.FC = () => {
   const [hasStarted, setHasStarted] = useState(false);
   const [view, setView] = useState<AppView>(AppView.WELCOME);
+  const [isAmbientMuted, setIsAmbientMuted] = useState(() => {
+    const saved = localStorage.getItem(STORAGE_KEYS.AMBIENT_MUTED);
+    return saved === 'true';
+  });
+  const [isAnyTrackPlaying, setIsAnyTrackPlaying] = useState(false);
+
   const [user, setUser] = useState<UserProfile | null>(() => {
     try {
       const saved = localStorage.getItem(STORAGE_KEYS.USER);
@@ -56,6 +63,10 @@ const App: React.FC = () => {
   const lastAnalyzedJournalCount = useRef<number>(0);
 
   useEffect(() => {
+    localStorage.setItem(STORAGE_KEYS.AMBIENT_MUTED, isAmbientMuted.toString());
+  }, [isAmbientMuted]);
+
+  useEffect(() => {
     if (user) {
       localStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(user));
     }
@@ -64,12 +75,9 @@ const App: React.FC = () => {
   useEffect(() => {
     localStorage.setItem(STORAGE_KEYS.JOURNAL, JSON.stringify(journalEntries));
     
-    // Conservative Refresh to avoid Quota Exhaustion
     if (refreshTimerRef.current) window.clearTimeout(refreshTimerRef.current);
     
-    // Only refresh if the count of journal entries changed to avoid unnecessary re-analysis
     if (journalEntries.length !== lastAnalyzedJournalCount.current) {
-      // Increased debounce to 15s to be more conservative with API quota
       refreshTimerRef.current = window.setTimeout(() => {
         if (journalEntries.length > 0) refreshAIInsights();
       }, 15000); 
@@ -124,8 +132,6 @@ const App: React.FC = () => {
   };
 
   const logout = () => {
-    // Preserve sanctuary history (journal, sleep, activity) 
-    // but clear the current user profile and session-specific drafts
     localStorage.removeItem(STORAGE_KEYS.USER);
     localStorage.removeItem(STORAGE_KEYS.DRAFT);
     
@@ -137,6 +143,8 @@ const App: React.FC = () => {
 
   return (
     <div className="min-h-screen transition-all duration-1000 relative overflow-x-hidden">
+      <BackgroundAmbience hasStarted={hasStarted} isActive={!isAmbientMuted && !isAnyTrackPlaying} />
+      
       <div className="fixed inset-0 z-0 overflow-hidden pointer-events-none">
         <img 
           src="https://images.unsplash.com/photo-1518241353330-0f7941c2d9b5?auto=format&fit=crop&q=80&w=2560" 
@@ -175,7 +183,13 @@ const App: React.FC = () => {
         {view === AppView.LOGIN && user && <AuthFlow onAuthComplete={handleAuthComplete} userName={user.name} />}
         {view !== AppView.WELCOME && view !== AppView.LOGIN && (
           <div className="flex flex-col md:flex-row min-h-screen">
-            <Navigation activeView={view} setView={setView} onLogout={logout} />
+            <Navigation 
+              activeView={view} 
+              setView={setView} 
+              onLogout={logout}
+              isAmbientMuted={isAmbientMuted}
+              toggleAmbient={() => setIsAmbientMuted(!isAmbientMuted)}
+            />
             <main className="flex-1 w-full transition-all duration-500 relative px-4 sm:px-8 pb-32 pt-24 md:pt-16 md:pb-16 md:pl-[260px] max-w-[1600px] mx-auto">
               <Dashboard 
                 view={view}
@@ -188,6 +202,7 @@ const App: React.FC = () => {
                 setJournalEntries={setJournalEntries}
                 aiInsights={aiInsights}
                 setSleepData={setSleepData}
+                setIsAnyTrackPlaying={setIsAnyTrackPlaying}
               />
             </main>
             {showTutorial && user && <OnboardingTutorial userName={user.name} onComplete={handleTutorialComplete} onViewChange={setView} />}

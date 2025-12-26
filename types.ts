@@ -6,7 +6,8 @@ export enum AppView {
   JOURNAL = 'JOURNAL',
   SLEEP = 'SLEEP',
   MUSIC = 'MUSIC',
-  ACTIVITY = 'ACTIVITY'
+  ACTIVITY = 'ACTIVITY',
+  PLANETARY = 'PLANETARY'
 }
 
 export interface UserProfile {

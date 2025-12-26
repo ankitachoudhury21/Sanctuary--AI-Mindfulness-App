@@ -1,12 +1,13 @@
-
 import React from 'react';
 import { AppView } from '../types';
-import { Home, BookHeart, Moon, Music, Compass, LogOut, Brain } from 'lucide-react';
+import { Home, BookHeart, Moon, Music, Compass, LogOut, Brain, Rocket, Stars, Volume2, VolumeX } from 'lucide-react';
 
 interface Props {
   activeView: AppView;
   setView: (view: AppView) => void;
   onLogout: () => void;
+  isAmbientMuted: boolean;
+  toggleAmbient: () => void;
 }
 
 const DesktopNavItem: React.FC<{ item: any; activeView: AppView; setView: (view: AppView) => void }> = ({ item, activeView, setView }) => {
@@ -20,7 +21,7 @@ const DesktopNavItem: React.FC<{ item: any; activeView: AppView; setView: (view:
       <div className={`
         w-10 h-10 rounded-full flex items-center justify-center border-2 transition-all duration-300
         ${isActive 
-          ? `${item.color} border-transparent text-white shadow-lg` 
+          ? `${item.color} border-transparent text-white shadow-lg shadow-amber-500/20` 
           : 'border-white/20 text-white/70 group-hover:border-white/40 group-hover:text-white'}
       `}>
         <Icon size={18} fill={isActive ? 'currentColor' : 'none'} />
@@ -55,13 +56,14 @@ const MobileNavItem: React.FC<{ item: any; activeView: AppView; setView: (view: 
   );
 };
 
-const Navigation: React.FC<Props> = ({ activeView, setView, onLogout }) => {
+const Navigation: React.FC<Props> = ({ activeView, setView, onLogout, isAmbientMuted, toggleAmbient }) => {
   const navItems = [
     { icon: Home, label: 'Home', view: AppView.DASHBOARD, color: 'bg-emerald-500' },
-    { icon: Brain, label: 'Meditate', view: AppView.MUSIC, color: 'bg-indigo-500' },
-    { icon: BookHeart, label: 'Journal', view: AppView.JOURNAL, color: 'bg-rose-500' },
-    { icon: Moon, label: 'Sleep', view: AppView.SLEEP, color: 'bg-blue-600' },
-    { icon: Compass, label: 'Journey', view: AppView.ACTIVITY, color: 'bg-amber-500' },
+    { icon: Brain, label: 'Daily Meditation', view: AppView.MUSIC, color: 'bg-indigo-500' },
+    { icon: Stars, label: 'Celestial Exploration', view: AppView.PLANETARY, color: 'bg-amber-600' },
+    { icon: BookHeart, label: 'Gratitude Journal', view: AppView.JOURNAL, color: 'bg-rose-500' },
+    { icon: Moon, label: 'Sleep Journal', view: AppView.SLEEP, color: 'bg-blue-600' },
+    { icon: Compass, label: 'Mindful Journey', view: AppView.ACTIVITY, color: 'bg-amber-500' },
   ];
 
   const BetaBadge = () => (
@@ -82,15 +84,22 @@ const Navigation: React.FC<Props> = ({ activeView, setView, onLogout }) => {
             </svg>
           </div>
           <span className="font-black text-slate-900 tracking-tight text-xl font-display">Sanctuary</span>
-          <span className="px-1.5 py-0.5 bg-teal-100 text-teal-700 label-caps rounded-md border border-teal-200" style={{fontSize: '6px'}}>BETA</span>
         </button>
-        <button 
-          onClick={onLogout}
-          className="w-10 h-10 flex items-center justify-center text-slate-400 hover:text-red-500 active:scale-90 transition-all rounded-full bg-slate-50 border border-slate-100"
-          title="Log out"
-        >
-          <LogOut size={18} />
-        </button>
+        <div className="flex items-center gap-2">
+          <button 
+            onClick={toggleAmbient}
+            className={`w-10 h-10 flex items-center justify-center rounded-full transition-all ${!isAmbientMuted ? 'bg-teal-100 text-teal-600 shadow-inner' : 'bg-slate-50 text-slate-400'}`}
+          >
+            {!isAmbientMuted ? <Volume2 size={18} className="animate-pulse" /> : <VolumeX size={18} />}
+          </button>
+          <button 
+            onClick={onLogout}
+            className="w-10 h-10 flex items-center justify-center text-slate-400 hover:text-red-500 active:scale-90 transition-all rounded-full bg-slate-50 border border-slate-100"
+            title="Log out"
+          >
+            <LogOut size={18} />
+          </button>
+        </div>
       </header>
 
       <aside className="hidden md:flex fixed top-0 left-0 bottom-0 w-[260px] bg-[#0b1d2e] z-[70] flex-col py-10 shadow-2xl border-r border-white/5">
@@ -122,6 +131,19 @@ const Navigation: React.FC<Props> = ({ activeView, setView, onLogout }) => {
         </nav>
 
         <div className="px-6 space-y-4 pt-10 border-t border-white/10 mt-auto">
+          <button 
+            onClick={toggleAmbient}
+            className={`w-full flex items-center gap-4 px-2 py-3 group transition-all duration-300 outline-none ${!isAmbientMuted ? 'text-teal-400' : 'text-slate-500'}`}
+          >
+            <div className={`w-10 h-10 rounded-full border-2 flex items-center justify-center transition-all ${!isAmbientMuted ? 'border-teal-500/50 bg-teal-500/10 shadow-[0_0_15px_rgba(45,212,191,0.2)]' : 'border-white/10'}`}>
+              {!isAmbientMuted ? <Volume2 size={18} /> : <VolumeX size={18} />}
+            </div>
+            <div className="flex flex-col items-start">
+              <span className="text-sm font-black uppercase tracking-widest">Ambient</span>
+              <span className="text-[9px] opacity-60 font-bold uppercase">{!isAmbientMuted ? 'Sanctuary Pulse' : 'Muted'}</span>
+            </div>
+          </button>
+          
           <button 
             onClick={onLogout}
             className="w-full flex items-center gap-4 px-2 py-3 text-slate-400 hover:text-red-400 transition-colors font-display"
