@@ -28,12 +28,15 @@ const TRACKS = [
   { id: 'p4', cat: 'piano', name: 'Latency Void', genre: 'Ambient Grand', icon: Zap, color: 'from-slate-900 via-slate-800 to-slate-950', url: 'GEN_PIANO_VOID', benefit: 'Ultra-slow, drifting harmonies that create a mental buffer between work and rest.' },
   { id: 'p5', cat: 'piano', name: 'Coffee Lake Prelude', genre: 'Rhythmic Focus', icon: Coffee, color: 'from-amber-600/20 to-amber-900/40', url: 'GEN_PIANO_COFFEE', benefit: 'A driving, focused tempo to maintain high-velocity output during deep work blocks.' },
   { id: 'p6', cat: 'piano', name: 'Glass Focus', genre: 'Minimalist Zen', icon: Activity, color: 'from-blue-50 to-teal-100', url: 'GEN_PIANO_GLASS', benefit: 'Precision-timed, minimal notes for entering a state of high-performance flow.' },
-  { id: 'f1', cat: 'focus', name: 'Deep Work', genre: 'Calm Waves', icon: WavesIcon, color: 'from-blue-50 to-teal-300', url: 'GEN_CALM_WAVES', benefit: 'Rhythmic shore waves for cognitive clarity.' },
   { id: 'f7', cat: 'focus', name: 'Raag Bilawal', genre: 'Energizing', icon: Sun, color: 'from-yellow-400 to-orange-400', url: 'GEN_RAAG_BILAWAL', benefit: 'A bright, major-scale Raga to energize your focus.' },
   { id: 'f4', cat: 'focus', name: 'Raag Yaman', genre: 'Evening Devotion', icon: Music, color: 'from-orange-200 to-amber-600', url: 'GEN_RAAG_YAMAN', benefit: 'Lydian melodies that cultivate peace and creative devotion.' },
   { id: 'f6', cat: 'focus', name: 'Logic Reeds', genre: 'Harmonium Focus', icon: Wind, color: 'from-amber-100 to-orange-300', url: 'GEN_HARMONIUM_FOCUS', benefit: 'Steady reed drone for rhythmic cognitive flow.' },
-  { id: 'm5', cat: 'meditate', name: 'Celestial Voyage', genre: 'Astro-Ambient', icon: Stars, color: 'from-slate-900 via-indigo-950 to-purple-900', url: 'GEN_SPACE_ASTRO', benefit: 'Ethereal cosmic melodies and deep stardust frequencies.' },
+  { id: 'f1', cat: 'focus', name: 'Deep Work', genre: 'Calm Waves', icon: WavesIcon, color: 'from-blue-50 to-teal-300', url: 'GEN_CALM_WAVES', benefit: 'Rhythmic shore waves for cognitive clarity.' },
   { id: 'm6', cat: 'meditate', name: 'Sacred Bellows', genre: 'Reed Zen', icon: Wind, color: 'from-amber-200 to-orange-700', url: 'GEN_HARMONIUM_MEDITATE', benefit: 'Traditional harmonium drone for spiritual depth and centering.' },
+  { id: 'm5', cat: 'meditate', name: 'Celestial Voyage', genre: 'Astro-Ambient', icon: Stars, color: 'from-slate-900 via-indigo-950 to-purple-900', url: 'GEN_SPACE_ASTRO', benefit: 'Ethereal cosmic melodies and deep stardust frequencies.' },
+  { id: 'm7', cat: 'meditate', name: 'Ancient Temple', genre: 'Bronze Resonance', icon: Brain, color: 'from-amber-200 to-yellow-600', url: 'GEN_BRONZE_ZEN', benefit: 'Deep singing bowl vibrations for grounding your nervous system.' },
+  { id: 'm8', cat: 'meditate', name: 'Forest Breath', genre: 'Shakuhachi', icon: Wind, color: 'from-green-100 to-teal-200', url: 'GEN_FLUTE_MEDITATE', benefit: 'Natural woodwind textures that sync with your breathing capacity.' },
+  { id: 'm9', cat: 'meditate', name: 'Prism Light', genre: 'Glass Harp', icon: Sparkles, color: 'from-blue-50 to-indigo-100', url: 'GEN_GLASS_HARP', benefit: 'High-clarity harmonic layers to sharpen intuition and focus.' },
   { id: 'r3', cat: 'relax', name: 'Raag Bhairavi', genre: 'Healing', icon: Heart, color: 'from-rose-100 to-teal-400', url: 'GEN_RAAG_BHAIRAVI', benefit: 'The Queen of Ragas. A soul-stirring healing vibration suited for any time of day.' },
   { id: 'r4', cat: 'relax', name: 'Raag Malhar', genre: 'Monsoon Rain', icon: Cloud, color: 'from-slate-700 to-blue-900', url: 'GEN_RAAG_MALHAR', benefit: 'The Raga of Rain. Majestic, surging melodies like a storm over the plains.' },
   { id: 'r5', cat: 'relax', name: 'Raag Bihag', genre: 'Dreamy Evening', icon: Heart, color: 'from-pink-100 to-amber-200', url: 'GEN_RAAG_BIHAG', benefit: 'Best suited for late evening. Evokes a sweet, romantic, and dreamy atmosphere.' },
@@ -238,6 +241,173 @@ const MusicPlayer: React.FC<Props> = ({ setView, setIsAnyTrackPlaying }) => {
       const schedulerId = setInterval(runSequence, 200);
       runSequence();
       extraNodes.push({ stop: () => clearInterval(schedulerId) });
+      mainNode = mainGain;
+    }
+    else if (type === 'GEN_BRONZE_ZEN') {
+      const mainGain = ctx.createGain();
+      mainGain.connect(voiceGain);
+      if (reverbNodeRef.current) mainGain.connect(reverbNodeRef.current);
+      
+      // Steady low-frequency temple drone
+      const droneOsc = ctx.createOscillator();
+      droneOsc.type = 'sine';
+      droneOsc.frequency.setValueAtTime(55, ctx.currentTime);
+      const droneG = ctx.createGain();
+      droneG.gain.setValueAtTime(0.08, ctx.currentTime);
+      droneOsc.connect(droneG).connect(mainGain);
+      droneOsc.start();
+      extraNodes.push(droneOsc, droneG);
+
+      const playBowl = () => {
+        const now = ctx.currentTime;
+        const base = 110 + (Math.random() * 10);
+        const harmonics = [1, 2.76, 5.4, 8.1, 11.3]; 
+        
+        harmonics.forEach((h, i) => {
+          const osc = ctx.createOscillator();
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(base * h, now);
+          osc.detune.setValueAtTime((Math.random() - 0.5) * 8, now);
+          
+          const g = ctx.createGain();
+          const lfo = ctx.createOscillator();
+          lfo.frequency.setValueAtTime(0.2 + (i * 0.05), now);
+          const lfoG = ctx.createGain();
+          lfoG.gain.setValueAtTime(0.05, now);
+          lfo.connect(lfoG).connect(g.gain);
+          
+          g.gain.setValueAtTime(0, now);
+          g.gain.linearRampToValueAtTime(0.12 / (i + 1), now + 0.1);
+          g.gain.exponentialRampToValueAtTime(0.0001, now + 18);
+          
+          osc.connect(g).connect(mainGain);
+          osc.start(now); osc.stop(now + 19);
+          lfo.start(now); lfo.stop(now + 19);
+          extraNodes.push(osc, g, lfo, lfoG);
+        });
+      };
+      const bowlId = setInterval(playBowl, 14000);
+      playBowl();
+      extraNodes.push({ stop: () => clearInterval(bowlId) });
+      mainNode = mainGain;
+    }
+    else if (type === 'GEN_FLUTE_MEDITATE') {
+      const mainGain = ctx.createGain();
+      mainGain.connect(voiceGain);
+      if (reverbNodeRef.current) mainGain.connect(reverbNodeRef.current);
+      
+      const playFlute = () => {
+        const now = ctx.currentTime;
+        const root = 220;
+        const scale = [0, 3, 5, 7, 10]; // Minor Pentatonic
+        const freq = root * Math.pow(2, scale[Math.floor(Math.random() * scale.length)] / 12);
+        
+        // Breathy component
+        const noise = ctx.createBufferSource();
+        const buffer = ctx.createBuffer(1, ctx.sampleRate * 5, ctx.sampleRate);
+        const data = buffer.getChannelData(0);
+        for(let i=0; i<buffer.length; i++) data[i] = Math.random() * 2 - 1;
+        noise.buffer = buffer; noise.loop = true;
+        
+        const noiseFilter = ctx.createBiquadFilter();
+        noiseFilter.type = 'bandpass';
+        noiseFilter.frequency.setValueAtTime(freq, now);
+        noiseFilter.Q.setValueAtTime(10, now);
+        
+        const nGain = ctx.createGain();
+        nGain.gain.setValueAtTime(0, now);
+        nGain.gain.linearRampToValueAtTime(0.25, now + 1.2);
+        nGain.gain.linearRampToValueAtTime(0, now + 6);
+        
+        // Tonal component
+        const osc = ctx.createOscillator();
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(freq, now);
+        
+        const oscFilter = ctx.createBiquadFilter();
+        oscFilter.type = 'lowpass';
+        oscFilter.frequency.setValueAtTime(freq * 2.5, now);
+        
+        const oGain = ctx.createGain();
+        oGain.gain.setValueAtTime(0, now);
+        oGain.gain.linearRampToValueAtTime(0.15, now + 1.5);
+        oGain.gain.exponentialRampToValueAtTime(0.0001, now + 5.8);
+        
+        // Vibrato
+        const vibrato = ctx.createOscillator();
+        vibrato.frequency.setValueAtTime(4.5 + Math.random(), now);
+        const vibratoG = ctx.createGain();
+        vibratoG.gain.setValueAtTime(freq * 0.02, now);
+        vibrato.connect(vibratoG).connect(osc.frequency);
+        vibrato.connect(vibratoG).connect(noiseFilter.frequency);
+        
+        noise.connect(noiseFilter).connect(nGain).connect(mainGain);
+        osc.connect(oscFilter).connect(oGain).connect(mainGain);
+        
+        noise.start(now); noise.stop(now + 6.1);
+        osc.start(now); osc.stop(now + 6.1);
+        vibrato.start(now); vibrato.stop(now + 6.1);
+        extraNodes.push(noise, noiseFilter, nGain, osc, oscFilter, oGain, vibrato, vibratoG);
+      };
+      
+      const fluteId = setInterval(playFlute, 8500);
+      playFlute();
+      extraNodes.push({ stop: () => clearInterval(fluteId) });
+      mainNode = mainGain;
+    }
+    else if (type === 'GEN_GLASS_HARP') {
+      const mainGain = ctx.createGain();
+      mainGain.connect(voiceGain);
+      if (reverbNodeRef.current) mainGain.connect(reverbNodeRef.current);
+      
+      const playGlass = () => {
+        const now = ctx.currentTime;
+        const scale = [0, 4, 7, 11, 14, 19]; // Lydian flavors
+        const root = 440;
+        const freq = root * Math.pow(2, scale[Math.floor(Math.random() * scale.length)] / 12);
+        
+        // FM Synthesis for Glassy tone
+        const carrier = ctx.createOscillator();
+        carrier.type = 'sine';
+        carrier.frequency.setValueAtTime(freq, now);
+        
+        const modulator = ctx.createOscillator();
+        modulator.type = 'sine';
+        modulator.frequency.setValueAtTime(freq * 2.01, now); // Ratio for brightness
+        
+        const modGain = ctx.createGain();
+        modGain.gain.setValueAtTime(freq * 1.5, now);
+        modGain.gain.exponentialRampToValueAtTime(freq * 0.1, now + 4);
+        
+        modulator.connect(modGain).connect(carrier.frequency);
+        
+        const g = ctx.createGain();
+        g.gain.setValueAtTime(0, now);
+        g.gain.linearRampToValueAtTime(0.08, now + 0.05);
+        g.gain.exponentialRampToValueAtTime(0.0001, now + 4.5);
+        
+        // Add random glimmers (high frequency sparks)
+        if (Math.random() > 0.5) {
+          const shimmer = ctx.createOscillator();
+          shimmer.frequency.setValueAtTime(freq * 8, now);
+          const sGain = ctx.createGain();
+          sGain.gain.setValueAtTime(0, now);
+          sGain.gain.linearRampToValueAtTime(0.02, now + 0.1);
+          sGain.gain.exponentialRampToValueAtTime(0.0001, now + 1);
+          shimmer.connect(sGain).connect(mainGain);
+          shimmer.start(now); shimmer.stop(now + 1.1);
+          extraNodes.push(shimmer, sGain);
+        }
+
+        carrier.connect(g).connect(mainGain);
+        carrier.start(now); carrier.stop(now + 4.6);
+        modulator.start(now); modulator.stop(now + 4.6);
+        extraNodes.push(carrier, modulator, modGain, g);
+      };
+      
+      const glassId = setInterval(playGlass, 2500);
+      playGlass();
+      extraNodes.push({ stop: () => clearInterval(glassId) });
       mainNode = mainGain;
     }
     else if (type.startsWith('GEN_RAAG')) {
