@@ -20,6 +20,8 @@ interface Planet {
     distance: string;
     hazard: string;
     diameter: string;
+    pressure?: string;
+    gravity?: string;
   };
 }
 
@@ -30,11 +32,11 @@ const PLANETS: Planet[] = [
     desc: 'Solar Core: G-Type Star', 
     color: 'from-orange-600 to-yellow-500', 
     videoUrl: 'https://cdn.pixabay.com/vimeo/312061265/sun-1358.mp4?width=1280', 
-    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/b/b4/The_Sun_by_the_Atmospheric_Imaging_Assembly_of_NASA%27s_Solar_Dynamics_Observatory_-_20100819.jpg/1200px-The_Sun_by_the_Atmospheric_Imaging_Assembly_of_NASA%27s_Solar_Dynamics_Observatory_-_20100819.jpg',
+    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/b/b4/The_Sun_by_the_Atmospheric_Imaging_Assembly_of_NASA%27s_Solar_Dynamics_Observatory_-_20100819.jpg',
     synthesis: 'SUN', 
     mission: 'Harness the raw energy of existence.', 
     audioTrackName: 'Solar Flare Resonance',
-    metrics: { temp: '5,500°C', distance: '0.0 AU', hazard: 'EXTREME', diameter: '1.39M km' } 
+    metrics: { temp: '5,500°C', distance: '0.0 AU', hazard: 'EXTREME', diameter: '1.39M km', gravity: '274 m/s²' } 
   },
   { 
     id: 'mercury', 
@@ -42,11 +44,11 @@ const PLANETS: Planet[] = [
     desc: 'Craters: Metallic Core', 
     color: 'from-slate-500 to-slate-700', 
     videoUrl: '', 
-    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/4/4a/Mercury_in_true_color.jpg/1200px-Mercury_in_true_color.jpg',
+    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/4/4a/Mercury_in_true_color.jpg',
     synthesis: 'MERCURY', 
     mission: 'Endure the extremes of the inner circle.', 
     audioTrackName: 'Core Vibrations',
-    metrics: { temp: '430°C', distance: '0.39 AU', hazard: 'HIGH', diameter: '4,879 km' } 
+    metrics: { temp: '430°C', distance: '0.39 AU', hazard: 'HIGH', diameter: '4,879 km', gravity: '3.7 m/s²' } 
   },
   { 
     id: 'venus', 
@@ -54,11 +56,11 @@ const PLANETS: Planet[] = [
     desc: 'Dense: Sulfuric Greenhouse', 
     color: 'from-orange-300 to-amber-600', 
     videoUrl: 'https://cdn.pixabay.com/vimeo/186596918/venus-5743.mp4?width=1280', 
-    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/0/08/Venus_from_Mariner_10.jpg/1200px-Venus_from_Mariner_10.jpg',
+    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/0/08/Venus_from_Mariner_10.jpg',
     synthesis: 'VENUS', 
     mission: 'Navigate the pressure of the eternal storm.', 
     audioTrackName: "Acid Cloud Echo",
-    metrics: { temp: '462°C', distance: '0.72 AU', hazard: 'CRITICAL', diameter: '12,104 km' } 
+    metrics: { temp: '462°C', distance: '0.72 AU', hazard: 'CRITICAL', diameter: '12,104 km', pressure: '92 bar' } 
   },
   { 
     id: 'earth', 
@@ -66,11 +68,11 @@ const PLANETS: Planet[] = [
     desc: 'Organic: Pale Blue Dot', 
     color: 'from-blue-600 to-emerald-400', 
     videoUrl: 'https://cdn.pixabay.com/vimeo/158300267/earth-2384.mp4?width=1280', 
-    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/9/97/The_Earth_seen_from_Apollo_17.jpg/1200px-The_Earth_seen_from_Apollo_17.jpg',
+    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/9/97/The_Earth_seen_from_Apollo_17.jpg',
     synthesis: 'EARTH', 
     mission: 'Rediscover the heartbeat of home.', 
     audioTrackName: "Gaia's Resonant Heartbeat",
-    metrics: { temp: '15°C', distance: '1.0 AU', hazard: 'MINIMAL', diameter: '12,742 km' } 
+    metrics: { temp: '15°C', distance: '1.0 AU', hazard: 'MINIMAL', diameter: '12,742 km', gravity: '9.81 m/s²' } 
   },
   { 
     id: 'moon', 
@@ -78,11 +80,11 @@ const PLANETS: Planet[] = [
     desc: 'Satellite: Lunar Stillness', 
     color: 'from-slate-300 to-slate-500', 
     videoUrl: 'https://cdn.pixabay.com/vimeo/186596954/moon-5744.mp4?width=1280', 
-    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/e/e1/FullMoon2010.jpg/1200px-FullMoon2010.jpg',
+    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/e/e1/FullMoon2010.jpg',
     synthesis: 'MOON', 
     mission: 'Embrace the silence of the cosmic mirror.', 
     audioTrackName: 'Regolith Echo',
-    metrics: { temp: '-173°C', distance: '384k km', hazard: 'LOW', diameter: '3,474 km' } 
+    metrics: { temp: '-173°C', distance: '384k km', hazard: 'LOW', diameter: '3,474 km', gravity: '1.62 m/s²' } 
   },
   { 
     id: 'mars', 
@@ -90,11 +92,11 @@ const PLANETS: Planet[] = [
     desc: 'Rust: The Crimson Frontier', 
     color: 'from-red-700 to-orange-900', 
     videoUrl: 'https://cdn.pixabay.com/vimeo/312061108/mars-1357.mp4?width=1280', 
-    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/0/02/OSIRIS_Mars_true_color.jpg/1200px-OSIRIS_Mars_true_color.jpg',
+    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/0/02/OSIRIS_Mars_true_color.jpg',
     synthesis: 'MARS', 
     mission: 'Chart the path across the crimson dust.', 
     audioTrackName: 'Sol 1 Winds',
-    metrics: { temp: '-63°C', distance: '1.52 AU', hazard: 'MODERATE', diameter: '6,779 km' } 
+    metrics: { temp: '-63°C', distance: '1.52 AU', hazard: 'MODERATE', diameter: '6,779 km', gravity: '3.72 m/s²' } 
   },
   { 
     id: 'jupiter', 
@@ -102,11 +104,11 @@ const PLANETS: Planet[] = [
     desc: 'Banded: Gas Colossus', 
     color: 'from-amber-700 to-orange-950', 
     videoUrl: 'https://cdn.pixabay.com/vimeo/186596931/jupiter-5742.mp4?width=1280', 
-    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/e/e2/Jupiter_%28spacecraft_view%29.jpg/1200px-Jupiter_%28spacecraft_view%29.jpg',
+    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/2/2b/Jupiter_and_its_shrunken_Great_Red_Spot.jpg',
     synthesis: 'JUPITER', 
     mission: 'Witness the majesty of the Great Red Spot.', 
     audioTrackName: 'Great Red Resonance',
-    metrics: { temp: '-108°C', distance: '5.20 AU', hazard: 'HIGH', diameter: '139,820 km' } 
+    metrics: { temp: '-108°C', distance: '5.20 AU', hazard: 'HIGH', diameter: '139,820 km', gravity: '24.79 m/s²' } 
   },
   { 
     id: 'saturn', 
@@ -114,11 +116,11 @@ const PLANETS: Planet[] = [
     desc: 'Ringed: Lord of the Ice', 
     color: 'from-yellow-400 to-amber-700', 
     videoUrl: '', 
-    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c7/Saturn_during_Equinox.jpg/1200px-Saturn_during_Equinox.jpg',
+    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/c/c7/Saturn_during_Equinox.jpg',
     synthesis: 'SATURN', 
     mission: 'Listen to the shimmering songs of the rings.', 
     audioTrackName: 'Orbital Crystalline Chant',
-    metrics: { temp: '-138°C', distance: '9.58 AU', hazard: 'MODERATE', diameter: '116,460 km' } 
+    metrics: { temp: '-138°C', distance: '9.58 AU', hazard: 'MODERATE', diameter: '116,460 km', gravity: '10.44 m/s²' } 
   },
   { 
     id: 'uranus', 
@@ -126,23 +128,23 @@ const PLANETS: Planet[] = [
     desc: 'Ice Giant: Aquamarine Veil', 
     color: 'from-cyan-400 to-blue-600', 
     videoUrl: '', 
-    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/3/3d/Uranus2.jpg/1200px-Uranus2.jpg',
+    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/3/3d/Uranus2.jpg',
     synthesis: 'URANUS', 
     mission: 'Plunge into the crystalline turquoise depths.', 
     audioTrackName: 'Azure Ice Echo',
-    metrics: { temp: '-195°C', distance: '19.2 AU', hazard: 'HIGH', diameter: '50,724 km' } 
+    metrics: { temp: '-195°C', distance: '19.2 AU', hazard: 'HIGH', diameter: '50,724 km', gravity: '8.69 m/s²' } 
   },
   { 
     id: 'neptune', 
     name: 'Neptune', 
     desc: 'Deep Blue: Wind Master', 
     color: 'from-blue-700 to-indigo-900', 
-    videoUrl: 'https://cdn.pixabay.com/vimeo/186596931/neptune-5742.mp4?width=1280', 
-    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/5/56/Neptune_Full.jpg/1200px-Neptune_Full.jpg',
+    videoUrl: '', 
+    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/5/56/Neptune_Full.jpg',
     synthesis: 'NEPTUNE', 
     mission: 'Surrender to the ultra-sonic azure winds.', 
     audioTrackName: 'Great Dark Spot Hums',
-    metrics: { temp: '-201°C', distance: '30.1 AU', hazard: 'HIGH', diameter: '49,244 km' } 
+    metrics: { temp: '-201°C', distance: '30.1 AU', hazard: 'HIGH', diameter: '49,244 km', gravity: '11.15 m/s²' } 
   },
   { 
     id: 'pluto', 
@@ -150,11 +152,11 @@ const PLANETS: Planet[] = [
     desc: 'Dwarf: Glacial Heart', 
     color: 'from-slate-600 to-amber-900', 
     videoUrl: '', 
-    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/a/a7/Pluto-7015-07-14.jpg/1200px-Pluto-7015-07-14.jpg',
+    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/2/2a/Nh-pluto-in-true-color_2x_Full-Res.jpg',
     synthesis: 'PLUTO', 
     mission: 'Reflect at the final frontier of home.', 
     audioTrackName: 'Kuiper Belt Void',
-    metrics: { temp: '-232°C', distance: '39.5 AU', hazard: 'LOW', diameter: '2,376 km' } 
+    metrics: { temp: '-232°C', distance: '39.5 AU', hazard: 'LOW', diameter: '2,376 km', gravity: '0.62 m/s²' } 
   },
 ];
 
@@ -722,13 +724,18 @@ const PlanetaryMission: React.FC<{ setView: (v: AppView) => void; setIsAnyTrackP
       <div className="relative h-[420px] md:h-[650px] rounded-[3.5rem] md:rounded-[5rem] overflow-hidden group shadow-[0_50px_120px_-30px_rgba(0,0,0,0.6)] ring-1 ring-white/30 border-4 border-white/15">
         <div className="absolute inset-0 bg-black">
           <img 
+            key={`${activePlanet.id}-img`}
             src={activePlanet.imageUrl} 
             alt={activePlanet.name}
-            className={`absolute inset-0 w-full h-full object-cover transition-all duration-[80000ms] ${isPlaying ? 'scale-125 rotate-1' : 'scale-110'} ease-linear opacity-90`}
+            className={`absolute inset-0 w-full h-full object-cover transition-all duration-[80000ms] ${isPlaying ? 'scale-125 rotate-1' : 'scale-110'} ease-linear opacity-100`}
+            onError={(e) => {
+              const target = e.target as HTMLImageElement;
+              target.src = "https://images.unsplash.com/photo-1446776811953-b23d57bd21aa?auto=format&fit=crop&q=80&w=2560"; // Space fallback
+            }}
           />
           {activePlanet.videoUrl && !videoError && (
             <video 
-              key={activePlanet.id} 
+              key={`${activePlanet.id}-vid`} 
               ref={videoRef}
               src={activePlanet.videoUrl} 
               loop 
@@ -736,7 +743,7 @@ const PlanetaryMission: React.FC<{ setView: (v: AppView) => void; setIsAnyTrackP
               playsInline
               preload="auto"
               onError={() => setVideoError(true)}
-              className="absolute inset-0 w-full h-full object-cover opacity-90"
+              className="absolute inset-0 w-full h-full object-cover opacity-90 mix-blend-screen"
             />
           )}
         </div>
@@ -861,7 +868,15 @@ const PlanetaryMission: React.FC<{ setView: (v: AppView) => void; setIsAnyTrackP
               >
                 {/* Scientifically Accurate Planet Thumbnail */}
                 <div className={`w-28 h-28 rounded-full mb-6 relative overflow-hidden transition-all duration-700 ring-2 ring-transparent ${isActive ? 'ring-teal-400 ring-offset-4 ring-offset-slate-950 scale-110 shadow-[0_0_40px_rgba(45,212,191,0.4)]' : 'group-hover:scale-105'}`}>
-                  <img src={p.imageUrl} alt={p.name} className={`w-full h-full object-cover transition-transform duration-[20000ms] group-hover:scale-150 ${isActive ? 'animate-[spin_60s_linear_infinite]' : ''}`} />
+                  <img 
+                    src={p.imageUrl} 
+                    alt={p.name} 
+                    className={`w-full h-full object-cover transition-transform duration-[20000ms] group-hover:scale-150 ${isActive ? 'animate-[spin_60s_linear_infinite]' : ''}`}
+                    onError={(e) => {
+                      const target = e.target as HTMLImageElement;
+                      target.src = "https://images.unsplash.com/photo-1446776811953-b23d57bd21aa?auto=format&fit=crop&q=40&w=300";
+                    }}
+                  />
                   <div className={`absolute inset-0 bg-gradient-to-br ${p.color} opacity-30 mix-blend-overlay`}></div>
                   <div className="absolute inset-0 shadow-[inset_0_0_20px_rgba(0,0,0,0.4)]"></div>
                 </div>
