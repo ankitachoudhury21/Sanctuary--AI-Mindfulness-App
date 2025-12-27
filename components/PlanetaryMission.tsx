@@ -541,7 +541,8 @@ const PLANET_SYNTHESIZERS: Record<string, SynthesizerFunc> = {
 };
 
 const PlanetaryMission: React.FC<{ setView: (v: AppView) => void; setIsAnyTrackPlaying: (playing: boolean) => void }> = ({ setView, setIsAnyTrackPlaying }) => {
-  const [activePlanet, setActivePlanet] = useState<Planet>(PLANETS[3]); // Default to Earth
+  // LANDING TARGET UPDATED: Default is now The Sun (PLANETS[0]) instead of Earth (PLANETS[3])
+  const [activePlanet, setActivePlanet] = useState<Planet>(PLANETS[0]); 
   const [isPlaying, setIsPlaying] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [sessionTime, setSessionTime] = useState(0);
