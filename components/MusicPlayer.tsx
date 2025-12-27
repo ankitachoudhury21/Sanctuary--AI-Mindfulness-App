@@ -413,7 +413,6 @@ const MusicPlayer: React.FC<Props> = ({ setView, setIsAnyTrackPlaying }) => {
       let lastOut = 0;
       for (let i = 0; i < bufferSize; i++) {
         const white = Math.random() * 2 - 1;
-        // Brownian noise for a smoother, deep ocean feel
         lastOut = (lastOut + (0.02 * white)) / 1.02;
         data[i] = lastOut * 3.5;
       }
@@ -439,7 +438,6 @@ const MusicPlayer: React.FC<Props> = ({ setView, setIsAnyTrackPlaying }) => {
       mainGain.connect(voiceGain);
       if (reverbNodeRef.current) mainGain.connect(reverbNodeRef.current);
       
-      // 2Hz Delta Binaural Beat (100Hz and 102Hz)
       const leftOsc = ctx.createOscillator();
       leftOsc.frequency.setValueAtTime(100, ctx.currentTime);
       const leftPanner = ctx.createStereoPanner();
@@ -459,7 +457,6 @@ const MusicPlayer: React.FC<Props> = ({ setView, setIsAnyTrackPlaying }) => {
       leftOsc.start(); rightOsc.start();
       extraNodes.push(leftOsc, rightOsc, leftPanner, rightPanner, leftGain, rightGain);
 
-      // Ethereal Pad
       const playPad = () => {
         const now = ctx.currentTime;
         const freqs = [200, 300, 400, 600];
@@ -528,85 +525,113 @@ const MusicPlayer: React.FC<Props> = ({ setView, setIsAnyTrackPlaying }) => {
       mainGain.connect(voiceGain);
       if (reverbNodeRef.current) mainGain.connect(reverbNodeRef.current);
       
+      const isBilawal = type.includes('BILAWAL');
+      const isYaman = type.includes('YAMAN');
       const isBhairavi = type.includes('BHAIRAVI');
       const isMalhar = type.includes('MALHAR');
-      const isYaman = type.includes('YAMAN');
       const isDarbari = type.includes('DARBARI');
       const isBihag = type.includes('BIHAG');
-      const isBilawal = type.includes('BILAWAL');
 
-      const baseTonic = isDarbari ? 110 : isBhairavi ? 130.81 : 146.83; 
+      // Enhanced Tanpura Simulation
+      const baseTonic = isDarbari ? 110 : (isBilawal ? 130.81 : 146.83); 
+      
+      const createTanpuraString = (f: number, pan: number, pluckInterval: number, delay: number) => {
+        const osc = ctx.createOscillator();
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(f, ctx.currentTime);
+        
+        const filter = ctx.createBiquadFilter();
+        filter.type = 'lowpass';
+        filter.frequency.setValueAtTime(400, ctx.currentTime);
+        
+        const g = ctx.createGain();
+        g.gain.setValueAtTime(0, ctx.currentTime);
+        
+        const panner = ctx.createStereoPanner();
+        panner.pan.setValueAtTime(pan, ctx.currentTime);
+        
+        const runPluck = () => {
+          const pluckNow = ctx.currentTime;
+          g.gain.cancelScheduledValues(pluckNow);
+          g.gain.setValueAtTime(0, pluckNow);
+          g.gain.linearRampToValueAtTime(0.08, pluckNow + 0.1);
+          g.gain.exponentialRampToValueAtTime(0.001, pluckNow + pluckInterval * 0.9);
+        };
+
+        const intervalId = setInterval(runPluck, pluckInterval * 1000);
+        setTimeout(runPluck, delay * 1000);
+        
+        osc.connect(filter).connect(g).connect(panner).connect(mainGain);
+        osc.start();
+        extraNodes.push(osc, filter, g, panner, { stop: () => clearInterval(intervalId) });
+      };
+
+      // Traditional 4-string Tanpura tuning (Pa Sa Sa Sa_low)
+      const paFreq = isBilawal ? baseTonic * 1.5 : (isYaman ? baseTonic * 1.5 : baseTonic * 1.5);
+      createTanpuraString(paFreq, -0.6, 4.0, 0);       // First string (Pa)
+      createTanpuraString(baseTonic, -0.2, 4.0, 1.0);  // Second string (Sa)
+      createTanpuraString(baseTonic, 0.2, 4.0, 2.0);   // Third string (Sa)
+      createTanpuraString(baseTonic / 2, 0.6, 4.0, 3.0); // Fourth string (Low Sa)
+
+      const scaleBilawal = [0, 2, 4, 5, 7, 9, 11, 12];
+      const scaleYaman = [0, 2, 4, 6, 7, 9, 11, 12]; // Tivra Ma (sharp 4)
       const scaleBhairavi = [0, 1, 3, 5, 7, 8, 10, 12];
       const scaleMalhar = [0, 2, 5, 7, 10, 12];
-      const scaleYaman = [0, 2, 4, 6, 7, 9, 11, 12];
       const scaleDarbari = [0, 2, 3, 5, 7, 8, 10, 12];
       const scaleBihag = [0, 4, 5, 6, 7, 11, 12];
-      const scaleBilawal = [0, 2, 4, 5, 7, 9, 11, 12];
       
-      const activeScale = isBhairavi ? scaleBhairavi : 
+      const activeScale = isBilawal ? scaleBilawal : 
+                         isYaman ? scaleYaman :
+                         isBhairavi ? scaleBhairavi : 
                          isMalhar ? scaleMalhar : 
-                         isYaman ? scaleYaman : 
-                         isDarbari ? scaleDarbari : 
-                         isBihag ? scaleBihag : 
-                         isBilawal ? scaleBilawal : scaleYaman;
-
-      const droneG = ctx.createGain();
-      droneG.gain.setValueAtTime(0.18, ctx.currentTime);
-      droneG.connect(mainGain);
-      
-      if (isBhairavi) {
-        const healingOsc = ctx.createOscillator();
-        healingOsc.frequency.setValueAtTime(528 / 8, ctx.currentTime); 
-        const hg = ctx.createGain();
-        hg.gain.setValueAtTime(0.05, ctx.currentTime);
-        healingOsc.connect(hg).connect(droneG);
-        healingOsc.start();
-        extraNodes.push(healingOsc, hg);
-      }
-
-      [1, 1.5, 2].forEach((h, i) => {
-        const osc = ctx.createOscillator();
-        osc.type = 'sine';
-        osc.frequency.setValueAtTime(baseTonic * h, ctx.currentTime);
-        const g = ctx.createGain();
-        g.gain.setValueAtTime(0.06 / (i + 1), ctx.currentTime);
-        const lfo = ctx.createOscillator();
-        lfo.frequency.setValueAtTime(0.05 + (i * 0.02), ctx.currentTime);
-        const lfoG = ctx.createGain();
-        lfoG.gain.setValueAtTime(0.015, ctx.currentTime);
-        lfo.connect(lfoG).connect(g.gain);
-        osc.connect(g).connect(droneG);
-        osc.start(); lfo.start();
-        extraNodes.push(osc, lfo, g);
-      });
-      extraNodes.push(droneG);
+                         isDarbari ? scaleDarbari : scaleBihag;
 
       const playRaagNote = () => {
         const now = ctx.currentTime;
         const interval = activeScale[Math.floor(Math.random() * activeScale.length)];
-        const oct = Math.random() > 0.8 ? 2 : 1;
+        const oct = Math.random() > 0.7 ? 2 : 1;
         const freq = baseTonic * Math.pow(2, (interval + oct * 12) / 12);
+        
         const osc = ctx.createOscillator();
-        osc.type = isBhairavi ? 'sine' : 'triangle'; 
+        osc.type = 'triangle'; 
         osc.frequency.setValueAtTime(freq, now);
+        
+        const filter = ctx.createBiquadFilter();
+        filter.type = 'lowpass';
+        filter.frequency.setValueAtTime(2000, now);
         
         const g = ctx.createGain();
         g.gain.setValueAtTime(0, now);
-        g.gain.linearRampToValueAtTime(isBhairavi ? 0.12 : 0.08, now + (isBhairavi ? 2.5 : 1.5));
-        g.gain.exponentialRampToValueAtTime(0.0001, now + (isBhairavi ? 12 : 8));
         
-        if (Math.random() > (isBhairavi ? 0.3 : 0.5)) {
+        // Humanized Envelope
+        const attack = isYaman ? 1.5 : 0.8;
+        const decay = isYaman ? 8.0 : 4.0;
+        g.gain.linearRampToValueAtTime(0.1, now + attack);
+        g.gain.exponentialRampToValueAtTime(0.0001, now + decay);
+        
+        // Meend (Soulful Slides)
+        if (Math.random() > 0.4) {
           const nextInt = activeScale[Math.floor(Math.random() * activeScale.length)];
           const nextFreq = baseTonic * Math.pow(2, (nextInt + oct * 12) / 12);
-          osc.frequency.exponentialRampToValueAtTime(nextFreq, now + (isBhairavi ? 3.0 : 2.0));
+          osc.frequency.exponentialRampToValueAtTime(nextFreq, now + (isYaman ? 2.5 : 1.2));
         }
 
-        osc.connect(g).connect(mainGain);
-        osc.start(now); osc.stop(now + 13);
-        extraNodes.push(osc, g);
+        // Gamak (Subtle Vibrato)
+        const vibrato = ctx.createOscillator();
+        vibrato.frequency.setValueAtTime(5 + Math.random() * 2, now);
+        const vGain = ctx.createGain();
+        vGain.gain.setValueAtTime(0, now);
+        vGain.gain.linearRampToValueAtTime(freq * 0.015, now + attack);
+        vibrato.connect(vGain).connect(osc.frequency);
+        vibrato.start();
+
+        osc.connect(filter).connect(g).connect(mainGain);
+        osc.start(now); osc.stop(now + decay + 1);
+        vibrato.stop(now + decay + 1);
+        extraNodes.push(osc, filter, g, vibrato, vGain);
       };
 
-      const noteInterval = isBhairavi ? 7000 : (isMalhar ? 4000 : (isBilawal ? 3000 : 6000));
+      const noteInterval = isYaman ? 6000 : (isBilawal ? 3500 : 5000);
       const raagSeqId = setInterval(playRaagNote, noteInterval);
       playRaagNote();
       extraNodes.push({ stop: () => clearInterval(raagSeqId) });
