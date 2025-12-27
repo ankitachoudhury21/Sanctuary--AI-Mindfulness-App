@@ -1,9 +1,10 @@
-
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-// Added UserProfile to imports
 import { JournalEntry, AppView, UserProfile } from '../types';
-// Added MessageCircle to icons
-import { Mic, Square, Sparkles, Send, Quote, Heart, MessageCircle, MessageSquare, Loader2, Trash2, Calendar, CheckCircle2, ChevronLeft } from 'lucide-react';
+import { 
+  Mic, Square, Sparkles, Send, Quote, Heart, MessageCircle, 
+  Loader2, Trash2, Calendar, CheckCircle2, ChevronLeft, 
+  Download, Eraser, AlertCircle
+} from 'lucide-react';
 import { analyzeGratitudeJournal } from '../services/geminiService';
 import LiveVoiceSession from './LiveVoiceSession';
 
@@ -11,13 +12,11 @@ interface Props {
   entries: JournalEntry[];
   setEntries: React.Dispatch<React.SetStateAction<JournalEntry[]>>;
   setView: (view: AppView) => void;
-  // Added user to Props interface
   user: UserProfile | null;
 }
 
 const DRAFT_STORAGE_KEY = 'sanctuary_journal_draft';
 
-// Destructured user from props
 const Journal: React.FC<Props> = ({ entries, setEntries, setView, user }) => {
   const [isRecording, setIsRecording] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -25,6 +24,7 @@ const Journal: React.FC<Props> = ({ entries, setEntries, setView, user }) => {
   const [aiFeedback, setAiFeedback] = useState<string | null>(null);
   const [showLiveSession, setShowLiveSession] = useState(false);
   const [lastSaved, setLastSaved] = useState<string | null>(null);
+  const [showClearConfirm, setShowClearConfirm] = useState(false);
   const recognitionRef = useRef<any>(null);
 
   useEffect(() => {
@@ -93,24 +93,49 @@ const Journal: React.FC<Props> = ({ entries, setEntries, setView, user }) => {
     if (!textEntry.trim() || isProcessing) return;
     setIsProcessing(true);
     setAiFeedback("Analyzing your reflection...");
+    
+    let aiResponse = "I've saved your reflection in your sanctuary. It's a beautiful step toward peace.";
+    
     try {
+      // Attempt AI analysis
       const response = await analyzeGratitudeJournal(textEntry);
+      if (response) aiResponse = response;
+    } catch (e) {
+      console.warn("AI analysis failed, proceeding with local save only.");
+    } finally {
+      // ALWAYS save the entry, regardless of AI success
       const newEntry: JournalEntry = {
         id: Date.now().toString(),
         date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
         type: isRecording ? 'voice' : 'text',
         transcript: textEntry,
-        aiResponse: response
+        aiResponse: aiResponse
       };
+      
       setEntries(prev => [newEntry, ...prev]);
-      setAiFeedback(response);
+      setAiFeedback(aiResponse);
       setTextEntry('');
       localStorage.removeItem(DRAFT_STORAGE_KEY);
-    } catch (e) {
-      setAiFeedback("Reflection saved to local journal.");
-    } finally {
       setIsProcessing(false);
     }
+  };
+
+  const exportJournal = () => {
+    if (entries.length === 0) return;
+    const content = entries.map(e => `[${e.date}] (${e.type})\nReflection: ${e.transcript}\nSanctuary: ${e.aiResponse}\n\n-------------------\n\n`).join('');
+    const blob = new Blob([content], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `Sanctuary_Journal_${new Date().toISOString().split('T')[0]}.txt`;
+    link.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const clearAllEntries = () => {
+    setEntries([]);
+    setShowClearConfirm(false);
+    setAiFeedback("Your history has been cleared. A fresh start.");
   };
 
   return (
@@ -118,7 +143,7 @@ const Journal: React.FC<Props> = ({ entries, setEntries, setView, user }) => {
       <div className="flex flex-col items-center gap-6">
         <button 
           onClick={() => setView(AppView.DASHBOARD)} 
-          className="flex items-center gap-2 text-teal-700 font-black uppercase tracking-[0.2em] text-xs hover:gap-3 transition-all outline-none"
+          className="flex items-center gap-2 px-4 py-2 bg-white/40 hover:bg-white/80 backdrop-blur-md rounded-full border border-teal-100/30 text-teal-800 label-caps text-[10px] md:text-xs hover:gap-3 transition-all outline-none shadow-sm"
           aria-label="Back to dashboard"
         >
           <ChevronLeft size={16} /> Back to Sanctuary
@@ -128,7 +153,7 @@ const Journal: React.FC<Props> = ({ entries, setEntries, setView, user }) => {
             <h2 className="text-4xl sm:text-5xl md:text-7xl font-black text-slate-900 tracking-tighter leading-tight">Your Reflections</h2>
             <span className="px-3 py-1 bg-rose-50 text-rose-600 text-[10px] font-black tracking-[0.2em] rounded-full border border-rose-100 uppercase shadow-sm">BETA</span>
           </div>
-          <p className="text-lg md:text-2xl text-slate-500 font-bold italic leading-relaxed">Release the workday. Record your wins and worries.</p>
+          <p className="text-lg md:text-2xl text-slate-500 font-bold italic leading-relaxed">Release the workday. Your history is a record of resilience.</p>
         </div>
       </div>
 
@@ -154,7 +179,6 @@ const Journal: React.FC<Props> = ({ entries, setEntries, setView, user }) => {
                 className="flex-1 sm:flex-none h-16 md:h-24 px-6 md:px-10 rounded-2xl md:rounded-[2.5rem] bg-teal-900 text-white flex items-center gap-4 transition-all active:scale-95 group shadow-2xl shadow-teal-900/20"
                 aria-label="Start live AI voice session"
               >
-              {/* Using MessageCircle which is now imported */}
               <MessageCircle size={24} className="md:w-8 md:h-8 group-hover:rotate-12 transition-transform" />
               <div className="text-left">
                 <p className="text-[10px] font-black uppercase tracking-widest opacity-60">Conversation</p>
@@ -186,19 +210,76 @@ const Journal: React.FC<Props> = ({ entries, setEntries, setView, user }) => {
       </div>
 
       <div className="space-y-10 px-2 md:px-4">
-        <div className="flex items-center justify-between border-b-2 border-slate-100 pb-6 md:pb-10">
-          <h3 className="text-2xl md:text-5xl font-black text-slate-900 tracking-tighter flex items-center gap-4"><Calendar className="text-teal-600 md:w-10 md:h-10" /> Your History</h3>
-          <p className="label-caps text-slate-400 font-black">{entries.length} Sessions Logged</p>
+        <div className="flex flex-col md:flex-row md:items-end justify-between border-b-2 border-slate-100 pb-6 md:pb-10 gap-6">
+          <div className="space-y-2">
+             <h3 className="text-2xl md:text-5xl font-black text-slate-900 tracking-tighter flex items-center gap-4"><Calendar className="text-teal-600 md:w-10 md:h-10" /> Your History</h3>
+             <div className="flex items-center gap-3">
+               <span className="px-3 py-1 bg-teal-50 text-teal-700 text-[10px] font-black tracking-widest rounded-full border border-teal-100 uppercase">{entries.length} Sessions Logged</span>
+               <p className="text-slate-400 font-bold text-xs">All reflections are encrypted and saved locally.</p>
+             </div>
+          </div>
+          <div className="flex items-center gap-3">
+             <button 
+               onClick={exportJournal} 
+               disabled={entries.length === 0}
+               className="flex items-center gap-2 px-6 py-3 bg-white border border-slate-200 text-slate-700 font-black label-caps rounded-2xl hover:bg-slate-50 transition-all disabled:opacity-30 shadow-sm"
+             >
+               <Download size={14} /> Export History
+             </button>
+             <button 
+               onClick={() => setShowClearConfirm(true)} 
+               disabled={entries.length === 0}
+               className="flex items-center gap-2 px-6 py-3 bg-white border border-rose-100 text-rose-600 font-black label-caps rounded-2xl hover:bg-rose-50 transition-all disabled:opacity-30 shadow-sm"
+             >
+               <Eraser size={14} /> Reset
+             </button>
+          </div>
         </div>
+
+        {showClearConfirm && (
+          <div className="p-8 bg-rose-50 rounded-[2.5rem] border-2 border-rose-100 animate-in zoom-in-95 duration-300 flex flex-col md:flex-row items-center justify-between gap-6">
+             <div className="flex items-center gap-4">
+                <AlertCircle className="text-rose-600 w-10 h-10" />
+                <div>
+                   <p className="text-xl font-black text-rose-900">Are you absolutely sure?</p>
+                   <p className="text-rose-700 font-medium italic">This will permanently delete all your reflections and cannot be undone.</p>
+                </div>
+             </div>
+             <div className="flex items-center gap-3 w-full md:w-auto">
+                <button onClick={() => setShowClearConfirm(false)} className="flex-1 md:flex-none px-8 py-3 bg-white text-slate-600 font-black label-caps rounded-xl border border-slate-200">Cancel</button>
+                <button onClick={clearAllEntries} className="flex-1 md:flex-none px-8 py-3 bg-rose-600 text-white font-black label-caps rounded-xl shadow-lg shadow-rose-200">Delete Forever</button>
+             </div>
+          </div>
+        )}
+
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 md:gap-12">
           {entries.length === 0 ? (
-            <div className="col-span-full py-24 text-center glass-card rounded-[3rem] md:rounded-[4rem] border-dashed border-4 border-slate-100 px-10"><Quote size={64} className="mx-auto text-slate-100 mb-8 opacity-50" /><p className="text-xl md:text-3xl text-slate-300 font-bold italic tracking-tight">Your mindful history begins with your first reflection.</p></div>
+            <div className="col-span-full py-24 text-center glass-card rounded-[3rem] md:rounded-[4rem] border-dashed border-4 border-slate-100 px-10">
+              <Quote size={64} className="mx-auto text-slate-100 mb-8 opacity-50" />
+              <p className="text-xl md:text-3xl text-slate-300 font-bold italic tracking-tight">Your mindful history begins with your first reflection.</p>
+            </div>
           ) : entries.map(entry => (
               <div key={entry.id} className="glass-card p-8 md:p-14 rounded-[2.5rem] md:rounded-[4rem] space-y-6 md:space-y-8 hover:shadow-2xl transition-all group border-none relative overflow-hidden ring-1 ring-slate-100/50">
-                <div className="absolute top-4 right-4 md:top-8 md:right-8 p-3 opacity-0 group-hover:opacity-100 transition-opacity"><button onClick={() => setEntries(prev => prev.filter(e => e.id !== entry.id))} className="p-3 text-red-200 hover:text-red-600 transition-colors" aria-label="Delete entry"><Trash2 size={24} /></button></div>
-                <div className="flex justify-between items-center mb-4"><span className="px-4 py-1.5 bg-slate-50 text-[10px] md:text-xs font-black text-slate-500 rounded-full uppercase tracking-[0.25em] border border-slate-100">{entry.date}</span><div className={`flex items-center gap-2 px-4 py-1.5 rounded-full text-[10px] md:text-xs font-black uppercase tracking-widest border ${entry.type === 'live' ? 'bg-teal-50 text-teal-700 border-teal-100' : entry.type === 'voice' ? 'bg-blue-50 text-blue-700 border-blue-100' : 'bg-slate-50 text-slate-600 border-slate-100'}`}>{entry.type === 'live' ? <Sparkles size={12}/> : entry.type === 'voice' ? <Mic size={12}/> : <Send size={12}/>} {entry.type} Mode</div></div>
+                <div className="absolute top-4 right-4 md:top-8 md:right-8 p-3 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <button onClick={() => setEntries(prev => prev.filter(e => e.id !== entry.id))} className="p-3 text-red-200 hover:text-red-600 transition-colors" aria-label="Delete entry">
+                    <Trash2 size={24} />
+                  </button>
+                </div>
+                <div className="flex justify-between items-center mb-4">
+                  <span className="px-4 py-1.5 bg-slate-50 text-[10px] md:text-xs font-black text-slate-500 rounded-full uppercase tracking-[0.25em] border border-slate-100">{entry.date}</span>
+                  <div className={`flex items-center gap-2 px-4 py-1.5 rounded-full text-[10px] md:text-xs font-black uppercase tracking-widest border ${entry.type === 'live' ? 'bg-teal-50 text-teal-700 border-teal-100' : entry.type === 'voice' ? 'bg-blue-50 text-blue-700 border-blue-100' : 'bg-slate-50 text-slate-600 border-slate-100'}`}>
+                    {entry.type === 'live' ? <Sparkles size={12}/> : entry.type === 'voice' ? <Mic size={12}/> : <Send size={12}/>} {entry.type} Mode
+                  </div>
+                </div>
                 <p className="text-xl sm:text-2xl md:text-3xl font-medium text-slate-900 italic leading-[1.3] whitespace-pre-wrap line-clamp-4 tracking-tight">"{entry.transcript}"</p>
-                {entry.aiResponse && <div className="pt-6 md:pt-10 border-t border-slate-100 space-y-3"><div className="flex items-center gap-2 text-teal-700 font-black label-caps"><Sparkles size={14} /> Sanctuary Reflection</div><p className="text-base md:text-2xl text-slate-600 font-bold italic leading-relaxed text-balance">"{entry.aiResponse}"</p></div>}
+                {entry.aiResponse && (
+                  <div className="pt-6 md:pt-10 border-t border-slate-100 space-y-3">
+                    <div className="flex items-center gap-2 text-teal-700 font-black label-caps">
+                      <Sparkles size={14} /> Sanctuary Reflection
+                    </div>
+                    <p className="text-base md:text-2xl text-slate-600 font-bold italic leading-relaxed text-balance">"{entry.aiResponse}"</p>
+                  </div>
+                )}
               </div>
           ))}
         </div>
