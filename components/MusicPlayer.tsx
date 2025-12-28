@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { AppView } from '../types';
 import { 
@@ -32,6 +33,7 @@ const TRACKS = [
   { id: 'r6', cat: 'relax', name: 'Raag Bageshri', genre: 'Midnight Soothing', icon: Moon, color: 'from-indigo-800 to-purple-950', url: 'GEN_RAAG_BAGESHRI', benefit: 'A soothing midnight melody. Evokes deep emotional reflection and sweet tranquility for the evening.' },
   { id: 'p1', cat: 'piano', name: 'Midnight Debug', genre: 'Felt Reflection', icon: Music, color: 'from-slate-950 to-indigo-950', url: 'GEN_PIANO_MIDNIGHT', benefit: 'Deep, felt-damped melodies designed to slow down your racing thoughts after a long sprint.' },
   { id: 'p2', cat: 'piano', name: 'Solar Syntax', genre: 'Bright Prelude', icon: Sun, color: 'from-amber-100 to-orange-200', url: 'GEN_PIANO_MORNING', benefit: 'High-frequency major scales to clear cognitive fog and reset your morning flow state.' },
+  // Fix: Removed extraneous '連合' character at the end of the string.
   { id: 'p3', cat: 'piano', name: 'Monsoon Logic', genre: 'Rainy Resonance', icon: Droplets, color: 'from-blue-200 to-slate-400', url: 'GEN_PIANO_RAIN', benefit: 'A steady rhythmic downpour paired with low-octave chords to drown out office chatter.' },
   { id: 'p4', cat: 'piano', name: 'Latency Void', genre: 'Ambient Grand', icon: Zap, color: 'from-slate-900 via-slate-800 to-slate-950', url: 'GEN_PIANO_VOID', benefit: 'Ultra-slow, drifting melodies that create a mental buffer between work and rest.' },
   { id: 'p6', cat: 'piano', name: 'Glass Focus', genre: 'Minimalist Zen', icon: Activity, color: 'from-blue-50 to-teal-100', url: 'GEN_PIANO_GLASS', benefit: 'Precision-timed, minimal notes for entering a state of high-performance flow.' },
@@ -737,38 +739,64 @@ const MusicPlayer: React.FC<Props> = ({ setView, setIsAnyTrackPlaying }) => {
       t_mainGain.connect(voiceGain);
       if (reverbNodeRef.current) t_mainGain.connect(reverbNodeRef.current);
 
-      const playBayan = (volume: number) => {
+      const playBayan = (volume: number, freqOffset = 0) => {
         const t = ctx.currentTime;
-        const osc = ctx.createOscillator();
-        osc.type = 'sine';
-        osc.frequency.setValueAtTime(safeFreq(60), t); // Base frequency for Bayan
+        const baseFreq = safeFreq(60 + freqOffset);
+
+        // Two slightly detuned sines for richer bass
+        const osc1 = ctx.createOscillator();
+        osc1.type = 'sine';
+        osc1.frequency.setValueAtTime(baseFreq, t);
+
+        const osc2 = ctx.createOscillator();
+        osc2.type = 'sine';
+        osc2.frequency.setValueAtTime(safeFreq(baseFreq * 1.005), t); // Slight detune
 
         const gain = ctx.createGain();
         gain.gain.setValueAtTime(0, t);
         gain.gain.linearRampToValueAtTime(safeGain(0.8 * volume), t + 0.02); // Fast attack
-        gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.6); // Medium decay
+        gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.8); // Slightly longer decay
 
         const pitchEnv = ctx.createOscillator();
         pitchEnv.type = 'sine';
         pitchEnv.frequency.setValueAtTime(safeFreq(4), t); // LFO for pitch sweep
         const pitchGain = ctx.createGain();
-        pitchGain.gain.setValueAtTime(safeGain(50), t); // Pitch sweep depth
-        pitchEnv.connect(pitchGain).connect(osc.frequency);
-        pitchEnv.start(t);
+        pitchGain.gain.setValueAtTime(safeGain(80), t); // Increased pitch sweep depth
+        pitchEnv.connect(pitchGain).connect(osc1.frequency);
+        pitchEnv.connect(pitchGain).connect(osc2.frequency); // Apply to both
 
-        osc.connect(gain).connect(t_mainGain);
-        osc.start(t);
-        osc.stop(t + 1);
-        pitchEnv.stop(t + 1);
-        extraNodes.push(osc, gain, pitchEnv, pitchGain);
+        // Low-pass filter with envelope
+        const filter = ctx.createBiquadFilter();
+        filter.type = 'lowpass';
+        filter.frequency.setValueAtTime(safeFreq(2000), t); // Start open
+        filter.frequency.exponentialRampToValueAtTime(safeFreq(100), t + 0.8); // Decay filter frequency
+        filter.Q.setValueAtTime(safeQ(2), t); // Slight resonance
+
+        osc1.connect(filter);
+        osc2.connect(filter);
+        filter.connect(gain).connect(t_mainGain);
+
+        osc1.start(t); osc2.start(t); pitchEnv.start(t);
+        osc1.stop(t + 1.2); osc2.stop(t + 1.2); pitchEnv.stop(t + 1.2); // Stop all related nodes
+        extraNodes.push(osc1, osc2, gain, pitchEnv, pitchGain, filter);
       };
 
-      const playDayan = (volume: number, sharp = false) => {
+      const playDayan = (volume: number, type: 'resonant' | 'sharp' | 'open') => {
         const t = ctx.currentTime;
+        const baseFreq = type === 'sharp' ? safeFreq(800) : safeFreq(400);
+
+        const gain = ctx.createGain();
+        gain.gain.setValueAtTime(0, t);
+        gain.gain.linearRampToValueAtTime(safeGain(0.7 * volume), t + 0.01); // Very fast attack
+        let decayTime = type === 'sharp' ? 0.2 : (type === 'open' ? 0.6 : 0.4);
+        gain.gain.exponentialRampToValueAtTime(0.0001, t + decayTime);
+
+        // Core tone
         const osc = ctx.createOscillator();
         osc.type = 'triangle';
-        osc.frequency.setValueAtTime(safeFreq(sharp ? 800 : 400), t); // Higher freq for Dayan
+        osc.frequency.setValueAtTime(baseFreq, t);
 
+        // Noise transient
         const noise = ctx.createBufferSource();
         const nBuf = ctx.createBuffer(1, ctx.sampleRate * 0.1, ctx.sampleRate);
         const nData = nBuf.getChannelData(0);
@@ -776,45 +804,85 @@ const MusicPlayer: React.FC<Props> = ({ setView, setIsAnyTrackPlaying }) => {
         noise.buffer = nBuf;
         
         const noiseFilter = ctx.createBiquadFilter();
-        noiseFilter.type = 'highpass';
-        noiseFilter.frequency.setValueAtTime(safeFreq(1000), t);
-
-        const gain = ctx.createGain();
-        gain.gain.setValueAtTime(0, t);
-        gain.gain.linearRampToValueAtTime(safeGain(0.7 * volume), t + 0.01); // Very fast attack
-        gain.gain.exponentialRampToValueAtTime(0.0001, t + (sharp ? 0.2 : 0.4)); // Fast decay
+        noiseFilter.type = 'bandpass';
+        noiseFilter.frequency.setValueAtTime(safeFreq(5000), t);
+        noiseFilter.Q.setValueAtTime(safeQ(type === 'sharp' ? 30 : 10), t); // Sharper Q for sharp hits
+        noiseFilter.frequency.exponentialRampToValueAtTime(safeFreq(2000), t + 0.1); // Quick sweep
+        
+        // High-frequency ping for sharp attacks
+        if (type === 'sharp') {
+          const pingOsc = ctx.createOscillator();
+          pingOsc.type = 'sine';
+          pingOsc.frequency.setValueAtTime(safeFreq(6000 + Math.random() * 2000), t);
+          const pingGain = ctx.createGain();
+          pingGain.gain.setValueAtTime(0, t);
+          pingGain.gain.linearRampToValueAtTime(safeGain(0.15 * volume), t + 0.005);
+          pingGain.gain.exponentialRampToValueAtTime(0.0001, t + 0.1);
+          pingOsc.connect(pingGain).connect(gain);
+          pingOsc.start(t);
+          pingOsc.stop(t + 0.2);
+          extraNodes.push(pingOsc, pingGain);
+        }
 
         osc.connect(gain);
         noise.connect(noiseFilter).connect(gain);
         gain.connect(t_mainGain);
 
         osc.start(t); noise.start(t);
-        osc.stop(t + 0.5); noise.stop(t + 0.5);
+        osc.stop(t + 0.8); noise.stop(t + 0.8);
         extraNodes.push(osc, noise, noiseFilter, gain);
       };
 
-      // Simple rhythmic pattern (e.g., tintal "Dha Dhin Dhin Dha")
-      const rhythmPattern = [
-        { type: 'bayan', time: 0, vol: 1 }, // Dha
-        { type: 'dayan', time: 0.5, vol: 0.7, sharp: true }, // Dhin
-        { type: 'dayan', time: 1.0, vol: 0.7, sharp: true }, // Dhin
-        { type: 'bayan', time: 1.5, vol: 1 }, // Dha
+      // Teentaal rhythmic pattern (16 beats, 4-beat cycles)
+      const rhythmPatternTeentaal = [
+        { type: 'dha', time: 0, vol: 1.0 },   // Dha
+        { type: 'dhin', time: 1, vol: 0.8 }, // Dhin
+        { type: 'dhin', time: 2, vol: 0.8 }, // Dhin
+        { type: 'dha', time: 3, vol: 1.0 }, // Dha
+
+        { type: 'dha', time: 4, vol: 0.9 },   // Dha
+        { type: 'dhin', time: 5, vol: 0.7 }, // Dhin
+        { type: 'dhin', time: 6, vol: 0.7 }, // Dhin
+        { type: 'dha', time: 7, vol: 0.9 }, // Dha
+
+        { type: 'na', time: 8, vol: 0.8 },   // Na
+        { type: 'tin', time: 9, vol: 0.6 }, // Tin
+        { type: 'tin', time: 10, vol: 0.6 }, // Tin
+        { type: 'na', time: 11, vol: 0.8 }, // Na
+
+        { type: 'dha', time: 12, vol: 1.0 },   // Dha
+        { type: 'dhin', time: 13, vol: 0.8 }, // Dhin
+        { type: 'dhin', time: 14, vol: 0.8 }, // Dhin
+        { type: 'dha', time: 15, vol: 1.0 }, // Dha
       ];
+
+      const beatDuration = 0.25; // Each sub-beat is 0.25 seconds for a meditative pace
+      const intervalLength = rhythmPatternTeentaal.length * beatDuration * 1000; // Total duration in ms (16 * 0.25 * 1000 = 4000ms = 4 seconds)
 
       const playRhythm = () => {
         const t = ctx.currentTime;
-        rhythmPattern.forEach(beat => {
-          const beatTime = t + beat.time * 0.5; // Speed up
-          if (beat.type === 'bayan') {
-            playBayan(beat.vol);
-          } else {
-            playDayan(beat.vol, beat.sharp);
+        rhythmPatternTeentaal.forEach(beat => {
+          const beatStartTime = t + beat.time * beatDuration;
+          switch (beat.type) {
+            case 'dha': // Bayan + Resonant Dayan
+              playBayan(beat.vol);
+              playDayan(beat.vol, 'resonant');
+              break;
+            case 'dhin': // Resonant Dayan
+              playDayan(beat.vol, 'resonant');
+              break;
+            case 'na': // Open Dayan
+              playDayan(beat.vol, 'open');
+              break;
+            case 'tin': // Sharp Dayan
+              playDayan(beat.vol, 'sharp');
+              break;
           }
         });
       };
       
-      const rhythmInterval = setInterval(playRhythm, 2000); // Repeat every 2 seconds
-      playRhythm();
+      const rhythmInterval = setInterval(playRhythm, intervalLength);
+      playRhythm(); // Play immediately on start
       extraNodes.push({ stop: () => clearInterval(rhythmInterval) });
       mainNode = t_mainGain;
     }
@@ -1050,7 +1118,7 @@ const MusicPlayer: React.FC<Props> = ({ setView, setIsAnyTrackPlaying }) => {
           <ChevronLeft size={16} /> Exit Sanctuary
         </button>
         <div className="flex items-center gap-3">
-           <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 bg-white/60 backdrop-blur-md rounded-lg border border-white shadow-sm">
+           <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 bg-white/60 backdrop-blur-3xl rounded-lg border border-white shadow-sm">
              <Timer size={14} className="text-teal-600" />
              <span className="text-[10px] font-black uppercase tracking-widest">{Math.floor(sessionTime/60)}:{(sessionTime%60).toString().padStart(2,'0')}</span>
            </div>
