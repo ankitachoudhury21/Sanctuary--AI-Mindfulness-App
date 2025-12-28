@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { JournalEntry, AppView, UserProfile } from '../types';
 import { 
   Mic, Square, Sparkles, Send, Quote, Heart, MessageCircle, 
-  Loader2, Trash2, Calendar, CheckCircle2, ChevronLeft, 
+  Loader2, Trash2, Calendar, CheckCircle2, ChevronLeft, ChevronRight, // ChevronRight no longer explicitly used, but kept in imports
   Download, Eraser, AlertCircle
 } from 'lucide-react';
 import { analyzeGratitudeJournal } from '../services/geminiService';
@@ -147,10 +147,7 @@ const Journal: React.FC<Props> = ({ entries, setEntries, setView, user }) => {
           aria-label="Back to dashboard"
         >
           <ChevronLeft size={16} className="group-hover:translate-x-[-2px] transition-transform" /> 
-          <div className="flex flex-col items-start leading-none">
-            <span className="text-xs md:text-sm font-black tracking-wide">({entries.length}) /></span>
-            <span className="label-caps">Back to Sanctuary</span>
-          </div>
+          <span className="label-caps">Back to Sanctuary</span>
         </button>
         <div className="text-center space-y-3 md:space-y-4 max-w-2xl mx-auto px-4">
           <div className="flex flex-col md:flex-row items-center justify-center gap-3">
