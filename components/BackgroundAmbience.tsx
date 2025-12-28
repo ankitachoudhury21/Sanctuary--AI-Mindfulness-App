@@ -48,10 +48,24 @@ const BackgroundAmbience: React.FC<Props> = ({ isActive, hasStarted }) => {
       ctx.resume().catch(e => console.warn("Background audio resume interrupted", e));
     }
     
+    // Robust helper for clamping values to valid AudioParam ranges
+    const safeValue = (value: number, min: number, max: number, defaultValue: number) => {
+      if (isNaN(value) || !isFinite(value)) {
+        return defaultValue;
+      }
+      return Math.max(min, Math.min(max, value));
+    };
+
+    const safeFreq = (value: number) => safeValue(value, 0.001, ctx.sampleRate / 2 - 1, 0.001);
+    const safeGain = (value: number) => safeValue(value, 0.0001, 100, 0.0001); // Max gain 100
+    const safeQ = (value: number) => safeValue(value, 0.0001, 1000, 0.0001); // Max Q 1000
+    const safePan = (value: number) => safeValue(value, -1, 1, 0); // Pan -1 to 1
+
+
     // Master Gain for the entire ambience track
     const masterGain = ctx.createGain();
     masterGain.gain.setValueAtTime(0, ctx.currentTime);
-    masterGain.gain.linearRampToValueAtTime(0.04, ctx.currentTime + 1.5); // Very subtle volume
+    masterGain.gain.linearRampToValueAtTime(safeGain(0.04), ctx.currentTime + 1.5); // Very subtle volume
     masterGain.connect(ctx.destination);
     gainNodeRef.current = masterGain; // Reference for volume control/fade out
 
@@ -61,7 +75,7 @@ const BackgroundAmbience: React.FC<Props> = ({ isActive, hasStarted }) => {
     if (!reverbNodeRef.current) {
       const reverb = ctx.createConvolver();
       const reverbGain = ctx.createGain();
-      reverbGain.gain.setValueAtTime(0.35, ctx.currentTime); // Wet signal mix
+      reverbGain.gain.setValueAtTime(safeGain(0.35), ctx.currentTime); // Wet signal mix
       reverb.connect(reverbGain).connect(masterGain); 
 
       // Generate a simple impulse response for a subtle, long decay
@@ -79,12 +93,12 @@ const BackgroundAmbience: React.FC<Props> = ({ isActive, hasStarted }) => {
     
     // Pre-reverb gain node to split dry/wet signal
     const preReverbGain = ctx.createGain();
-    preReverbGain.gain.setValueAtTime(1, ctx.currentTime); // Full dry signal
+    preReverbGain.gain.setValueAtTime(safeGain(1), ctx.currentTime); // Full dry signal
     preReverbGain.connect(masterGain); // Dry path to master
     if (reverbNodeRef.current) preReverbGain.connect(reverbNodeRef.current); // Wet path to reverb
 
     // Drone Layer (3 Sine wave oscillators with frequency & gain LFOs)
-    [40, 60, 90].forEach(freq => { 
+    [safeFreq(40), safeFreq(60), safeFreq(90)].forEach(freq => { 
       const osc = ctx.createOscillator();
       osc.type = 'sine'; 
       osc.frequency.setValueAtTime(freq, ctx.currentTime);
@@ -92,19 +106,19 @@ const BackgroundAmbience: React.FC<Props> = ({ isActive, hasStarted }) => {
       // Slow frequency LFO for subtle pitch variations
       const freqLfo = ctx.createOscillator();
       freqLfo.type = 'sine';
-      freqLfo.frequency.setValueAtTime(0.01 + Math.random() * 0.005, ctx.currentTime); 
+      freqLfo.frequency.setValueAtTime(safeFreq(0.01 + Math.random() * 0.005), ctx.currentTime); 
       const freqLfoGain = ctx.createGain();
-      freqLfoGain.gain.setValueAtTime(freq * 0.005, ctx.currentTime); // Small modulation depth
+      freqLfoGain.gain.setValueAtTime(safeGain(freq * 0.005), ctx.currentTime); // Small modulation depth
       freqLfo.connect(freqLfoGain).connect(osc.frequency);
       
       // Existing gain LFO for "pulse"
       const g = ctx.createGain();
       const lfo = ctx.createOscillator(); 
-      lfo.frequency.setValueAtTime(0.08 + Math.random() * 0.02, ctx.currentTime); 
+      lfo.frequency.setValueAtTime(safeFreq(0.08 + Math.random() * 0.02), ctx.currentTime); 
       const lfoG = ctx.createGain();
-      lfoG.gain.setValueAtTime(0.3, ctx.currentTime); 
+      lfoG.gain.setValueAtTime(safeGain(0.3), ctx.currentTime); 
       lfo.connect(lfoG).connect(g.gain);
-      g.gain.setValueAtTime(0.2 + Math.random() * 0.1, ctx.currentTime); // Base gain
+      g.gain.setValueAtTime(safeGain(0.2 + Math.random() * 0.1), ctx.currentTime); // Base gain
       
       osc.connect(g).connect(preReverbGain); // Connect to pre-reverb gain
       osc.start(); freqLfo.start(); lfo.start();
@@ -118,7 +132,7 @@ const BackgroundAmbience: React.FC<Props> = ({ isActive, hasStarted }) => {
     let lastOut = 0;
     for (let i = 0; i < bufferSize; i++) {
       const white = Math.random() * 2 - 1;
-      lastOut = (lastOut + (0.02 * white)) / 1.02; // Simple brownian filter approximation
+      lastOut = (lastOut + (safeGain(0.02) * white)) / 1.02; // Simple brownian filter approximation
       data[i] = lastOut * 4.0; 
     }
     const noiseSrc = ctx.createBufferSource();
@@ -127,34 +141,34 @@ const BackgroundAmbience: React.FC<Props> = ({ isActive, hasStarted }) => {
     // Lowpass filter for brown noise with LFO modulation
     const noiseLowpass = ctx.createBiquadFilter();
     noiseLowpass.type = 'lowpass';
-    noiseLowpass.frequency.setValueAtTime(800, ctx.currentTime); // Initial lowpass frequency
-    noiseLowpass.Q.setValueAtTime(1, ctx.currentTime);
+    noiseLowpass.frequency.setValueAtTime(safeFreq(800), ctx.currentTime); // Initial lowpass frequency
+    noiseLowpass.Q.setValueAtTime(safeQ(1), ctx.currentTime);
 
     const noiseFreqLfo = ctx.createOscillator();
     noiseFreqLfo.type = 'sine';
-    noiseFreqLfo.frequency.setValueAtTime(0.008, ctx.currentTime); // Very slow LFO for filter freq
+    noiseFreqLfo.frequency.setValueAtTime(safeFreq(0.008), ctx.currentTime); // Very slow LFO for filter freq
     const noiseFreqLfoG = ctx.createGain();
-    noiseFreqLfoG.gain.setValueAtTime(600, ctx.currentTime); // Modulation depth
+    noiseFreqLfoG.gain.setValueAtTime(safeGain(600), ctx.currentTime); // Modulation depth
     noiseFreqLfo.connect(noiseFreqLfoG).connect(noiseLowpass.frequency);
 
     // Gain for noise with slow LFO
     const noiseGain = ctx.createGain();
     const noiseGainLfo = ctx.createOscillator();
     noiseGainLfo.type = 'sine';
-    noiseGainLfo.frequency.setValueAtTime(0.05, ctx.currentTime); // Slow volume LFO
+    noiseGainLfo.frequency.setValueAtTime(safeFreq(0.05), ctx.currentTime); // Slow volume LFO
     const noiseGainLfoG = ctx.createGain();
-    noiseGainLfoG.gain.setValueAtTime(0.03, ctx.currentTime); // Modulation depth
+    noiseGainLfoG.gain.setValueAtTime(safeGain(0.03), ctx.currentTime); // Modulation depth
     noiseGainLfo.connect(noiseGainLfoG).connect(noiseGain.gain);
-    noiseGain.gain.setValueAtTime(0.08, ctx.currentTime); // Base noise gain
+    noiseGain.gain.setValueAtTime(safeGain(0.08), ctx.currentTime); // Base noise gain
 
     // Stereo Panner with LFO
     const panner = ctx.createStereoPanner();
-    panner.pan.setValueAtTime(0, ctx.currentTime); // Start center
+    panner.pan.setValueAtTime(safePan(0), ctx.currentTime); // Start center
     const pannerLfo = ctx.createOscillator();
     pannerLfo.type = 'sine';
-    pannerLfo.frequency.setValueAtTime(0.005, ctx.currentTime); // Very slow stereo panning
+    pannerLfo.frequency.setValueAtTime(safeFreq(0.005), ctx.currentTime); // Very slow stereo panning
     const pannerLfoG = ctx.createGain();
-    pannerLfoG.gain.setValueAtTime(0.7, ctx.currentTime); // Wide pan range
+    pannerLfoG.gain.setValueAtTime(safeGain(0.7), ctx.currentTime); // Wide pan range
     pannerLfo.connect(pannerLfoG).connect(panner.pan);
 
     noiseSrc.connect(noiseLowpass).connect(noiseGain).connect(panner).connect(preReverbGain);

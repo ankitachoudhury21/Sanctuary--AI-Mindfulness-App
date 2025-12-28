@@ -18,6 +18,7 @@ const CATEGORIES = [
   { id: 'relax', label: 'Relax', icon: Wind, color: 'text-emerald-600', bg: 'bg-emerald-50' },
   { id: 'sleep', label: 'Sleep', icon: Moon, color: 'text-indigo-600', bg: 'bg-indigo-50' },
   { id: 'piano', label: 'Piano', icon: Music, color: 'text-amber-600', bg: 'bg-amber-50' },
+  { id: 'classical', label: 'Classical', icon: Music, color: 'text-rose-600', bg: 'bg-rose-50' },
   { id: 'all', label: 'All', icon: Activity, color: 'text-slate-600', bg: 'bg-slate-50' },
 ];
 
@@ -25,7 +26,7 @@ const TRACKS = [
   { id: 'f7', cat: 'focus', name: 'Raag Bilawal', genre: 'Morning Focus', icon: Sun, color: 'from-yellow-200 to-orange-400', url: 'GEN_RAAG_BILAWAL', benefit: 'The quintessential morning raga. Bright, uplifting major scales to energize your focus.' },
   { id: 'f4', cat: 'focus', name: 'Raag Yaman', genre: 'Deep Flow', icon: Music, color: 'from-orange-100 to-amber-600', url: 'GEN_RAAG_YAMAN', benefit: 'The raga of peace. Lydian melodies that promote creative devotion and steady attention.' },
   { id: 'f1', cat: 'focus', name: 'Deep Work', genre: 'Alpha Waves', icon: WavesIcon, color: 'from-blue-50 to-teal-300', url: 'GEN_CALM_WAVES', benefit: '10Hz Alpha entrainment layered with brown noise to drown out office distractions.' },
-  { id: 'm7', cat: 'meditate', name: 'Ancient Temple', genre: 'Bronze Zen', icon: Brain, color: 'from-amber-200 to-yellow-600', url: 'GEN_BRONZE_ZEN', benefit: 'Multi-layered Tibetan singing bowls with inharmonic overtones and deep grounding drones.' },
+  { id: 'm7', cat: 'meditate', name: 'Ancient Temple', genre: 'Bronze Zen', icon: Brain, color: 'from-amber-220 to-yellow-600', url: 'GEN_BRONZE_ZEN', benefit: 'Multi-layered Tibetan singing bowls with inharmonic overtones and deep grounding drones.' },
   { id: 'm8', cat: 'meditate', name: 'Forest Breath', genre: 'Procedural Flute', icon: Wind, color: 'from-green-100 to-teal-200', url: 'GEN_FLUTE_MEDITATE', benefit: 'Breathtaking Shakuhachi melodies synchronized with procedural birds and rustling leaves.' },
   { id: 'm5', cat: 'meditate', name: 'Celestial Voyage', genre: 'Astro-Ambient', icon: Stars, color: 'from-slate-900 via-indigo-950 to-purple-900', url: 'GEN_SPACE_ASTRO', benefit: 'Ethereal cosmic melodies and deep stardust frequencies for astral projection.' },
   { id: 'r6', cat: 'relax', name: 'Raag Bageshri', genre: 'Midnight Soothing', icon: Moon, color: 'from-indigo-800 to-purple-950', url: 'GEN_RAAG_BAGESHRI', benefit: 'A soothing midnight melody. Evokes deep emotional reflection and sweet tranquility for the evening.' },
@@ -38,6 +39,11 @@ const TRACKS = [
   { id: 'r2', cat: 'relax', name: 'Raag Darbari', genre: 'Regal Night', icon: Moon, color: 'from-indigo-900 to-blue-950', url: 'GEN_RAAG_DARBARI', benefit: 'Grave, regal, and deeply grounding melodies for late-night reflection.' },
   { id: 's1', cat: 'sleep', name: 'Lunar Tide', genre: 'Deep Ocean Delta', icon: WavesIcon, color: 'from-[#0b1d2e] to-[#1e3a8a]', url: 'GEN_SLEEP_WAVES', benefit: 'Warm, low-pass ocean frequencies. No high-end noise, just the heavy, rhythmic breath of the sea.' },
   { id: 's4', cat: 'sleep', name: 'Velvet Rain', genre: 'Forest Mist', icon: Droplets, color: 'from-emerald-900 to-slate-950', url: 'GEN_SLEEP_RAINFOREST', benefit: 'Soft tropical rain filtered through thick forest leaves. Strictly low-frequency textures for deep rest.' },
+  // New Classical Tracks
+  { id: 'sitar1', cat: 'classical', name: 'Sitar Raga: Dawn Serenity', genre: 'Indian Classical', icon: Music, color: 'from-orange-400 to-red-600', url: 'GEN_SITAR_DAWN', benefit: 'Awaken with the soulful melodies of sitar, fostering inner peace and focus.' },
+  { id: 'tabla1', cat: 'classical', name: 'Tabla Taal: Rhythmic Flow', genre: 'Indian Percussion', icon: Music, color: 'from-amber-800 to-gray-600', url: 'GEN_TABLA_RHYTHM', benefit: 'Ground yourself with the intricate and meditative rhythms of the tabla.' },
+  { id: 'guitar1', cat: 'classical', name: 'Classical Guitar: Forest Echoes', genre: 'Acoustic Serenade', icon: Music, color: 'from-green-400 to-blue-600', url: 'GEN_GUITAR_FOREST', benefit: 'Gentle classical guitar refrains that evoke calm forest landscapes.' },
+  { id: 'harmonium1', cat: 'classical', name: 'Harmonium Drone: Inner Sanctum', genre: 'Sustained Harmony', icon: Music, color: 'from-purple-400 to-pink-600', url: 'GEN_HARMONIUM_SANCTUM', benefit: 'Immerse in deep, sustained harmonies for profound meditation and relaxation.' },
 ];
 
 const CROSSFADE_TIME = 2.5; 
@@ -139,6 +145,21 @@ const MusicPlayer: React.FC<Props> = ({ setView, setIsAnyTrackPlaying }) => {
       return;
     }
     const now = ctx.currentTime;
+
+    // Robust helper for clamping values to valid AudioParam ranges
+    const safeValue = (value: number, min: number, max: number, defaultValue: number) => {
+      if (isNaN(value) || !isFinite(value)) {
+        return defaultValue;
+      }
+      return Math.max(min, Math.min(max, value));
+    };
+
+    const safeFreq = (value: number) => safeValue(value, 0.001, ctx.sampleRate / 2 - 1, 0.001);
+    const safeGain = (value: number) => safeValue(value, 0.0001, 100, 0.0001); // Max gain 100
+    const safeQ = (value: number) => safeValue(value, 0.0001, 1000, 0.0001); // Max Q 1000
+    const safePan = (value: number) => safeValue(value, -1, 1, 0); // Pan -1 to 1
+    const safeDetune = (value: number) => safeValue(value, -12000, 12000, 0); // Detune +/- 12000 cents
+
     const voiceGain = ctx.createGain();
     voiceGain.gain.setValueAtTime(0, now);
     voiceGain.gain.linearRampToValueAtTime(1, now + CROSSFADE_TIME);
@@ -156,12 +177,12 @@ const MusicPlayer: React.FC<Props> = ({ setView, setIsAnyTrackPlaying }) => {
       r_mainGain.connect(voiceGain);
       if (reverbNodeRef.current) r_mainGain.connect(reverbNodeRef.current);
 
-      const tonic = (isDarbari || isBageshri) ? 110 : (isYaman ? 146.83 : 130.81);
+      const tonic = (isDarbari || isBageshri) ? safeFreq(110) : (isYaman ? safeFreq(146.83) : safeFreq(130.81));
       
       // Drone strings: Bilawal has a brighter Sa-Pa-Sa' tuning with high Chikari plucks
       const strings = isBilawal 
-        ? [tonic * 0.75, tonic, tonic * 1.5, tonic * 2.0, tonic * 4.0] 
-        : [(isBageshri ? tonic * 1.334 : tonic * 1.5), tonic, tonic, tonic * 0.5, tonic * 0.25];
+        ? [safeFreq(tonic * 0.75), tonic, safeFreq(tonic * 1.5), safeFreq(tonic * 2.0), safeFreq(tonic * 4.0)] 
+        : [safeFreq((isBageshri ? tonic * 1.334 : tonic * 1.5)), tonic, tonic, safeFreq(tonic * 0.5), safeFreq(tonic * 0.25)];
 
       strings.forEach((freq, idx) => {
         const osc = ctx.createOscillator();
@@ -171,18 +192,18 @@ const MusicPlayer: React.FC<Props> = ({ setView, setIsAnyTrackPlaying }) => {
         const javari = ctx.createBiquadFilter();
         javari.type = 'bandpass';
         // Brighter 'buzzing' bridge harmonics for Bilawal
-        javari.frequency.setValueAtTime(isBilawal ? 1800 + (idx * 350) : 1200 + (idx * 200), now);
-        javari.Q.setValueAtTime(isBilawal ? 15 : 8, now);
+        javari.frequency.setValueAtTime(safeFreq(isBilawal ? 1800 + (idx * 350) : 1200 + (idx * 200)), now);
+        javari.Q.setValueAtTime(safeQ(isBilawal ? 15 : 8), now);
         
         const lp = ctx.createBiquadFilter();
         lp.type = 'lowpass';
-        lp.frequency.setValueAtTime(isBilawal ? 900 : 400, now);
+        lp.frequency.setValueAtTime(safeFreq(isBilawal ? 900 : 400), now);
         
         const sg = ctx.createGain();
         sg.gain.setValueAtTime(0, now);
         
         const pan = ctx.createStereoPanner();
-        pan.pan.setValueAtTime((idx - 2) * 0.4, now);
+        pan.pan.setValueAtTime(safePan((idx - 2) * 0.4), now);
         
         // Pluck cycle: Bilawal follows a tighter, more rhythmic 'Chikari' pulse
         const pluckInterval = isBilawal ? 3.8 : 4.5; 
@@ -191,7 +212,7 @@ const MusicPlayer: React.FC<Props> = ({ setView, setIsAnyTrackPlaying }) => {
           sg.gain.cancelScheduledValues(t);
           sg.gain.setValueAtTime(0, t);
           // Sharper attack for Bilawal plucks
-          sg.gain.linearRampToValueAtTime(isBilawal ? 0.12 : 0.07, t + (isBilawal ? 0.04 : 0.1));
+          sg.gain.linearRampToValueAtTime(safeGain(isBilawal ? 0.12 : 0.07), t + (isBilawal ? 0.04 : 0.1));
           sg.gain.exponentialRampToValueAtTime(0.0001, t + pluckInterval - 0.1);
         };
         const intervalId = setInterval(pluck, pluckInterval * 1000);
@@ -219,7 +240,7 @@ const MusicPlayer: React.FC<Props> = ({ setView, setIsAnyTrackPlaying }) => {
         
         const interval = activeScale[intervalIndex % activeScale.length];
         const octave = isBilawal ? (Math.random() > 0.4 ? 2 : 1) : (Math.random() > 0.8 ? 2 : 1);
-        const freq = tonic * Math.pow(2, (interval + octave * 12) / 12);
+        const freq = safeFreq(tonic * Math.pow(2, (interval + octave * 12) / 12));
         
         const mOsc = ctx.createOscillator();
         // Lead texture: Sitar-like filtered triangle for Bilawal
@@ -228,7 +249,7 @@ const MusicPlayer: React.FC<Props> = ({ setView, setIsAnyTrackPlaying }) => {
         
         const mFilter = ctx.createBiquadFilter();
         mFilter.type = 'lowpass';
-        mFilter.frequency.setValueAtTime(isBilawal ? 2800 : (isBageshri ? 1000 : 800), t);
+        mFilter.frequency.setValueAtTime(safeFreq(isBilawal ? 2800 : (isBageshri ? 1000 : 800)), t);
         
         const mGain = ctx.createGain();
         mGain.gain.setValueAtTime(0, t);
@@ -236,20 +257,20 @@ const MusicPlayer: React.FC<Props> = ({ setView, setIsAnyTrackPlaying }) => {
         // Fast, energetic articulation for Bilawal morning focus
         const attack = isBilawal ? 0.08 : (isBageshri ? 0.6 : 0.2);
         const decay = isBilawal ? 3.2 : (isBageshri ? 5.0 : 4.0);
-        mGain.gain.linearRampToValueAtTime(isBilawal ? 0.18 : 0.13, t + attack);
+        mGain.gain.linearRampToValueAtTime(safeGain(isBilawal ? 0.18 : 0.13), t + attack);
         mGain.gain.exponentialRampToValueAtTime(0.0001, t + decay);
 
         // Slide logic: Bilawal often has 'straight' notes but with crystalline vibrato
         if (Math.random() > 0.6 && isBilawal) {
           const nextInt = activeScale[(intervalIndex + 1) % activeScale.length];
-          const nextFreq = tonic * Math.pow(2, (nextInt + octave * 12) / 12);
+          const nextFreq = safeFreq(tonic * Math.pow(2, (nextInt + octave * 12) / 12));
           mOsc.frequency.exponentialRampToValueAtTime(nextFreq, t + 0.8);
         }
 
         const vib = ctx.createOscillator();
-        vib.frequency.setValueAtTime(isBilawal ? 6.8 : 5.5, t); 
+        vib.frequency.setValueAtTime(safeFreq(isBilawal ? 6.8 : 5.5), t); 
         const vibG = ctx.createGain();
-        vibG.gain.setValueAtTime(freq * (isBilawal ? 0.006 : 0.012), t);
+        vibG.gain.setValueAtTime(safeGain(freq * (isBilawal ? 0.006 : 0.012)), t);
         vib.connect(vibG).connect(mOsc.frequency);
         vib.start();
 
@@ -276,10 +297,10 @@ const MusicPlayer: React.FC<Props> = ({ setView, setIsAnyTrackPlaying }) => {
         ratios.forEach((ratio, i) => {
           const osc = ctx.createOscillator();
           osc.type = 'sine';
-          osc.frequency.setValueAtTime(fundamental * ratio, t);
+          osc.frequency.setValueAtTime(safeFreq(fundamental * ratio), t);
           const g = ctx.createGain();
           g.gain.setValueAtTime(0, t);
-          g.gain.linearRampToValueAtTime((0.15 / (i + 1)) * force, t + 0.1);
+          g.gain.linearRampToValueAtTime(safeGain((0.15 / (i + 1)) * force), t + 0.1);
           g.gain.exponentialRampToValueAtTime(0.0001, t + 12.0 - (i * 2));
           osc.connect(g).connect(b_mainGain);
           osc.start(t); osc.stop(t + 13);
@@ -288,10 +309,10 @@ const MusicPlayer: React.FC<Props> = ({ setView, setIsAnyTrackPlaying }) => {
       };
 
       const bowlInterval = setInterval(() => {
-        const root = [110, 164.81, 196][Math.floor(Math.random() * 3)];
-        playSingingBowl(root, 0.6 + Math.random() * 0.4);
+        const root = [safeFreq(110), safeFreq(164.81), safeFreq(196)][Math.floor(Math.random() * 3)];
+        playSingingBowl(root, safeGain(0.6 + Math.random() * 0.4));
       }, 8000);
-      playSingingBowl(110, 0.8);
+      playSingingBowl(safeFreq(110), safeGain(0.8));
       extraNodes.push({ stop: () => clearInterval(bowlInterval) });
 
       // Rim-rubbing texture
@@ -301,10 +322,15 @@ const MusicPlayer: React.FC<Props> = ({ setView, setIsAnyTrackPlaying }) => {
       for(let i=0; i<nBuf.length; i++) nData[i] = Math.random() * 2 - 1;
       noise.buffer = nBuf; noise.loop = true;
       const bp = ctx.createBiquadFilter();
-      bp.type = 'bandpass'; bp.frequency.setValueAtTime(440, now); bp.Q.setValueAtTime(50, now);
-      const rimLfo = ctx.createOscillator(); rimLfo.frequency.setValueAtTime(0.1, now);
-      const rimLfoG = ctx.createGain(); rimLfoG.gain.setValueAtTime(0.05, now);
-      const rimGain = ctx.createGain(); rimGain.gain.setValueAtTime(0.05, now);
+      bp.type = 'bandpass'; 
+      bp.frequency.setValueAtTime(safeFreq(440), now); 
+      bp.Q.setValueAtTime(safeQ(50), now);
+      const rimLfo = ctx.createOscillator(); 
+      rimLfo.frequency.setValueAtTime(safeFreq(0.1), now);
+      const rimLfoG = ctx.createGain(); 
+      rimLfoG.gain.setValueAtTime(safeGain(0.05), now);
+      const rimGain = ctx.createGain(); 
+      rimGain.gain.setValueAtTime(safeGain(0.05), now);
       rimLfo.connect(rimLfoG).connect(rimGain.gain);
       noise.connect(bp).connect(rimGain).connect(b_mainGain);
       noise.start(); rimLfo.start();
@@ -321,7 +347,7 @@ const MusicPlayer: React.FC<Props> = ({ setView, setIsAnyTrackPlaying }) => {
         const t = ctx.currentTime;
         const scale = [0, 3, 5, 7, 10, 12];
         const root = 220; // A3
-        const freq = root * Math.pow(2, scale[Math.floor(Math.random() * scale.length)] / 12);
+        const freq = safeFreq(root * Math.pow(2, scale[Math.floor(Math.random() * scale.length)] / 12));
         
         const osc = ctx.createOscillator();
         osc.type = 'sine';
@@ -334,23 +360,24 @@ const MusicPlayer: React.FC<Props> = ({ setView, setIsAnyTrackPlaying }) => {
         for(let i=0; i<nBuf.length; i++) nData[i] = Math.random() * 2 - 1;
         noise.buffer = nBuf;
         const nLp = ctx.createBiquadFilter();
-        nLp.type = 'lowpass'; nLp.frequency.setValueAtTime(freq * 2, t);
+        nLp.type = 'lowpass'; 
+        nLp.frequency.setValueAtTime(safeFreq(freq * 2), t);
         const nG = ctx.createGain();
         nG.gain.setValueAtTime(0, t);
-        nG.gain.linearRampToValueAtTime(0.08, t + 0.1);
+        nG.gain.linearRampToValueAtTime(safeGain(0.08), t + 0.1);
         nG.gain.exponentialRampToValueAtTime(0.0001, t + 0.8);
         noise.connect(nLp).connect(nG).connect(f_mainGain);
         noise.start(t);
         
         const g = ctx.createGain();
         g.gain.setValueAtTime(0, t);
-        g.gain.linearRampToValueAtTime(0.15, t + 1.2);
+        g.gain.linearRampToValueAtTime(safeGain(0.15), t + 1.2);
         g.gain.exponentialRampToValueAtTime(0.0001, t + 5.0);
         
         const vib = ctx.createOscillator();
-        vib.frequency.setValueAtTime(4 + Math.random(), t);
+        vib.frequency.setValueAtTime(safeFreq(4 + Math.random()), t);
         const vibG = ctx.createGain();
-        vibG.gain.setValueAtTime(freq * 0.02, t);
+        vibG.gain.setValueAtTime(safeGain(freq * 0.02), t);
         vib.connect(vibG).connect(osc.frequency);
         vib.start(t);
 
@@ -369,12 +396,12 @@ const MusicPlayer: React.FC<Props> = ({ setView, setIsAnyTrackPlaying }) => {
         const bt = ctx.currentTime;
         const birdOsc = ctx.createOscillator();
         birdOsc.type = 'sine';
-        const startF = 3000 + Math.random() * 2000;
+        const startF = safeFreq(3000 + Math.random() * 2000);
         birdOsc.frequency.setValueAtTime(startF, bt);
-        birdOsc.frequency.exponentialRampToValueAtTime(startF + 500, bt + 0.1);
+        birdOsc.frequency.exponentialRampToValueAtTime(safeFreq(startF + 500), bt + 0.1);
         const birdG = ctx.createGain();
         birdG.gain.setValueAtTime(0, bt);
-        birdG.gain.linearRampToValueAtTime(0.015, bt + 0.05);
+        birdG.gain.linearRampToValueAtTime(safeGain(0.015), bt + 0.05);
         birdG.gain.exponentialRampToValueAtTime(0.0001, bt + 0.2);
         birdOsc.connect(birdG).connect(f_mainGain);
         birdOsc.start(bt); birdOsc.stop(bt + 0.3);
@@ -390,39 +417,39 @@ const MusicPlayer: React.FC<Props> = ({ setView, setIsAnyTrackPlaying }) => {
       if (reverbNodeRef.current) s_mainGain.connect(reverbNodeRef.current);
       const hum = ctx.createOscillator();
       hum.type = 'sine';
-      hum.frequency.setValueAtTime(32.7, now);
+      hum.frequency.setValueAtTime(safeFreq(32.7), now);
       const humG = ctx.createGain();
       const humLfo = ctx.createOscillator();
-      humLfo.frequency.setValueAtTime(0.05, now);
+      humLfo.frequency.setValueAtTime(safeFreq(0.05), now);
       const humLfoG = ctx.createGain();
-      humLfoG.gain.setValueAtTime(0.05, now);
+      humLfoG.gain.setValueAtTime(safeGain(0.05), now);
       humLfo.connect(humLfoG).connect(humG.gain);
-      humG.gain.setValueAtTime(0.12, now);
+      humG.gain.setValueAtTime(safeGain(0.12), now);
       hum.connect(humG).connect(s_mainGain);
       hum.start(); humLfo.start();
       extraNodes.push(hum, humG, humLfo, humLfoG);
-      const nebulaFreqs = [130.81, 164.81, 196.00, 246.94, 329.63];
+      const nebulaFreqs = [safeFreq(130.81), safeFreq(164.81), safeFreq(196.00), safeFreq(246.94), safeFreq(329.63)];
       nebulaFreqs.forEach((f, i) => {
         const osc = ctx.createOscillator();
         osc.type = 'triangle';
         osc.frequency.setValueAtTime(f, now);
         const detuneLfo = ctx.createOscillator();
-        detuneLfo.frequency.setValueAtTime(0.02 + i * 0.005, now);
+        detuneLfo.frequency.setValueAtTime(safeFreq(0.02 + i * 0.005), now);
         const detuneG = ctx.createGain();
-        detuneG.gain.setValueAtTime(5, now);
+        detuneG.gain.setValueAtTime(safeGain(5), now);
         detuneLfo.connect(detuneG).connect(osc.detune);
         const g = ctx.createGain();
         const lfo = ctx.createOscillator();
-        lfo.frequency.setValueAtTime(0.03 + (i * 0.01), now);
+        lfo.frequency.setValueAtTime(safeFreq(0.03 + (i * 0.01)), now);
         const lfoG = ctx.createGain();
-        lfoG.gain.setValueAtTime(0.03, now);
+        lfoG.gain.setValueAtTime(safeGain(0.03), now);
         lfo.connect(lfoG).connect(g.gain);
-        g.gain.setValueAtTime(0.05, now);
+        g.gain.setValueAtTime(safeGain(0.05), now);
         const pan = ctx.createStereoPanner();
-        pan.pan.setValueAtTime(Math.sin(i), now);
+        pan.pan.setValueAtTime(safePan(Math.sin(i)), now);
         const lp = ctx.createBiquadFilter();
         lp.type = 'lowpass';
-        lp.frequency.setValueAtTime(600 + i * 100, now);
+        lp.frequency.setValueAtTime(safeFreq(600 + i * 100), now);
         osc.connect(lp).connect(g).connect(pan).connect(s_mainGain);
         osc.start(); lfo.start(); detuneLfo.start();
         extraNodes.push(osc, lp, g, lfo, lfoG, pan, detuneLfo, detuneG);
@@ -434,14 +461,14 @@ const MusicPlayer: React.FC<Props> = ({ setView, setIsAnyTrackPlaying }) => {
       noiseSrc.buffer = noiseBuffer; noiseSrc.loop = true;
       const bp = ctx.createBiquadFilter();
       bp.type = 'bandpass';
-      bp.frequency.setValueAtTime(1000, now);
+      bp.frequency.setValueAtTime(safeFreq(1000), now);
       const bpLfo = ctx.createOscillator();
-      bpLfo.frequency.setValueAtTime(0.04, now);
+      bpLfo.frequency.setValueAtTime(safeFreq(0.04), now);
       const bpLfoG = ctx.createGain();
-      bpLfoG.gain.setValueAtTime(600, now);
+      bpLfoG.gain.setValueAtTime(safeGain(600), now);
       bpLfo.connect(bpLfoG).connect(bp.frequency);
       const nGain = ctx.createGain();
-      nGain.gain.setValueAtTime(0.04, now);
+      nGain.gain.setValueAtTime(safeGain(0.04), now);
       noiseSrc.connect(bp).connect(nGain).connect(s_mainGain);
       noiseSrc.start(); bpLfo.start();
       extraNodes.push(noiseSrc, bp, bpLfo, bpLfoG, nGain);
@@ -449,13 +476,13 @@ const MusicPlayer: React.FC<Props> = ({ setView, setIsAnyTrackPlaying }) => {
         const t = ctx.currentTime;
         const pOsc = ctx.createOscillator();
         pOsc.type = 'sine';
-        pOsc.frequency.setValueAtTime(2000 + Math.random() * 3000, t);
+        pOsc.frequency.setValueAtTime(safeFreq(2000 + Math.random() * 3000), t);
         const pG = ctx.createGain();
         pG.gain.setValueAtTime(0, t);
-        pG.gain.linearRampToValueAtTime(0.015, t + 0.1);
+        pG.gain.linearRampToValueAtTime(safeGain(0.015), t + 0.1);
         pG.gain.exponentialRampToValueAtTime(0.0001, t + 6.0);
         const pPan = ctx.createStereoPanner();
-        pPan.pan.setValueAtTime(Math.random() * 2 - 1, t);
+        pPan.pan.setValueAtTime(safePan(Math.random() * 2 - 1), t);
         pOsc.connect(pG).connect(pPan).connect(s_mainGain);
         pOsc.start(t); pOsc.stop(t + 6.5);
       };
@@ -475,7 +502,7 @@ const MusicPlayer: React.FC<Props> = ({ setView, setIsAnyTrackPlaying }) => {
       let lastOut = 0;
       for (let i = 0; i < bufferSize; i++) {
         const white = Math.random() * 2 - 1;
-        lastOut = (lastOut + (0.02 * white)) / 1.02; // Simple brownian filter
+        lastOut = (lastOut + (safeGain(0.02) * white)) / 1.02; // Simple brownian filter
         data[i] = lastOut * 4.0;
       }
       
@@ -485,23 +512,23 @@ const MusicPlayer: React.FC<Props> = ({ setView, setIsAnyTrackPlaying }) => {
       // Strict Low-pass filter (no high notes)
       const lp = ctx.createBiquadFilter();
       lp.type = 'lowpass';
-      lp.frequency.setValueAtTime(150, now);
-      lp.Q.setValueAtTime(1, now);
+      lp.frequency.setValueAtTime(safeFreq(150), now);
+      lp.Q.setValueAtTime(safeQ(1), now);
       
       // Rhythmic gain LFO for breathing effect
       const bLfo = ctx.createOscillator();
-      bLfo.frequency.setValueAtTime(0.08, now); // 12.5s cycle
+      bLfo.frequency.setValueAtTime(safeFreq(0.08), now); // 12.5s cycle
       const bLfoG = ctx.createGain();
-      bLfoG.gain.setValueAtTime(0.3, now);
+      bLfoG.gain.setValueAtTime(safeGain(0.3), now);
       bLfo.connect(bLfoG).connect(w_mainGain.gain);
-      w_mainGain.gain.setValueAtTime(0.4, now);
+      w_mainGain.gain.setValueAtTime(safeGain(0.4), now);
       
       // Deep sub-bass pulse
       const sub = ctx.createOscillator();
       sub.type = 'sine';
-      sub.frequency.setValueAtTime(40, now);
+      sub.frequency.setValueAtTime(safeFreq(40), now);
       const subG = ctx.createGain();
-      subG.gain.setValueAtTime(0.15, now);
+      subG.gain.setValueAtTime(safeGain(0.15), now);
       sub.connect(subG).connect(w_mainGain);
       sub.start();
       
@@ -521,22 +548,22 @@ const MusicPlayer: React.FC<Props> = ({ setView, setIsAnyTrackPlaying }) => {
       let lo = 0;
       for (let i = 0; i < bufferSize; i++) {
         const w = Math.random() * 2 - 1;
-        lo = (lo + (0.025 * w)) / 1.025;
+        lo = (lo + (safeGain(0.025) * w)) / 1.025;
         data[i] = lo * 3.0;
       }
       const rSrc = ctx.createBufferSource();
       rSrc.buffer = buffer; rSrc.loop = true;
       const rLp = ctx.createBiquadFilter();
       rLp.type = 'lowpass'; 
-      rLp.frequency.setValueAtTime(220, now); // Low only
+      rLp.frequency.setValueAtTime(safeFreq(220), now); // Low only
       
       // Volume LFO for "intensity shifts" in rain
       const rainLfo = ctx.createOscillator();
-      rainLfo.frequency.setValueAtTime(0.04, now);
+      rainLfo.frequency.setValueAtTime(safeFreq(0.04), now);
       const rainLfoG = ctx.createGain();
-      rainLfoG.gain.setValueAtTime(0.15, now);
+      rainLfoG.gain.setValueAtTime(safeGain(0.15), now);
       rainLfo.connect(rainLfoG).connect(r_mainGain.gain);
-      r_mainGain.gain.setValueAtTime(0.4, now);
+      r_mainGain.gain.setValueAtTime(safeGain(0.4), now);
       
       rSrc.connect(rLp).connect(r_mainGain);
       rSrc.start(); rainLfo.start();
@@ -547,10 +574,10 @@ const MusicPlayer: React.FC<Props> = ({ setView, setIsAnyTrackPlaying }) => {
         const t = ctx.currentTime;
         const osc = ctx.createOscillator();
         osc.type = 'sine';
-        osc.frequency.setValueAtTime(60 + Math.random() * 40, t);
+        osc.frequency.setValueAtTime(safeFreq(60 + Math.random() * 40), t);
         const g = ctx.createGain();
         g.gain.setValueAtTime(0, t);
-        g.gain.linearRampToValueAtTime(0.08, t + 0.1);
+        g.gain.linearRampToValueAtTime(safeGain(0.08), t + 0.1);
         g.gain.exponentialRampToValueAtTime(0.0001, t + 2.5);
         osc.connect(g).connect(r_mainGain);
         osc.start(t); osc.stop(t + 3);
@@ -569,31 +596,31 @@ const MusicPlayer: React.FC<Props> = ({ setView, setIsAnyTrackPlaying }) => {
       let bLastOut = 0;
       for (let i = 0; i < bufferSize; i++) {
         const white = Math.random() * 2 - 1;
-        bLastOut = (bLastOut + (0.02 * white)) / 1.02;
+        bLastOut = (bLastOut + (safeGain(0.02) * white)) / 1.02;
         data[i] = bLastOut * 4.5; 
       }
       const bSource = ctx.createBufferSource();
       bSource.buffer = buffer; bSource.loop = true;
       const bLp = ctx.createBiquadFilter();
-      bLp.type = 'lowpass'; bLp.frequency.setValueAtTime(450, now);
+      bLp.type = 'lowpass'; bLp.frequency.setValueAtTime(safeFreq(450), now);
       const bLfo = ctx.createOscillator();
-      bLfo.frequency.setValueAtTime(0.08, now); 
+      bLfo.frequency.setValueAtTime(safeFreq(0.08), now); 
       const bLfoG = ctx.createGain();
-      bLfoG.gain.setValueAtTime(0.4, now);
+      bLfoG.gain.setValueAtTime(safeGain(0.4), now);
       bLfo.connect(bLfoG).connect(w_mainGain.gain);
-      w_mainGain.gain.setValueAtTime(0.5, now);
+      w_mainGain.gain.setValueAtTime(safeGain(0.5), now);
       bSource.connect(bLp).connect(w_mainGain);
       bSource.start(); bLfo.start();
       extraNodes.push(bSource, bLp, bLfo, bLfoG);
-      const carrier = 100;
+      const carrier = safeFreq(100);
       const lOsc = ctx.createOscillator();
       lOsc.frequency.setValueAtTime(carrier, now);
       const rOsc = ctx.createOscillator();
-      rOsc.frequency.setValueAtTime(carrier + 10, now);
-      const lPan = ctx.createStereoPanner(); lPan.pan.setValueAtTime(-1, now);
-      const rPan = ctx.createStereoPanner(); rPan.pan.setValueAtTime(1, now);
+      rOsc.frequency.setValueAtTime(safeFreq(carrier + 10), now);
+      const lPan = ctx.createStereoPanner(); lPan.pan.setValueAtTime(safePan(-1), now);
+      const rPan = ctx.createStereoPanner(); rPan.pan.setValueAtTime(safePan(1), now);
       const bGain = ctx.createGain();
-      bGain.gain.setValueAtTime(0.06, now); 
+      bGain.gain.setValueAtTime(safeGain(0.06), now); 
       lOsc.connect(lPan).connect(bGain);
       rOsc.connect(rPan).connect(bGain);
       bGain.connect(voiceGain);
@@ -610,10 +637,10 @@ const MusicPlayer: React.FC<Props> = ({ setView, setIsAnyTrackPlaying }) => {
         harmonicRatios.forEach((ratio, idx) => {
           const osc = ctx.createOscillator();
           osc.type = 'sine';
-          osc.frequency.setValueAtTime(freq * ratio, startTime);
+          osc.frequency.setValueAtTime(safeFreq(freq * ratio), startTime);
           const g = ctx.createGain();
           g.gain.setValueAtTime(0, startTime);
-          g.gain.linearRampToValueAtTime((0.25 / (idx + 1)) * vel, startTime + 0.005);
+          g.gain.linearRampToValueAtTime(safeGain((0.25 / (idx + 1)) * vel), startTime + 0.005);
           g.gain.exponentialRampToValueAtTime(0.0001, startTime + duration * (1.5 - idx * 0.1));
           osc.connect(g).connect(p_mainGain);
           osc.start(startTime);
@@ -624,16 +651,311 @@ const MusicPlayer: React.FC<Props> = ({ setView, setIsAnyTrackPlaying }) => {
       const scale = [0, 2, 4, 7, 9, 12];
       const runSeq = () => {
         const interval = scale[Math.floor(Math.random() * scale.length)];
-        const f = 130.81 * Math.pow(2, (interval + (Math.random() > 0.5 ? 12 : 0)) / 12);
+        const f = safeFreq(130.81 * Math.pow(2, (interval + (Math.random() > 0.5 ? 12 : 0)) / 12));
         playPianoNote(f, ctx.currentTime, 4.0, 0.8);
       };
       const seqId = setInterval(runSeq, 3000);
       runSeq();
       extraNodes.push({ stop: () => clearInterval(seqId) });
       mainNode = p_mainGain;
-    } else {
+    } 
+    // NEW CLASSICAL INSTRUMENTS START HERE
+    else if (type === 'GEN_SITAR_DAWN') {
+      const s_mainGain = ctx.createGain();
+      s_mainGain.gain.setValueAtTime(safeGain(0.3), now);
+      s_mainGain.connect(voiceGain);
+      if (reverbNodeRef.current) s_mainGain.connect(reverbNodeRef.current);
+
+      const tonic = safeFreq(130.81); // C3
+      const scale = [0, 2, 4, 5, 7, 9, 11, 12]; // Major scale for uplifting feel
+
+      // Tanpura-like drone
+      [tonic, safeFreq(tonic * 1.5), safeFreq(tonic * 2.0)].forEach((freqVal, idx) => {
+        const osc = ctx.createOscillator();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(freqVal, now);
+        const g = ctx.createGain();
+        const lfo = ctx.createOscillator();
+        lfo.frequency.setValueAtTime(safeFreq(0.01 + Math.random() * 0.005), now);
+        const lfoG = ctx.createGain();
+        lfoG.gain.setValueAtTime(safeGain(0.1 + Math.random() * 0.05), now);
+        lfo.connect(lfoG).connect(g.gain);
+        g.gain.setValueAtTime(safeGain(0.1 / (idx + 1)), now);
+        osc.connect(g).connect(s_mainGain);
+        osc.start(); lfo.start();
+        extraNodes.push(osc, g, lfo, lfoG);
+      });
+
+      const playSitarNote = () => {
+        const t = ctx.currentTime;
+        const interval = scale[Math.floor(Math.random() * scale.length)];
+        const octave = Math.random() > 0.5 ? 1 : 2;
+        const freq = safeFreq(tonic * Math.pow(2, (interval + octave * 12) / 12));
+
+        const osc = ctx.createOscillator();
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(freq, t);
+
+        const javariFilter = ctx.createBiquadFilter();
+        javariFilter.type = 'bandpass';
+        javariFilter.frequency.setValueAtTime(safeFreq(freq * (2 + Math.random())), t); // Dynamic buzz point
+        javariFilter.Q.setValueAtTime(safeQ(15 + Math.random() * 10), t); // Sharp resonance for buzz
+
+        const lpFilter = ctx.createBiquadFilter();
+        lpFilter.type = 'lowpass';
+        lpFilter.frequency.setValueAtTime(safeFreq(4000 + Math.random() * 2000), t);
+
+        const g = ctx.createGain();
+        g.gain.setValueAtTime(0, t);
+        g.gain.linearRampToValueAtTime(safeGain(0.2), t + 0.05); // Fast attack
+        g.gain.exponentialRampToValueAtTime(0.0001, t + 4.0 + Math.random() * 2); // Long decay
+
+        const vib = ctx.createOscillator(); // Vibrato
+        vib.frequency.setValueAtTime(safeFreq(4 + Math.random() * 2), t);
+        const vibG = ctx.createGain();
+        vibG.gain.setValueAtTime(safeGain(freq * 0.01 + Math.random() * 0.005), t);
+        vib.connect(vibG).connect(osc.frequency);
+        vib.start(t);
+
+        osc.connect(javariFilter).connect(g);
+        osc.connect(lpFilter).connect(g); // Mix filtered and buzzy sounds
+        g.connect(s_mainGain);
+        osc.start(t);
+        osc.stop(t + 6.5); // Ensure all nodes stop
+        vib.stop(t + 6.5);
+
+        extraNodes.push(osc, javariFilter, lpFilter, g, vib, vibG);
+      };
+      const sitarInterval = setInterval(playSitarNote, 3500 + Math.random() * 1500); 
+      playSitarNote();
+      extraNodes.push({ stop: () => clearInterval(sitarInterval) });
+      mainNode = s_mainGain;
+    }
+    else if (type === 'GEN_TABLA_RHYTHM') {
+      const t_mainGain = ctx.createGain();
+      t_mainGain.gain.setValueAtTime(safeGain(0.4), now);
+      t_mainGain.connect(voiceGain);
+      if (reverbNodeRef.current) t_mainGain.connect(reverbNodeRef.current);
+
+      const playBayan = (volume: number) => {
+        const t = ctx.currentTime;
+        const osc = ctx.createOscillator();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(safeFreq(60), t); // Base frequency for Bayan
+
+        const gain = ctx.createGain();
+        gain.gain.setValueAtTime(0, t);
+        gain.gain.linearRampToValueAtTime(safeGain(0.8 * volume), t + 0.02); // Fast attack
+        gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.6); // Medium decay
+
+        const pitchEnv = ctx.createOscillator();
+        pitchEnv.type = 'sine';
+        pitchEnv.frequency.setValueAtTime(safeFreq(4), t); // LFO for pitch sweep
+        const pitchGain = ctx.createGain();
+        pitchGain.gain.setValueAtTime(safeGain(50), t); // Pitch sweep depth
+        pitchEnv.connect(pitchGain).connect(osc.frequency);
+        pitchEnv.start(t);
+
+        osc.connect(gain).connect(t_mainGain);
+        osc.start(t);
+        osc.stop(t + 1);
+        pitchEnv.stop(t + 1);
+        extraNodes.push(osc, gain, pitchEnv, pitchGain);
+      };
+
+      const playDayan = (volume: number, sharp = false) => {
+        const t = ctx.currentTime;
+        const osc = ctx.createOscillator();
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(safeFreq(sharp ? 800 : 400), t); // Higher freq for Dayan
+
+        const noise = ctx.createBufferSource();
+        const nBuf = ctx.createBuffer(1, ctx.sampleRate * 0.1, ctx.sampleRate);
+        const nData = nBuf.getChannelData(0);
+        for(let i=0; i<nBuf.length; i++) nData[i] = Math.random() * 2 - 1;
+        noise.buffer = nBuf;
+        
+        const noiseFilter = ctx.createBiquadFilter();
+        noiseFilter.type = 'highpass';
+        noiseFilter.frequency.setValueAtTime(safeFreq(1000), t);
+
+        const gain = ctx.createGain();
+        gain.gain.setValueAtTime(0, t);
+        gain.gain.linearRampToValueAtTime(safeGain(0.7 * volume), t + 0.01); // Very fast attack
+        gain.gain.exponentialRampToValueAtTime(0.0001, t + (sharp ? 0.2 : 0.4)); // Fast decay
+
+        osc.connect(gain);
+        noise.connect(noiseFilter).connect(gain);
+        gain.connect(t_mainGain);
+
+        osc.start(t); noise.start(t);
+        osc.stop(t + 0.5); noise.stop(t + 0.5);
+        extraNodes.push(osc, noise, noiseFilter, gain);
+      };
+
+      // Simple rhythmic pattern (e.g., tintal "Dha Dhin Dhin Dha")
+      const rhythmPattern = [
+        { type: 'bayan', time: 0, vol: 1 }, // Dha
+        { type: 'dayan', time: 0.5, vol: 0.7, sharp: true }, // Dhin
+        { type: 'dayan', time: 1.0, vol: 0.7, sharp: true }, // Dhin
+        { type: 'bayan', time: 1.5, vol: 1 }, // Dha
+      ];
+
+      const playRhythm = () => {
+        const t = ctx.currentTime;
+        rhythmPattern.forEach(beat => {
+          const beatTime = t + beat.time * 0.5; // Speed up
+          if (beat.type === 'bayan') {
+            playBayan(beat.vol);
+          } else {
+            playDayan(beat.vol, beat.sharp);
+          }
+        });
+      };
+      
+      const rhythmInterval = setInterval(playRhythm, 2000); // Repeat every 2 seconds
+      playRhythm();
+      extraNodes.push({ stop: () => clearInterval(rhythmInterval) });
+      mainNode = t_mainGain;
+    }
+    else if (type === 'GEN_GUITAR_FOREST') {
+      const g_mainGain = ctx.createGain();
+      g_mainGain.gain.setValueAtTime(safeGain(0.4), now);
+      g_mainGain.connect(voiceGain);
+      if (reverbNodeRef.current) g_mainGain.connect(reverbNodeRef.current);
+
+      const scale = [0, 2, 3, 5, 7, 8, 10, 12]; // Natural minor scale
+      const rootFreq = safeFreq(164.81); // E3
+
+      const playGuitarNote = (freqVal: number, velocity: number) => {
+        const t = ctx.currentTime;
+        const osc = ctx.createOscillator();
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(freqVal, t);
+
+        const gain = ctx.createGain();
+        gain.gain.setValueAtTime(0, t);
+        gain.gain.linearRampToValueAtTime(safeGain(0.3 * velocity), t + 0.01); // Fast attack
+        gain.gain.exponentialRampToValueAtTime(0.0001, t + 3.0 + Math.random() * 1.5); // Medium-long decay
+
+        // Subtle finger noise
+        if (Math.random() > 0.7) {
+          const noise = ctx.createBufferSource();
+          const nBuf = ctx.createBuffer(1, ctx.sampleRate * 0.05, ctx.sampleRate);
+          const nData = nBuf.getChannelData(0);
+          for(let i=0; i<nBuf.length; i++) nData[i] = Math.random() * 2 - 1;
+          noise.buffer = nBuf;
+          const nLp = ctx.createBiquadFilter();
+          nLp.type = 'highpass'; 
+          nLp.frequency.setValueAtTime(safeFreq(4000), t);
+          const nG = ctx.createGain(); 
+          nG.gain.setValueAtTime(safeGain(0.05), t);
+          noise.connect(nLp).connect(nG).connect(g_mainGain);
+          noise.start(t); noise.stop(t + 0.1);
+          extraNodes.push(noise, nLp, nG);
+        }
+
+        osc.connect(gain).connect(g_mainGain);
+        osc.start(t);
+        osc.stop(t + 5);
+        extraNodes.push(osc, gain);
+      };
+
+      const sequence = [
+        { note: 0, octave: 0, delay: 0 },
+        { note: 3, octave: 0, delay: 0.4 },
+        { note: 7, octave: 0, delay: 0.8 },
+        { note: 10, octave: 0, delay: 1.2 },
+        { note: 7, octave: 0, delay: 1.8 },
+        { note: 5, octave: 0, delay: 2.2 },
+        { note: 2, octave: 1, delay: 2.6 },
+        { note: 0, octave: 1, delay: 3.0 },
+      ];
+
+      const playArpeggio = () => {
+        const t = ctx.currentTime;
+        sequence.forEach(s => {
+          const freq = safeFreq(rootFreq * Math.pow(2, (scale[s.note] + s.octave * 12) / 12));
+          playGuitarNote(freq, safeGain(0.6 + Math.random() * 0.4));
+        });
+      };
+      
+      const arpeggioInterval = setInterval(playArpeggio, 6000 + Math.random() * 2000); 
+      playArpeggio();
+      extraNodes.push({ stop: () => clearInterval(arpeggioInterval) });
+      mainNode = g_mainGain;
+    }
+    else if (type === 'GEN_HARMONIUM_SANCTUM') {
+      const h_mainGain = ctx.createGain();
+      h_mainGain.gain.setValueAtTime(safeGain(0.35), now);
+      h_mainGain.connect(voiceGain);
+      if (reverbNodeRef.current) h_mainGain.connect(reverbNodeRef.current);
+
+      const rootFreq = safeFreq(110); // A2
+      const chord = [rootFreq, safeFreq(rootFreq * 1.5), safeFreq(rootFreq * 2)]; // A minor triad (A, E, A)
+
+      chord.forEach((freqVal, idx) => {
+        const osc1 = ctx.createOscillator();
+        osc1.type = 'sawtooth';
+        osc1.frequency.setValueAtTime(freqVal, now);
+        
+        const osc2 = ctx.createOscillator(); // Slightly detuned for richness
+        osc2.type = 'sawtooth';
+        osc2.frequency.setValueAtTime(safeFreq(freqVal * 1.005), now);
+
+        const gain = ctx.createGain();
+        gain.gain.setValueAtTime(0, now);
+        gain.gain.linearRampToValueAtTime(safeGain(0.15 / (idx + 1)), now + 2.0); // Slow attack
+        gain.gain.linearRampToValueAtTime(safeGain(0.1 / (idx + 1)), now + 10.0); // Long sustain
+        gain.gain.exponentialRampToValueAtTime(0.0001, now + 20.0); // Slow release
+
+        const vib = ctx.createOscillator(); // Vibrato
+        vib.type = 'sine';
+        vib.frequency.setValueAtTime(safeFreq(2 + Math.random() * 1), now);
+        const vibG = ctx.createGain();
+        vibG.gain.setValueAtTime(safeGain(freqVal * 0.005), now);
+        vib.connect(vibG).connect(osc1.frequency);
+        vib.connect(vibG).connect(osc2.frequency);
+        vib.start(now);
+
+        osc1.connect(gain);
+        osc2.connect(gain);
+        gain.connect(h_mainGain);
+        osc1.start(now); osc2.start(now);
+        extraNodes.push(osc1, osc2, gain, vib, vibG);
+      });
+
+      // Bellows noise
+      const noise = ctx.createBufferSource();
+      const nBuf = ctx.createBuffer(1, ctx.sampleRate * 2, ctx.sampleRate);
+      const nData = nBuf.getChannelData(0);
+      for(let i=0; i<nBuf.length; i++) nData[i] = Math.random() * 2 - 1;
+      noise.buffer = nBuf; noise.loop = true;
+
+      const lpFilter = ctx.createBiquadFilter();
+      lpFilter.type = 'lowpass';
+      lpFilter.frequency.setValueAtTime(safeFreq(200), now);
+
+      const noiseGain = ctx.createGain();
+      noiseGain.gain.setValueAtTime(safeGain(0.05), now);
+
+      const noiseLfo = ctx.createOscillator(); // Slow volume modulation for bellows
+      noiseLfo.type = 'sine';
+      noiseLfo.frequency.setValueAtTime(safeFreq(0.05), now);
+      const noiseLfoG = ctx.createGain();
+      noiseLfoG.gain.setValueAtTime(safeGain(0.02), now);
+      noiseLfo.connect(noiseLfoG).connect(noiseGain.gain);
+      noiseLfo.start(now);
+
+      noise.connect(lpFilter).connect(noiseGain).connect(h_mainGain);
+      noise.start(now);
+      extraNodes.push(noise, lpFilter, noiseGain, noiseLfo, noiseLfoG);
+      mainNode = h_mainGain;
+    }
+    // NEW CLASSICAL INSTRUMENTS END HERE
+    else {
       const dummy = ctx.createOscillator();
-      dummy.frequency.setValueAtTime(432, now);
+      dummy.frequency.setValueAtTime(safeFreq(432), now);
       dummy.connect(voiceGain);
       dummy.start();
       mainNode = dummy;
@@ -671,6 +993,15 @@ const MusicPlayer: React.FC<Props> = ({ setView, setIsAnyTrackPlaying }) => {
     const canvas = canvasRef.current;
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
+
+    // Ensure canvas drawing resolution matches display size for clarity
+    const displayWidth = canvas.offsetWidth;
+    const displayHeight = canvas.offsetHeight;
+    if (canvas.width !== displayWidth || canvas.height !== displayHeight) {
+      canvas.width = displayWidth;
+      canvas.height = displayHeight;
+    }
+
     const data = new Uint8Array(analyzerRef.current.frequencyBinCount);
     analyzerRef.current.getByteFrequencyData(data);
     ctx.clearRect(0, 0, canvas.width, canvas.height);

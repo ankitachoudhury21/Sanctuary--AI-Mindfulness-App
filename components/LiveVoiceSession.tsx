@@ -48,6 +48,18 @@ async function decodeAudioData(
   return buffer;
 }
 
+// Helper to encode Float32Array to Int16Array (PCM) with clamping
+function encodePCM(data: Float32Array): Uint8Array {
+  const l = data.length;
+  const int16 = new Int16Array(l);
+  for (let i = 0; i < l; i++) {
+    // Clamp float value to [-1, 1] before scaling to Int16 range
+    const clampedValue = Math.max(-1, Math.min(1, data[i]));
+    int16[i] = clampedValue * 32768;
+  }
+  return new Uint8Array(int16.buffer);
+}
+
 const LiveVoiceSession: React.FC<Props> = ({ onClose, onSave, userName }) => {
   const [isConnected, setIsConnected] = useState(false);
   const [messages, setMessages] = useState<TranscriptionMessage[]>([]);
@@ -103,11 +115,8 @@ const LiveVoiceSession: React.FC<Props> = ({ onClose, onSave, userName }) => {
               scriptProcessor.onaudioprocess = (e) => {
                 if (isMuted) return;
                 const inputData = e.inputBuffer.getChannelData(0);
-                const int16 = new Int16Array(inputData.length);
-                for (let i = 0; i < inputData.length; i++) {
-                  int16[i] = inputData[i] * 32768;
-                }
-                const pcmBase64 = encodeBase64(new Uint8Array(int16.buffer));
+                const pcmBytes = encodePCM(inputData); // Use the clamping encoder
+                const pcmBase64 = encodeBase64(pcmBytes);
                 
                 sessionPromise.then(session => {
                   if (session) {
