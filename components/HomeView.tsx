@@ -19,6 +19,11 @@ const HomeView: React.FC<Props> = ({ user, sleepData, activity, setActivity, aiI
 
   const waterPercent = Math.min(Math.round((activity.waterIntake / (user?.waterGoal ? user.waterGoal * 4 : 8)) * 100), 100);
 
+  // Local BetaBadge for consistency and avoiding prop drilling
+  const BetaBadge = () => (
+    <span className="px-2 py-0.5 bg-teal-500/20 text-teal-400 label-caps rounded-md border border-teal-500/30 ml-2 text-[8px] md:text-[9px]">BETA</span>
+  );
+
   const modules = [
     {
       id: 'meditate',
@@ -28,6 +33,7 @@ const HomeView: React.FC<Props> = ({ user, sleepData, activity, setActivity, aiI
       view: AppView.MUSIC,
       color: 'bg-indigo-600',
       textColor: 'text-indigo-900',
+      beta: true,
     },
     {
       id: 'journal',
@@ -37,6 +43,7 @@ const HomeView: React.FC<Props> = ({ user, sleepData, activity, setActivity, aiI
       view: AppView.JOURNAL,
       color: 'bg-rose-500',
       textColor: 'text-rose-900',
+      beta: true,
     },
     {
       id: 'sleep',
@@ -46,6 +53,7 @@ const HomeView: React.FC<Props> = ({ user, sleepData, activity, setActivity, aiI
       view: AppView.SLEEP,
       color: 'bg-blue-600',
       textColor: 'text-blue-900',
+      beta: true, // Added beta flag
     },
     {
       id: 'flow',
@@ -55,6 +63,7 @@ const HomeView: React.FC<Props> = ({ user, sleepData, activity, setActivity, aiI
       view: AppView.ACTIVITY,
       color: 'bg-amber-500',
       textColor: 'text-amber-900',
+      beta: true, // Added beta flag
     }
   ];
 
@@ -173,7 +182,7 @@ const HomeView: React.FC<Props> = ({ user, sleepData, activity, setActivity, aiI
           <div className="lg:w-1/3 bg-slate-50 rounded-[2rem] p-8 flex flex-col justify-center gap-4">
              <div className="space-y-1">
                <p className="label-caps text-slate-400 font-bold">Status</p>
-               <p className="text-3xl font-black text-teal-600">{aiInsights?.label || 'Calibrated'}</p>
+               <p className="text-lg md:text-2xl font-black text-blue-600">{aiInsights?.label || 'Calibrated'}</p>
              </div>
              <div className="h-[2px] bg-slate-100 w-full"></div>
              <p className="text-slate-500 font-semibold leading-relaxed">
@@ -245,7 +254,10 @@ const HomeView: React.FC<Props> = ({ user, sleepData, activity, setActivity, aiI
                 <m.icon size={24} />
               </div>
               <div>
-                <h4 className={`text-lg md:text-xl font-black ${m.textColor} tracking-tight leading-tight`}>{m.title}</h4>
+                <h4 className={`text-lg md:text-xl font-black ${m.textColor} tracking-tight leading-tight flex items-center`}>
+                  {m.title}
+                  {m.beta && <BetaBadge />} {/* Conditionally render BetaBadge */}
+                </h4>
                 <p className="text-[10px] md:text-xs font-semibold text-slate-500 mt-1 leading-tight">{m.desc}</p>
               </div>
             </button>
