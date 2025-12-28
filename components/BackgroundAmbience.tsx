@@ -9,6 +9,7 @@ const BackgroundAmbience: React.FC<Props> = ({ isActive, hasStarted }) => {
   const audioContextRef = useRef<AudioContext | null>(null);
   const nodesRef = useRef<any[]>([]);
   const gainNodeRef = useRef<GainNode | null>(null);
+  const reverbNodeRef = useRef<ConvolverNode | null>(null); // Added for reverb
 
   const stopAudio = () => {
     if (gainNodeRef.current && audioContextRef.current) {
@@ -46,41 +47,122 @@ const BackgroundAmbience: React.FC<Props> = ({ isActive, hasStarted }) => {
     if (ctx.state === 'suspended') {
       ctx.resume().catch(e => console.warn("Background audio resume interrupted", e));
     }
+    
+    // Master Gain for the entire ambience track
     const masterGain = ctx.createGain();
     masterGain.gain.setValueAtTime(0, ctx.currentTime);
-    masterGain.gain.linearRampToValueAtTime(0.04, ctx.currentTime + 1.5);
+    masterGain.gain.linearRampToValueAtTime(0.04, ctx.currentTime + 1.5); // Very subtle volume
     masterGain.connect(ctx.destination);
-    gainNodeRef.current = masterGain;
+    gainNodeRef.current = masterGain; // Reference for volume control/fade out
+
     const nodes: any[] = [masterGain];
-    [60, 90].forEach(freq => {
+
+    // Reverb Setup
+    if (!reverbNodeRef.current) {
+      const reverb = ctx.createConvolver();
+      const reverbGain = ctx.createGain();
+      reverbGain.gain.setValueAtTime(0.35, ctx.currentTime); // Wet signal mix
+      reverb.connect(reverbGain).connect(masterGain); 
+
+      // Generate a simple impulse response for a subtle, long decay
+      const length = ctx.sampleRate * 5; // 5 seconds long
+      const impulse = ctx.createBuffer(2, length, ctx.sampleRate);
+      for (let i = 0; i < length; i++) {
+        const env = Math.pow(1 - i / length, 4); 
+        impulse.getChannelData(0)[i] = (Math.random() * 2 - 1) * env * 0.1; // Reduced amplitude for subtlety
+        impulse.getChannelData(1)[i] = (Math.random() * 2 - 1) * env * 0.1; 
+      }
+      reverb.buffer = impulse;
+      reverbNodeRef.current = reverb;
+      nodes.push(reverb, reverbGain);
+    }
+    
+    // Pre-reverb gain node to split dry/wet signal
+    const preReverbGain = ctx.createGain();
+    preReverbGain.gain.setValueAtTime(1, ctx.currentTime); // Full dry signal
+    preReverbGain.connect(masterGain); // Dry path to master
+    if (reverbNodeRef.current) preReverbGain.connect(reverbNodeRef.current); // Wet path to reverb
+
+    // Drone Layer (3 Sine wave oscillators with frequency & gain LFOs)
+    [40, 60, 90].forEach(freq => { 
       const osc = ctx.createOscillator();
-      osc.type = 'sine';
+      osc.type = 'sine'; 
       osc.frequency.setValueAtTime(freq, ctx.currentTime);
+
+      // Slow frequency LFO for subtle pitch variations
+      const freqLfo = ctx.createOscillator();
+      freqLfo.type = 'sine';
+      freqLfo.frequency.setValueAtTime(0.01 + Math.random() * 0.005, ctx.currentTime); 
+      const freqLfoGain = ctx.createGain();
+      freqLfoGain.gain.setValueAtTime(freq * 0.005, ctx.currentTime); // Small modulation depth
+      freqLfo.connect(freqLfoGain).connect(osc.frequency);
+      
+      // Existing gain LFO for "pulse"
       const g = ctx.createGain();
-      const lfo = ctx.createOscillator();
-      lfo.frequency.setValueAtTime(0.1, ctx.currentTime); 
+      const lfo = ctx.createOscillator(); 
+      lfo.frequency.setValueAtTime(0.08 + Math.random() * 0.02, ctx.currentTime); 
       const lfoG = ctx.createGain();
-      lfoG.gain.setValueAtTime(0.2, ctx.currentTime);
+      lfoG.gain.setValueAtTime(0.3, ctx.currentTime); 
       lfo.connect(lfoG).connect(g.gain);
-      g.gain.setValueAtTime(0.3, ctx.currentTime);
-      osc.connect(g).connect(masterGain);
-      osc.start(); lfo.start();
-      nodes.push(osc, g, lfo, lfoG);
+      g.gain.setValueAtTime(0.2 + Math.random() * 0.1, ctx.currentTime); // Base gain
+      
+      osc.connect(g).connect(preReverbGain); // Connect to pre-reverb gain
+      osc.start(); freqLfo.start(); lfo.start();
+      nodes.push(osc, g, lfo, lfoG, freqLfo, freqLfoGain);
     });
-    const noiseBuffer = ctx.createBuffer(1, ctx.sampleRate * 2, ctx.sampleRate);
-    const noiseData = noiseBuffer.getChannelData(0);
-    for (let i = 0; i < noiseBuffer.length; i++) noiseData[i] = Math.random() * 2 - 1;
+
+    // Brownian Noise Layer (soft, natural ambient sound like wind or distant ocean)
+    const bufferSize = ctx.sampleRate * 10; // 10 seconds of noise buffer
+    const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+    const data = buffer.getChannelData(0);
+    let lastOut = 0;
+    for (let i = 0; i < bufferSize; i++) {
+      const white = Math.random() * 2 - 1;
+      lastOut = (lastOut + (0.02 * white)) / 1.02; // Simple brownian filter approximation
+      data[i] = lastOut * 4.0; 
+    }
     const noiseSrc = ctx.createBufferSource();
-    noiseSrc.buffer = noiseBuffer; noiseSrc.loop = true;
-    const filter = ctx.createBiquadFilter();
-    filter.type = 'bandpass'; filter.frequency.setValueAtTime(3000, ctx.currentTime); filter.Q.setValueAtTime(1, ctx.currentTime);
-    const filterLfo = ctx.createOscillator(); filterLfo.frequency.setValueAtTime(0.05, ctx.currentTime);
-    const filterLfoG = ctx.createGain(); filterLfoG.gain.setValueAtTime(1000, ctx.currentTime);
-    filterLfo.connect(filterLfoG).connect(filter.frequency);
-    const noiseGain = ctx.createGain(); noiseGain.gain.setValueAtTime(0.1, ctx.currentTime);
-    noiseSrc.connect(filter).connect(noiseGain).connect(masterGain);
-    noiseSrc.start(); filterLfo.start();
-    nodes.push(noiseSrc, filter, filterLfo, filterLfoG, noiseGain);
+    noiseSrc.buffer = buffer; noiseSrc.loop = true;
+
+    // Lowpass filter for brown noise with LFO modulation
+    const noiseLowpass = ctx.createBiquadFilter();
+    noiseLowpass.type = 'lowpass';
+    noiseLowpass.frequency.setValueAtTime(800, ctx.currentTime); // Initial lowpass frequency
+    noiseLowpass.Q.setValueAtTime(1, ctx.currentTime);
+
+    const noiseFreqLfo = ctx.createOscillator();
+    noiseFreqLfo.type = 'sine';
+    noiseFreqLfo.frequency.setValueAtTime(0.008, ctx.currentTime); // Very slow LFO for filter freq
+    const noiseFreqLfoG = ctx.createGain();
+    noiseFreqLfoG.gain.setValueAtTime(600, ctx.currentTime); // Modulation depth
+    noiseFreqLfo.connect(noiseFreqLfoG).connect(noiseLowpass.frequency);
+
+    // Gain for noise with slow LFO
+    const noiseGain = ctx.createGain();
+    const noiseGainLfo = ctx.createOscillator();
+    noiseGainLfo.type = 'sine';
+    noiseGainLfo.frequency.setValueAtTime(0.05, ctx.currentTime); // Slow volume LFO
+    const noiseGainLfoG = ctx.createGain();
+    noiseGainLfoG.gain.setValueAtTime(0.03, ctx.currentTime); // Modulation depth
+    noiseGainLfo.connect(noiseGainLfoG).connect(noiseGain.gain);
+    noiseGain.gain.setValueAtTime(0.08, ctx.currentTime); // Base noise gain
+
+    // Stereo Panner with LFO
+    const panner = ctx.createStereoPanner();
+    panner.pan.setValueAtTime(0, ctx.currentTime); // Start center
+    const pannerLfo = ctx.createOscillator();
+    pannerLfo.type = 'sine';
+    pannerLfo.frequency.setValueAtTime(0.005, ctx.currentTime); // Very slow stereo panning
+    const pannerLfoG = ctx.createGain();
+    pannerLfoG.gain.setValueAtTime(0.7, ctx.currentTime); // Wide pan range
+    pannerLfo.connect(pannerLfoG).connect(panner.pan);
+
+    noiseSrc.connect(noiseLowpass).connect(noiseGain).connect(panner).connect(preReverbGain);
+    noiseSrc.start(); noiseFreqLfo.start(); noiseGainLfo.start(); pannerLfo.start();
+    nodes.push(noiseSrc, noiseLowpass, noiseFreqLfo, noiseFreqLfoG, noiseGain, noiseGainLfo, noiseGainLfoG, panner, pannerLfo, pannerLfoG);
+    
+    // Add reverbNodeRef.current to nodes array for proper cleanup
+    if (reverbNodeRef.current) nodes.push(reverbNodeRef.current);
     nodesRef.current = nodes;
   };
 

@@ -143,10 +143,14 @@ const Journal: React.FC<Props> = ({ entries, setEntries, setView, user }) => {
       <div className="flex flex-col items-center gap-6">
         <button 
           onClick={() => setView(AppView.DASHBOARD)} 
-          className="flex items-center gap-2 px-4 py-2 bg-white/40 hover:bg-white/80 backdrop-blur-md rounded-full border border-teal-100/30 text-teal-800 label-caps text-[10px] md:text-xs hover:gap-3 transition-all outline-none shadow-sm"
+          className="flex items-center gap-2 px-5 py-2.5 bg-white/40 hover:bg-white/80 backdrop-blur-md rounded-full border border-teal-100/30 text-teal-800 outline-none shadow-sm group hover:scale-105 active:scale-95 transition-all"
           aria-label="Back to dashboard"
         >
-          <ChevronLeft size={16} /> Back to Sanctuary
+          <ChevronLeft size={16} className="group-hover:translate-x-[-2px] transition-transform" /> 
+          <div className="flex flex-col items-start leading-none">
+            <span className="text-xs md:text-sm font-black tracking-wide">({entries.length}) /></span>
+            <span className="label-caps">Back to Sanctuary</span>
+          </div>
         </button>
         <div className="text-center space-y-3 md:space-y-4 max-w-2xl mx-auto px-4">
           <div className="flex flex-col md:flex-row items-center justify-center gap-3">
