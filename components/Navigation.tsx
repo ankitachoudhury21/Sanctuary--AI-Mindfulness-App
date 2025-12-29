@@ -1,6 +1,6 @@
 import React from 'react';
 import { AppView } from '../types';
-import { Home, BookHeart, Moon, Music, Compass, LogOut, Brain, Rocket, Stars, Volume2, VolumeX, Sun, CloudMoon } from 'lucide-react';
+import { Home, BookHeart, Moon, Music, Compass, LogOut, Brain, Rocket, Stars, Volume2, VolumeX, Sun, CloudMoon, ImageIcon } from 'lucide-react';
 
 interface Props {
   activeView: AppView;
@@ -65,18 +65,19 @@ const Navigation: React.FC<Props> = ({ activeView, setView, onLogout, isAmbientM
     { icon: Home, label: 'Home', view: AppView.DASHBOARD, color: 'bg-emerald-500' },
     { icon: Brain, label: 'Daily Meditation', view: AppView.MUSIC, color: 'bg-indigo-500' },
     { icon: Stars, label: 'Celestial Exploration', view: AppView.PLANETARY, color: 'bg-amber-600' },
+    { icon: ImageIcon, label: 'AI Image Studio', view: AppView.IMAGE_GEN, color: 'bg-orange-500'}, // New navigation item
     { icon: BookHeart, label: 'Gratitude Journal', view: AppView.JOURNAL, color: 'bg-rose-500' },
     { icon: Moon, label: 'Sleep Journal', view: AppView.SLEEP, color: 'bg-blue-600' },
     { icon: Compass, label: 'Mindful Journey', view: AppView.ACTIVITY, color: 'bg-amber-500' },
   ];
 
   const BetaBadge = () => (
-    <span className="px-2 py-0.5 bg-teal-500/20 text-teal-400 label-caps rounded-md border border-teal-500/30 ml-2">BETA</span>
+    <span className="px-2 py-0.5 bg-teal-500/20 text-teal-400 label-caps rounded-md border border-teal-500/30 ml-2 text-[8px] md:text-[9px]">BETA</span>
   );
 
   return (
     <>
-      <header className="md:hidden fixed top-0 left-0 right-0 h-16 bg-white/80 dark:bg-[#0b1d2e]/95 backdrop-blur-xl border-b border-slate-100 dark:border-white/10 z-[70] flex items-center justify-between px-6 shadow-sm transition-colors duration-300">
+      <header className="md:hidden fixed top-0 left-0 right-0 h-16 bg-white/80 dark:bg-white/95 backdrop-blur-xl border-b border-slate-100 dark:border-slate-200 z-[70] flex items-center justify-between px-6 shadow-sm transition-colors duration-300">
         <button 
           onClick={() => setView(AppView.DASHBOARD)}
           className="flex items-center gap-2 outline-none active:scale-95 transition-transform"
@@ -88,7 +89,7 @@ const Navigation: React.FC<Props> = ({ activeView, setView, onLogout, isAmbientM
               <circle cx="12" cy="12" r="3" fill="white" />
             </svg>
           </div>
-          <span className="font-black text-slate-900 dark:text-white tracking-tight text-xl font-display transition-colors duration-300">Sanctuary</span>
+          <span className="font-black text-slate-900 dark:text-slate-900 tracking-tight text-xl font-display transition-colors duration-300">Sanctuary</span>
         </button>
         <div className="flex items-center gap-2">
           <button 

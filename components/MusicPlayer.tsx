@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { AppView } from '../types';
 import { 
@@ -32,7 +33,6 @@ const TRACKS = [
   { id: 'r6', cat: 'relax', name: 'Raag Bageshri', genre: 'Midnight Soothing', icon: Moon, color: 'from-indigo-800 to-purple-950', url: 'GEN_RAAG_BAGESHRI', benefit: 'A soothing midnight melody. Evokes deep emotional reflection and sweet tranquility for the evening.' },
   { id: 'p1', cat: 'piano', name: 'Midnight Debug', genre: 'Felt Reflection', icon: Music, color: 'from-slate-950 to-indigo-950', url: 'GEN_PIANO_MIDNIGHT', benefit: 'Deep, felt-damped melodies designed to slow down your racing thoughts after a long sprint.' },
   { id: 'p2', cat: 'piano', name: 'Solar Syntax', genre: 'Bright Prelude', icon: Sun, color: 'from-amber-100 to-orange-200', url: 'GEN_PIANO_MORNING', benefit: 'High-frequency major scales to clear cognitive fog and reset your morning flow state.' },
-  // Fix: Removed extraneous '連合' character at the end of the string.
   { id: 'p3', cat: 'piano', name: 'Monsoon Logic', genre: 'Rainy Resonance', icon: Droplets, color: 'from-blue-200 to-slate-400', url: 'GEN_PIANO_RAIN', benefit: 'A steady rhythmic downpour paired with low-octave chords to drown out office chatter.' },
   { id: 'p4', cat: 'piano', name: 'Latency Void', genre: 'Ambient Grand', icon: Zap, color: 'from-slate-900 via-slate-800 to-slate-950', url: 'GEN_PIANO_VOID', benefit: 'Ultra-slow, drifting melodies that create a mental buffer between work and rest.' },
   { id: 'p6', cat: 'piano', name: 'Glass Focus', genre: 'Minimalist Zen', icon: Activity, color: 'from-blue-50 to-teal-100', url: 'GEN_PIANO_GLASS', benefit: 'Precision-timed, minimal notes for entering a state of high-performance flow.' },
@@ -40,7 +40,7 @@ const TRACKS = [
   { id: 'r2', cat: 'relax', name: 'Raag Darbari', genre: 'Regal Night', icon: Moon, color: 'from-indigo-900 to-blue-950', url: 'GEN_RAAG_DARBARI', benefit: 'Grave, regal, and deeply grounding melodies for late-night reflection.' },
   { id: 's1', cat: 'sleep', name: 'Lunar Tide', genre: 'Deep Ocean Delta', icon: WavesIcon, color: 'from-[#0b1d2e] to-[#1e3a8a]', url: 'GEN_SLEEP_WAVES', benefit: 'Warm, low-pass ocean frequencies. No high-end noise, just the heavy, rhythmic breath of the sea.' },
   { id: 's4', cat: 'sleep', name: 'Velvet Rain', genre: 'Forest Mist', icon: Droplets, color: 'from-emerald-900 to-slate-950', url: 'GEN_SLEEP_RAINFOREST', benefit: 'Soft tropical rain filtered through thick forest leaves. Strictly low-frequency textures for deep rest.' },
-  // New Classical Tracks
+  // New Classical Tracks - ensuring clean ASCII for benefit strings
   { id: 'sitar1', cat: 'classical', name: 'Sitar Raga: Dawn Serenity', genre: 'Indian Classical', icon: Music, color: 'from-orange-400 to-red-600', url: 'GEN_SITAR_DAWN', benefit: 'Awaken with the soulful melodies of sitar, fostering inner peace and focus.' },
   { id: 'tabla1', cat: 'classical', name: 'Tabla Taal: Rhythmic Flow', genre: 'Indian Percussion', icon: Music, color: 'from-amber-800 to-gray-600', url: 'GEN_TABLA_RHYTHM', benefit: 'Ground yourself with the intricate and meditative rhythms of the tabla.' },
   { id: 'guitar1', cat: 'classical', name: 'Classical Guitar: Forest Echoes', genre: 'Acoustic Serenade', icon: Music, color: 'from-green-400 to-blue-600', url: 'GEN_GUITAR_FOREST', benefit: 'Gentle classical guitar refrains that evoke calm forest landscapes.' },
@@ -200,7 +200,7 @@ const MusicPlayer: React.FC<Props> = ({ setView, setIsAnyTrackPlaying }) => {
         
         const lp = ctx.createBiquadFilter();
         lp.type = 'lowpass';
-        lp.frequency.setValueAtTime(safeFreq(isBilawal ? 900 : 400), now);
+        lp.frequency.setValueAtTime(safeFreq(900), now);
         
         const sg = ctx.createGain();
         sg.gain.setValueAtTime(0, now);
@@ -798,465 +798,473 @@ const MusicPlayer: React.FC<Props> = ({ setView, setIsAnyTrackPlaying }) => {
         osc.frequency.setValueAtTime(baseFreq, t);
 
         // Noise transient
+        const noiseBuffer = ctx.createBuffer(1, ctx.sampleRate * 0.1, ctx.sampleRate);
+        const nData = noiseBuffer.getChannelData(0);
+        for(let i=0; i<noiseBuffer.length; i++) nData[i] = Math.random() * 2 - 1;
         const noise = ctx.createBufferSource();
-        const nBuf = ctx.createBuffer(1, ctx.sampleRate * 0.1, ctx.sampleRate);
-        const nData = nBuf.getChannelData(0);
-        for(let i=0; i<nBuf.length; i++) nData[i] = Math.random() * 2 - 1;
-        noise.buffer = nBuf;
+        noise.buffer = noiseBuffer;
         
         const noiseFilter = ctx.createBiquadFilter();
         noiseFilter.type = 'bandpass';
         noiseFilter.frequency.setValueAtTime(safeFreq(5000), t);
-        noiseFilter.Q.setValueAtTime(safeQ(type === 'sharp' ? 30 : 10), t); // Sharper Q for sharp hits
-        noiseFilter.frequency.exponentialRampToValueAtTime(safeFreq(2000), t + 0.1); // Quick sweep
+        noiseFilter.Q.setValueAtTime(safeQ(type === 'sharp' ? 15 : 5), t);
         
-        // High-frequency ping for sharp attacks
-        if (type === 'sharp') {
-          const pingOsc = ctx.createOscillator();
-          pingOsc.type = 'sine';
-          pingOsc.frequency.setValueAtTime(safeFreq(6000 + Math.random() * 2000), t);
-          const pingGain = ctx.createGain();
-          pingGain.gain.setValueAtTime(0, t);
-          pingGain.gain.linearRampToValueAtTime(safeGain(0.15 * volume), t + 0.005);
-          pingGain.gain.exponentialRampToValueAtTime(0.0001, t + 0.1);
-          pingOsc.connect(pingGain).connect(gain);
-          pingOsc.start(t);
-          pingOsc.stop(t + 0.2);
-          extraNodes.push(pingOsc, pingGain);
-        }
+        // Noise envelope for sharp transient
+        const noiseGain = ctx.createGain();
+        noiseGain.gain.setValueAtTime(0, t);
+        noiseGain.gain.linearRampToValueAtTime(safeGain(0.3 * volume), t + 0.005);
+        noiseGain.gain.exponentialRampToValueAtTime(0.0001, t + 0.1);
+        noise.connect(noiseFilter).connect(noiseGain).connect(gain); // Connect noise to filter, then gain
+        noise.start(t); noise.stop(t + decayTime + 0.1); // Noise transient is short
 
         osc.connect(gain);
-        noise.connect(noiseFilter).connect(gain);
         gain.connect(t_mainGain);
 
-        osc.start(t); noise.start(t);
-        osc.stop(t + 0.8); noise.stop(t + 0.8);
-        extraNodes.push(osc, noise, noiseFilter, gain);
+        osc.start(t);
+        osc.stop(t + decayTime + 0.2); // Stop core tone slightly after noise
+
+        extraNodes.push(osc, gain, noise, noiseFilter, noiseGain);
       };
 
-      // Teentaal rhythmic pattern (16 beats, 4-beat cycles)
-      const rhythmPatternTeentaal = [
-        { type: 'dha', time: 0, vol: 1.0 },   // Dha
-        { type: 'dhin', time: 1, vol: 0.8 }, // Dhin
-        { type: 'dhin', time: 2, vol: 0.8 }, // Dhin
-        { type: 'dha', time: 3, vol: 1.0 }, // Dha
-
-        { type: 'dha', time: 4, vol: 0.9 },   // Dha
-        { type: 'dhin', time: 5, vol: 0.7 }, // Dhin
-        { type: 'dhin', time: 6, vol: 0.7 }, // Dhin
-        { type: 'dha', time: 7, vol: 0.9 }, // Dha
-
-        { type: 'na', time: 8, vol: 0.8 },   // Na
-        { type: 'tin', time: 9, vol: 0.6 }, // Tin
-        { type: 'tin', time: 10, vol: 0.6 }, // Tin
-        { type: 'na', time: 11, vol: 0.8 }, // Na
-
-        { type: 'dha', time: 12, vol: 1.0 },   // Dha
-        { type: 'dhin', time: 13, vol: 0.8 }, // Dhin
-        { type: 'dhin', time: 14, vol: 0.8 }, // Dhin
-        { type: 'dha', time: 15, vol: 1.0 }, // Dha
+      // Define a rhythmic sequence for Tabla
+      const talaDadmra = [ // 7-beat rhythm
+        { beat: 0, instrument: 'dayan', type: 'sharp', vol: 1.0 },
+        { beat: 1, instrument: 'bayan', vol: 0.7 },
+        { beat: 2, instrument: 'dayan', type: 'open', vol: 0.8 },
+        { beat: 3.5, instrument: 'dayan', type: 'sharp', vol: 0.9 },
+        { beat: 4.5, instrument: 'bayan', vol: 0.6 },
+        { beat: 5.5, instrument: 'dayan', type: 'resonant', vol: 0.8 },
       ];
+      
+      const bpm = 80;
+      const beatDuration = 60 / bpm; // Duration of one beat in seconds
 
-      const beatDuration = 0.25; // Each sub-beat is 0.25 seconds for a meditative pace
-      const intervalLength = rhythmPatternTeentaal.length * beatDuration * 1000; // Total duration in ms (16 * 0.25 * 1000 = 4000ms = 4 seconds)
-
-      const playRhythm = () => {
+      const playTablaPattern = () => {
         const t = ctx.currentTime;
-        rhythmPatternTeentaal.forEach(beat => {
-          const beatStartTime = t + beat.time * beatDuration;
-          switch (beat.type) {
-            case 'dha': // Bayan + Resonant Dayan
-              playBayan(beat.vol);
-              playDayan(beat.vol, 'resonant');
-              break;
-            case 'dhin': // Resonant Dayan
-              playDayan(beat.vol, 'resonant');
-              break;
-            case 'na': // Open Dayan
-              playDayan(beat.vol, 'open');
-              break;
-            case 'tin': // Sharp Dayan
-              playDayan(beat.vol, 'sharp');
-              break;
+        talaDadmra.forEach(note => {
+          const scheduleTime = t + (note.beat * beatDuration);
+          if (note.instrument === 'dayan') {
+            playDayan(note.vol, note.type as 'resonant' | 'sharp' | 'open'); // Explicit type assertion
+          } else { // bayan
+            playBayan(note.vol);
           }
         });
       };
       
-      const rhythmInterval = setInterval(playRhythm, intervalLength);
-      playRhythm(); // Play immediately on start
-      extraNodes.push({ stop: () => clearInterval(rhythmInterval) });
+      // Start the tabla sequence repeatedly
+      const loopInterval = (talaDadmra[talaDadmra.length - 1].beat + 1) * beatDuration * 1000;
+      const tablaSequenceInterval = setInterval(playTablaPattern, loopInterval);
+      playTablaPattern(); // Play first pattern immediately
+      extraNodes.push({ stop: () => clearInterval(tablaSequenceInterval) });
       mainNode = t_mainGain;
     }
     else if (type === 'GEN_GUITAR_FOREST') {
       const g_mainGain = ctx.createGain();
-      g_mainGain.gain.setValueAtTime(safeGain(0.4), now);
+      g_mainGain.gain.setValueAtTime(safeGain(0.35), now);
       g_mainGain.connect(voiceGain);
       if (reverbNodeRef.current) g_mainGain.connect(reverbNodeRef.current);
 
-      const scale = [0, 2, 3, 5, 7, 8, 10, 12]; // Natural minor scale
-      const rootFreq = safeFreq(164.81); // E3
-
-      const playGuitarNote = (freqVal: number, velocity: number) => {
-        const t = ctx.currentTime;
-        const osc = ctx.createOscillator();
-        osc.type = 'triangle';
-        osc.frequency.setValueAtTime(freqVal, t);
-
-        const gain = ctx.createGain();
-        gain.gain.setValueAtTime(0, t);
-        gain.gain.linearRampToValueAtTime(safeGain(0.3 * velocity), t + 0.01); // Fast attack
-        gain.gain.exponentialRampToValueAtTime(0.0001, t + 3.0 + Math.random() * 1.5); // Medium-long decay
-
-        // Subtle finger noise
-        if (Math.random() > 0.7) {
-          const noise = ctx.createBufferSource();
-          const nBuf = ctx.createBuffer(1, ctx.sampleRate * 0.05, ctx.sampleRate);
-          const nData = nBuf.getChannelData(0);
-          for(let i=0; i<nBuf.length; i++) nData[i] = Math.random() * 2 - 1;
-          noise.buffer = nBuf;
-          const nLp = ctx.createBiquadFilter();
-          nLp.type = 'highpass'; 
-          nLp.frequency.setValueAtTime(safeFreq(4000), t);
-          const nG = ctx.createGain(); 
-          nG.gain.setValueAtTime(safeGain(0.05), t);
-          noise.connect(nLp).connect(nG).connect(g_mainGain);
-          noise.start(t); noise.stop(t + 0.1);
-          extraNodes.push(noise, nLp, nG);
-        }
-
-        osc.connect(gain).connect(g_mainGain);
-        osc.start(t);
-        osc.stop(t + 5);
-        extraNodes.push(osc, gain);
-      };
-
-      const sequence = [
-        { note: 0, octave: 0, delay: 0 },
-        { note: 3, octave: 0, delay: 0.4 },
-        { note: 7, octave: 0, delay: 0.8 },
-        { note: 10, octave: 0, delay: 1.2 },
-        { note: 7, octave: 0, delay: 1.8 },
-        { note: 5, octave: 0, delay: 2.2 },
-        { note: 2, octave: 1, delay: 2.6 },
-        { note: 0, octave: 1, delay: 3.0 },
-      ];
-
-      const playArpeggio = () => {
-        const t = ctx.currentTime;
-        sequence.forEach(s => {
-          const freq = safeFreq(rootFreq * Math.pow(2, (scale[s.note] + s.octave * 12) / 12));
-          playGuitarNote(freq, safeGain(0.6 + Math.random() * 0.4));
+      const playGuitarNote = (freq: number, startTime: number, duration: number, vel: number) => {
+        const harmonicRatios = [1, 2, 2.99, 4.01, 5.02, 6]; // Inharmonicity for plucked strings
+        harmonicRatios.forEach((ratio, idx) => {
+          const osc = ctx.createOscillator();
+          osc.type = 'triangle'; // Mellower than square
+          osc.frequency.setValueAtTime(safeFreq(freq * ratio), startTime);
+          const g = ctx.createGain();
+          g.gain.setValueAtTime(0, startTime);
+          g.gain.linearRampToValueAtTime(safeGain((0.2 / (idx + 1)) * vel), startTime + 0.01); // Fast attack
+          g.gain.exponentialRampToValueAtTime(0.0001, startTime + duration * (1.2 - idx * 0.05)); // Longer decay for lower harmonics
+          osc.connect(g).connect(g_mainGain);
+          osc.start(startTime);
+          osc.stop(startTime + duration + 1);
+          extraNodes.push(osc, g);
         });
       };
-      
-      const arpeggioInterval = setInterval(playArpeggio, 6000 + Math.random() * 2000); 
-      playArpeggio();
-      extraNodes.push({ stop: () => clearInterval(arpeggioInterval) });
+
+      const scale = [0, 2, 4, 7, 9, 12]; // Major pentatonic-like scale
+      const chordNotes = [
+        [safeFreq(130.81), safeFreq(196.00), safeFreq(261.63)], // C major triad
+        [safeFreq(146.83), safeFreq(220.00), safeFreq(293.66)], // D minor triad (relative)
+        [safeFreq(164.81), safeFreq(246.94), safeFreq(329.63)], // E minor triad
+        [safeFreq(110.00), safeFreq(164.81), safeFreq(220.00)], // A minor triad
+      ];
+      let currentChordIdx = 0;
+
+      const playGuitarArpeggio = () => {
+        const t = ctx.currentTime;
+        const currentChord = chordNotes[currentChordIdx];
+        currentChord.forEach((noteFreq, idx) => {
+          playGuitarNote(noteFreq, t + idx * 0.2, 4.0, 0.7); // Strummed arpeggio
+        });
+        currentChordIdx = (currentChordIdx + 1) % chordNotes.length;
+      };
+
+      const guitarInterval = setInterval(playGuitarArpeggio, 8000); // Change chord every 8 seconds
+      playGuitarArpeggio();
+      extraNodes.push({ stop: () => clearInterval(guitarInterval) });
+
+      // Forest ambiance (light wind, distant leaves)
+      const noiseBuffer = ctx.createBuffer(1, ctx.sampleRate * 5, ctx.sampleRate);
+      const noiseData = noiseBuffer.getChannelData(0);
+      let lastNoiseOut = 0;
+      for (let i = 0; i < noiseBuffer.length; i++) {
+        const white = Math.random() * 2 - 1;
+        lastNoiseOut = (lastNoiseOut + (safeGain(0.02) * white)) / 1.02;
+        noiseData[i] = lastNoiseOut * 2.0;
+      }
+      const noiseSrc = ctx.createBufferSource();
+      noiseSrc.buffer = noiseBuffer; noiseSrc.loop = true;
+      const noiseLp = ctx.createBiquadFilter();
+      noiseLp.type = 'lowpass';
+      noiseLp.frequency.setValueAtTime(safeFreq(500), now);
+      const noiseGain = ctx.createGain();
+      noiseGain.gain.setValueAtTime(safeGain(0.05), now);
+      noiseSrc.connect(noiseLp).connect(noiseGain).connect(g_mainGain);
+      noiseSrc.start();
+      extraNodes.push(noiseSrc, noiseLp, noiseGain);
+
       mainNode = g_mainGain;
     }
     else if (type === 'GEN_HARMONIUM_SANCTUM') {
       const h_mainGain = ctx.createGain();
-      h_mainGain.gain.setValueAtTime(safeGain(0.35), now);
+      h_mainGain.gain.setValueAtTime(safeGain(0.4), now);
       h_mainGain.connect(voiceGain);
       if (reverbNodeRef.current) h_mainGain.connect(reverbNodeRef.current);
 
-      const rootFreq = safeFreq(110); // A2
-      const chord = [rootFreq, safeFreq(rootFreq * 1.5), safeFreq(rootFreq * 2)]; // A minor triad (A, E, A)
+      const droneFreqs = [safeFreq(110), safeFreq(164.81), safeFreq(220)]; // A2, E3, A3
+      droneFreqs.forEach((freqVal, idx) => {
+        const osc = ctx.createOscillator();
+        osc.type = 'sawtooth'; // Richer harmonics than sine
+        osc.frequency.setValueAtTime(freqVal, now);
 
-      chord.forEach((freqVal, idx) => {
-        const osc1 = ctx.createOscillator();
-        osc1.type = 'sawtooth';
-        osc1.frequency.setValueAtTime(freqVal, now);
-        
-        const osc2 = ctx.createOscillator(); // Slightly detuned for richness
-        osc2.type = 'sawtooth';
-        osc2.frequency.setValueAtTime(safeFreq(freqVal * 1.005), now);
+        const filter = ctx.createBiquadFilter();
+        filter.type = 'lowpass';
+        filter.frequency.setValueAtTime(safeFreq(800 + idx * 200), now); // Slightly different filter for each drone
+        filter.Q.setValueAtTime(safeQ(2), now);
 
         const gain = ctx.createGain();
-        gain.gain.setValueAtTime(0, now);
-        gain.gain.linearRampToValueAtTime(safeGain(0.15 / (idx + 1)), now + 2.0); // Slow attack
-        gain.gain.linearRampToValueAtTime(safeGain(0.1 / (idx + 1)), now + 10.0); // Long sustain
-        gain.gain.exponentialRampToValueAtTime(0.0001, now + 20.0); // Slow release
-
-        const vib = ctx.createOscillator(); // Vibrato
-        vib.type = 'sine';
-        vib.frequency.setValueAtTime(safeFreq(2 + Math.random() * 1), now);
-        const vibG = ctx.createGain();
-        vibG.gain.setValueAtTime(safeGain(freqVal * 0.005), now);
-        vib.connect(vibG).connect(osc1.frequency);
-        vib.connect(vibG).connect(osc2.frequency);
-        vib.start(now);
-
-        osc1.connect(gain);
-        osc2.connect(gain);
-        gain.connect(h_mainGain);
-        osc1.start(now); osc2.start(now);
-        extraNodes.push(osc1, osc2, gain, vib, vibG);
+        const lfo = ctx.createOscillator();
+        lfo.frequency.setValueAtTime(safeFreq(0.02 + idx * 0.005), now); // Slow, slightly detuned LFOs for "wobble"
+        const lfoG = ctx.createGain();
+        lfoG.gain.setValueAtTime(safeGain(0.1 + idx * 0.05), now); // Varying depth
+        lfo.connect(lfoG).connect(gain.gain);
+        gain.gain.setValueAtTime(safeGain(0.2 / (idx + 1)), now); // Base gain
+        
+        osc.connect(filter).connect(gain).connect(h_mainGain);
+        osc.start(); lfo.start();
+        extraNodes.push(osc, filter, gain, lfo, lfoG);
       });
 
-      // Bellows noise
-      const noise = ctx.createBufferSource();
-      const nBuf = ctx.createBuffer(1, ctx.sampleRate * 2, ctx.sampleRate);
-      const nData = nBuf.getChannelData(0);
-      for(let i=0; i<nBuf.length; i++) nData[i] = Math.random() * 2 - 1;
-      noise.buffer = nBuf; noise.loop = true;
+      // Subtle, high-frequency "reeds" texture
+      const highFreqOsc = ctx.createOscillator();
+      highFreqOsc.type = 'sawtooth';
+      highFreqOsc.frequency.setValueAtTime(safeFreq(440), now); // A4
+      const highFilter = ctx.createBiquadFilter();
+      highFilter.type = 'highpass';
+      highFilter.frequency.setValueAtTime(safeFreq(1000), now);
+      const highGain = ctx.createGain();
+      highGain.gain.setValueAtTime(safeGain(0.05), now);
+      highFreqOsc.connect(highFilter).connect(highGain).connect(h_mainGain);
+      highFreqOsc.start();
+      extraNodes.push(highFreqOsc, highFilter, highGain);
 
-      const lpFilter = ctx.createBiquadFilter();
-      lpFilter.type = 'lowpass';
-      lpFilter.frequency.setValueAtTime(safeFreq(200), now);
-
-      const noiseGain = ctx.createGain();
-      noiseGain.gain.setValueAtTime(safeGain(0.05), now);
-
-      const noiseLfo = ctx.createOscillator(); // Slow volume modulation for bellows
-      noiseLfo.type = 'sine';
-      noiseLfo.frequency.setValueAtTime(safeFreq(0.05), now);
-      const noiseLfoG = ctx.createGain();
-      noiseLfoG.gain.setValueAtTime(safeGain(0.02), now);
-      noiseLfo.connect(noiseLfoG).connect(noiseGain.gain);
-      noiseLfo.start(now);
-
-      noise.connect(lpFilter).connect(noiseGain).connect(h_mainGain);
-      noise.start(now);
-      extraNodes.push(noise, lpFilter, noiseGain, noiseLfo, noiseLfoG);
       mainNode = h_mainGain;
     }
     // NEW CLASSICAL INSTRUMENTS END HERE
-    else {
-      const dummy = ctx.createOscillator();
-      dummy.frequency.setValueAtTime(safeFreq(432), now);
-      dummy.connect(voiceGain);
-      dummy.start();
-      mainNode = dummy;
-    }
+    
+    // Add all nodes for this voice to the activeVoicesRef for cleanup
+    activeVoicesRef.current.push({ id: trackId, gainNode: voiceGain, nodes: extraNodes.concat(mainNode) });
 
-    activeVoicesRef.current.push({ id: trackId, gainNode: voiceGain, nodes: [...extraNodes, mainNode] });
-    setIsPlaying(true);
-    setIsAnyTrackPlaying(true);
-    setIsLoading(false);
-  }, [isMuted, setIsAnyTrackPlaying, currentTrack.cat]);
+  }, [volume, isMuted, setIsAnyTrackPlaying]); // Added setIsAnyTrackPlaying to dependencies
 
-  const handleTrackSelect = async (track: any) => {
+
+  const togglePlayPause = useCallback(async () => {
     if (isLoading) return;
 
-    // Scenario 1: Toggling off the currently playing track
-    if (currentTrack.id === track.id && isPlaying && !isMuted) {
-      stopAllVoices(false); // Immediate stop
-      setCurrentTrack(track); // Keep it current but stopped for UI
-      return;
-    }
-
-    // Scenario 2: Switching to a new track or starting a new one
-    setIsLoading(true);
-    stopAllVoices(false); // Immediate stop of any existing audio to prepare for the new one
-    
-    const success = await initAudioEngine();
-    if (!success) {
+    if (isPlaying) {
+      stopAllVoices(true); // Fade out
+    } else {
+      setIsLoading(true);
+      await initAudioEngine();
+      startGenerator(currentTrack.url, currentTrack.id);
+      setIsPlaying(true);
+      setIsAnyTrackPlaying(true);
       setIsLoading(false);
-      return;
     }
-    
-    setCurrentTrack(track); // Set the new track immediately for UI updates
+  }, [isPlaying, isLoading, stopAllVoices, initAudioEngine, startGenerator, currentTrack, setIsAnyTrackPlaying]);
 
-    // Give a small moment for the DOM/AudioContext to register the old tracks are gone.
-    // This timeout helps prevent race conditions where a new play request
-    // might overlap with a pending stop/cleanup from a previous track.
-    setTimeout(() => startGenerator(track.url, track.id), 50); 
-  };
-
-  const toggleMute = useCallback(() => {
-    const next = !isMuted; setIsMuted(next);
-    if (masterGainRef.current && audioContextRef.current) {
-      masterGainRef.current.gain.linearRampToValueAtTime(next ? 0 : volume, audioContextRef.current.currentTime + 0.5);
+  const playNextTrack = useCallback(() => {
+    const currentIndex = filteredTracks.findIndex(t => t.id === currentTrack.id);
+    const nextIndex = (currentIndex + 1) % filteredTracks.length;
+    setCurrentTrack(filteredTracks[nextIndex]);
+    if (isPlaying) {
+      setIsLoading(true);
+      stopAllVoices(); // Stop immediately before changing track
+      startGenerator(filteredTracks[nextIndex].url, filteredTracks[nextIndex].id);
+      setIsLoading(false);
     }
-    // If muting, stop all voices immediately. If unmuting and was playing, restart current track.
-    if (next) {
-      stopAllVoices(false);
-    } else if (isPlaying && currentTrack) {
-      setIsLoading(true); // Indicate loading as audio restarts
-      setTimeout(() => startGenerator(currentTrack.url, currentTrack.id), 50);
-    }
-  }, [isMuted, volume, isPlaying, currentTrack, stopAllVoices, startGenerator]);
+  }, [currentTrack, filteredTracks, isPlaying, stopAllVoices, startGenerator]);
 
-  const drawVisualizer = useCallback(() => {
-    if (!canvasRef.current || !analyzerRef.current) return;
-    const canvas = canvasRef.current;
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
-
-    // Ensure canvas drawing resolution matches display size for clarity
-    const displayWidth = canvas.offsetWidth;
-    const displayHeight = canvas.offsetHeight;
-    if (canvas.width !== displayWidth || canvas.height !== displayHeight) {
-      canvas.width = displayWidth;
-      canvas.height = displayHeight;
+  const playPreviousTrack = useCallback(() => {
+    const currentIndex = filteredTracks.findIndex(t => t.id === currentTrack.id);
+    const prevIndex = (currentIndex - 1 + filteredTracks.length) % filteredTracks.length;
+    setCurrentTrack(filteredTracks[prevIndex]);
+    if (isPlaying) {
+      setIsLoading(true);
+      stopAllVoices(); // Stop immediately before changing track
+      startGenerator(filteredTracks[prevIndex].url, filteredTracks[prevIndex].id);
+      setIsLoading(false);
     }
+  }, [currentTrack, filteredTracks, isPlaying, stopAllVoices, startGenerator]);
 
-    const data = new Uint8Array(analyzerRef.current.frequencyBinCount);
-    analyzerRef.current.getByteFrequencyData(data);
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    const cx = canvas.width / 2;
-    const cy = canvas.height / 2;
-    
-    // Different visualizer logic for sleep: larger, slower circles
-    const isSleep = currentTrack.cat === 'sleep';
-    const rb = Math.min(cx, cy) * (isSleep ? 0.5 : 0.4);
-    
-    ctx.beginPath(); 
-    ctx.lineWidth = isSleep ? 6 : 3; 
-    ctx.strokeStyle = isSleep ? 'rgba(59, 130, 246, 0.4)' : 'rgba(255,255,255,0.6)';
-    
-    for (let i = 0; i < data.length; i++) {
-      const h = (data[i] / 255) * rb * (isSleep ? 0.3 : 0.6);
-      const a = (i / data.length) * Math.PI * 2;
-      const x = cx + Math.cos(a) * (rb + h);
-      const y = cy + Math.sin(a) * (rb + h);
-      if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
-    }
-    ctx.closePath(); ctx.stroke();
-    animationRef.current = requestAnimationFrame(drawVisualizer);
-  }, [currentTrack.cat]);
 
   useEffect(() => {
-    if (isPlaying && !isMuted) drawVisualizer();
-    else if (animationRef.current) cancelAnimationFrame(animationRef.current);
-    return () => { if (animationRef.current) cancelAnimationFrame(animationRef.current); };
-  }, [isPlaying, isMuted, drawVisualizer]);
-
-  useEffect(() => {
-    let t: any;
-    if (isPlaying && !isMuted) t = setInterval(() => setSessionTime(p => p + 1), 1000);
-    return () => clearInterval(t);
+    let timer: any;
+    if (isPlaying && !isMuted) {
+      timer = setInterval(() => setSessionTime(prev => prev + 1), 1000);
+    }
+    return () => clearInterval(timer);
   }, [isPlaying, isMuted]);
 
   useEffect(() => {
-    return () => { stopAllVoices(false); setIsAnyTrackPlaying(false); };
-  }, [setIsAnyTrackPlaying, stopAllVoices]);
+    // This effect handles starting/stopping based on the track and play state
+    if (isPlaying && !isLoading && !isMuted) {
+      stopAllVoices(); // Stop any previous track if playing
+      startGenerator(currentTrack.url, currentTrack.id);
+    } else if (!isPlaying && !isMuted) {
+      stopAllVoices();
+    }
+  }, [currentTrack.id]); // Only re-run when track changes
+
+  // Global mute/unmute
+  const toggleMute = useCallback(() => {
+    const nextMuted = !isMuted;
+    setIsMuted(nextMuted);
+
+    const ctx = audioContextRef.current;
+    if (ctx && masterGainRef.current) {
+      masterGainRef.current.gain.cancelScheduledValues(ctx.currentTime);
+      masterGainRef.current.gain.setValueAtTime(masterGainRef.current.gain.value, ctx.currentTime); // Ensure current value is set
+      masterGainRef.current.gain.linearRampToValueAtTime(nextMuted ? 0 : volume, ctx.currentTime + 0.1);
+    }
+
+    if (nextMuted) {
+      stopAllVoices(); // Stop all generators if muted
+    } else if (isPlaying && !isLoading) { // Only restart if was playing and not loading
+      setIsLoading(true);
+      startGenerator(currentTrack.url, currentTrack.id);
+      setIsLoading(false);
+    }
+  }, [isMuted, isPlaying, isLoading, volume, currentTrack, stopAllVoices, startGenerator]);
+  
+  // Cleanup on component unmount
+  useEffect(() => {
+    return () => {
+      stopAllVoices();
+      if (audioContextRef.current && audioContextRef.current.state !== 'closed') {
+        audioContextRef.current.close().catch(e => console.error("Error closing AudioContext on unmount", e));
+        audioContextRef.current = null;
+      }
+      setIsAnyTrackPlaying(false); // Ensure global state is reset
+    };
+  }, [stopAllVoices, setIsAnyTrackPlaying]);
+
+  const formatTime = (s: number) => {
+    const m = Math.floor(s / 60);
+    return `${m}:${(s % 60).toString().padStart(2, '0')}`;
+  };
+
+  const drawVisualization = useCallback(() => {
+    const canvas = canvasRef.current;
+    const analyzer = analyzerRef.current;
+    if (!canvas || !analyzer) return;
+
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    const bufferLength = analyzer.frequencyBinCount;
+    const dataArray = new Uint8Array(bufferLength);
+    analyzer.getByteFrequencyData(dataArray);
+
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    const barWidth = (canvas.width / bufferLength) * 2.5; // Adjusted bar width for better spacing
+    let x = 0;
+
+    for (let i = 0; i < bufferLength; i++) {
+      const barHeight = dataArray[i] / 2; // Adjusted height scaling
+      const gradient = ctx.createLinearGradient(0, canvas.height, 0, canvas.height - barHeight);
+      gradient.addColorStop(0, '#2dd4bf'); // Teal
+      gradient.addColorStop(1, '#155e75'); // Darker teal
+
+      ctx.fillStyle = gradient;
+      ctx.fillRect(x, canvas.height - barHeight, barWidth, barHeight);
+
+      x += barWidth + 1; // Spacing between bars
+    }
+
+    animationRef.current = requestAnimationFrame(drawVisualization);
+  }, []);
+
+  useEffect(() => {
+    if (isPlaying && analyzerRef.current && canvasRef.current) {
+      animationRef.current = requestAnimationFrame(drawVisualization);
+    } else {
+      if (animationRef.current) {
+        cancelAnimationFrame(animationRef.current);
+      }
+      const ctx = canvasRef.current?.getContext('2d');
+      if (ctx) ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height); // Clear canvas when stopped
+    }
+    return () => {
+      if (animationRef.current) {
+        cancelAnimationFrame(animationRef.current);
+      }
+    };
+  }, [isPlaying, drawVisualization]);
+  
 
   return (
-    <div className="space-y-6 md:space-y-10 animate-in slide-in-from-bottom-8 duration-1000 px-2 md:px-0 pb-40">
-      <div className="flex justify-between items-center px-4 md:px-0">
-        <button onClick={() => { stopAllVoices(false); setView(AppView.DASHBOARD); }} className="flex items-center gap-2 text-teal-800 dark:text-teal-300 label-caps text-[10px] md:text-xs hover:gap-3 transition-all outline-none"
-        aria-label="Exit Meditation Player"
-        >
-          <ChevronLeft size={16} /> Exit Sanctuary
-        </button>
-        <div className="flex items-center gap-3">
-           <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 bg-white/60 dark:bg-slate-800/60 backdrop-blur-3xl rounded-lg border border-white dark:border-slate-700 shadow-sm transition-colors duration-300">
-             <Timer size={14} className="text-teal-600 dark:text-teal-400" />
-             <span className="text-[10px] font-black uppercase tracking-widest text-slate-900 dark:text-slate-200">{Math.floor(sessionTime/60)}:{(sessionTime%60).toString().padStart(2,'0')}</span>
-           </div>
-           <div className="flex items-center gap-2 bg-white/80 dark:bg-slate-800/80 backdrop-blur-md px-3 py-1.5 rounded-lg border border-white dark:border-slate-700 shadow-sm transition-colors duration-300">
-            <button onClick={toggleMute} className={`transition-colors outline-none focus-visible:ring-2 focus-visible:ring-teal-400 focus-visible:rounded-full ${isMuted ? 'text-slate-400' : 'text-teal-700 dark:text-teal-400'}`}
-            aria-label={isMuted ? "Unmute audio" : "Mute audio"}
-            >
-              {isMuted ? <VolumeX size={14} /> : <Volume2 size={14} />}
-            </button>
-            <input type="range" min="0" max="1" step="0.01" className="w-16 md:w-20 h-1 bg-teal-100 dark:bg-teal-900/50 rounded-full appearance-none cursor-pointer accent-teal-700 dark:accent-teal-400 custom-range-slider-music" value={volume} onChange={(e) => {
-                const val = parseFloat(e.target.value); setVolume(val);
-                if (masterGainRef.current && audioContextRef.current && !isMuted) masterGainRef.current.gain.setValueAtTime(val, audioContextRef.current.currentTime);
-              }}
-              aria-label="Volume slider"
-            />
-            <style jsx>{`
-              .custom-range-slider-music::-webkit-slider-thumb {
-                -webkit-appearance: none;
-                appearance: none;
-                width: 16px;
-                height: 16px;
-                border-radius: 50%;
-                background: var(--sanctuary-teal);
-                cursor: grab;
-                box-shadow: 0 0 0 3px rgba(45, 212, 191, 0.2);
-                transition: background 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
-              }
-              .custom-range-slider-music::-moz-range-thumb {
-                width: 16px;
-                height: 16px;
-                border-radius: 50%;
-                background: var(--sanctuary-teal);
-                cursor: grab;
-                box-shadow: 0 0 0 3px rgba(45, 212, 191, 0.2);
-                transition: background 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
-                border: none;
-              }
-              .custom-range-slider-music::-webkit-slider-thumb:hover {
-                background: var(--sanctuary-blue);
-                box-shadow: 0 0 0 5px rgba(45, 212, 191, 0.3);
-              }
-              .custom-range-slider-music::-moz-range-thumb:hover {
-                background: var(--sanctuary-blue);
-                box-shadow: 0 0 0 5px rgba(45, 212, 191, 0.3);
-              }
-            `}</style>
+    <div className="space-y-8 md:space-y-12 animate-in slide-in-from-bottom-8 duration-1000 pb-24 px-2 md:px-0 max-w-7xl mx-auto">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+        <div className="space-y-1">
+          <button 
+            onClick={() => { togglePlayPause(); setView(AppView.DASHBOARD); }}
+            className="flex items-center gap-2 text-indigo-800 label-caps text-[10px] md:text-xs hover:gap-3 transition-all mb-2"
+            aria-label="Back to Sanctuary Dashboard"
+          >
+            <ChevronLeft size={16} /> Exit Mediation
+          </button>
+          <div className="flex flex-col md:flex-row md:items-center gap-4">
+            <h2 className="text-4xl md:text-7xl font-black text-slate-900 tracking-tighter leading-none transition-colors duration-300">Daily Meditation</h2>
+            <span className="px-3 py-1 bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 rounded-full border border-indigo-200 uppercase w-fit text-[10px] font-black tracking-widest">BETA</span>
           </div>
+          <p className="text-slate-500 font-semibold text-lg md:text-2xl transition-colors duration-300">Procedural forest baths for tech professionals.</p>
         </div>
-      </div>
-      
-      <div className="relative h-[320px] md:h-[480px] rounded-[2.5rem] md:rounded-[4rem] overflow-hidden group shadow-[0_30px_80px_-15px_rgba(0,0,0,0.3)] dark:shadow-[0_30px_80px_-15px_rgba(0,0,0,0.6)] transition-all duration-1000 ring-1 ring-white/15 dark:ring-white/5">
-        <div className={`absolute inset-0 bg-gradient-to-br ${currentTrack.color} transition-all duration-[2500ms] scale-105 group-hover:scale-100`}></div>
-        <div className="absolute inset-0 bg-black/45 backdrop-blur-[2px]"></div>
-        <canvas ref={canvasRef} width={1000} height={1000} className="absolute inset-0 w-full h-full opacity-70 pointer-events-none mix-blend-screen" />
-        <div className="absolute inset-0 flex flex-col items-center justify-center p-6 md:p-12 z-10 text-center">
-          <div className="space-y-4 md:space-y-6 animate-in zoom-in-95 duration-1000 max-w-4xl">
-             <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-white/10 dark:bg-black/20 backdrop-blur-3xl rounded-full border border-white/20 dark:border-white/10 mx-auto">
-               <Sparkles size={14} className="text-teal-300" />
-               <p className="text-[10px] md:text-xs font-black uppercase tracking-[0.3em] text-white/90">Mode: {currentTrack.genre}</p>
-             </div>
-             <div className="space-y-2">
-               <h2 className="text-4xl sm:text-6xl md:text-7xl font-black tracking-tighter drop-shadow-2xl text-white leading-[0.9]">{currentTrack.name}</h2>
-               {currentTrack.benefit && <p className="text-sm md:text-xl text-teal-50 font-medium italic drop-shadow-lg opacity-90 leading-relaxed max-w-2xl mx-auto">"{currentTrack.benefit}"</p>}
-             </div>
-          </div>
-          <div className="mt-8 md:mt-12">
-            <button onClick={() => handleTrackSelect(currentTrack)} disabled={isLoading} className={`w-14 h-14 md:w-20 md:h-20 bg-white text-teal-950 rounded-full flex items-center justify-center shadow-xl hover:scale-110 active:scale-95 transition-all ${isLoading ? 'opacity-50' : ''}`}
-            aria-label={isPlaying && !isMuted ? "Pause current track" : "Play current track"}
-            >
-              {isLoading ? <Loader2 size={24} className="animate-spin text-teal-700" /> : isPlaying && !isMuted ? <Pause size={32} fill="currentColor" /> : <Play size={32} className="ml-1" fill="currentColor" />}
-            </button>
-          </div>
+
+        <div className="flex items-center gap-4 bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl p-3 rounded-[2.5rem] border border-white dark:border-slate-700 shadow-sm ring-1 ring-indigo-500/5 transition-colors duration-300">
+           <Timer className="text-indigo-600 dark:text-indigo-400 ml-2" />
+           <p className="text-slate-900 dark:text-white font-black uppercase tracking-widest text-[10px] pr-4">Session Active</p>
         </div>
       </div>
 
-      <div className="space-y-8">
-        <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-4 px-4 md:px-6">
-          <div className="space-y-1">
-            <h3 className="text-2xl md:text-4xl font-black text-slate-900 dark:text-white tracking-tight leading-none transition-colors duration-300">Meditation Library</h3>
-            <p className="text-slate-500 dark:text-slate-300 font-bold text-xs md:text-sm transition-colors duration-300">Clinical-grade procedural audio for neural reset.</p>
-          </div>
-          <div className="flex p-1 bg-slate-100/80 dark:bg-slate-800/80 backdrop-blur-3xl rounded-xl gap-0.5 border border-white dark:border-slate-700 shadow-inner flex-wrap">
-            {CATEGORIES.map((cat) => (
-              <button key={cat.id} onClick={() => setActiveCat(cat.id)} className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all ${activeCat === cat.id ? 'bg-white text-slate-900 shadow-sm dark:bg-slate-700 dark:text-white' : 'text-slate-500 hover:text-slate-800 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-700'}`}
-              aria-pressed={activeCat === cat.id}
-              aria-label={`Filter by ${cat.label} category`}
-              >
-                <cat.icon size={12} className={activeCat === cat.id ? `${cat.color} dark:text-teal-400` : ''} />{cat.label}
-              </button>
-            ))}
-          </div>
-        </div>
+      <div className="glass-card p-8 md:p-14 rounded-[3rem] md:rounded-[5rem] relative overflow-hidden flex flex-col items-center justify-center min-h-[400px] shadow-2xl border-none ring-1 ring-indigo-500/10 dark:ring-indigo-700/10 hover:shadow-indigo-500/20 transition-all duration-300">
+        <div className={`absolute inset-0 bg-gradient-to-br ${currentTrack.color} opacity-60 mix-blend-multiply transition-all duration-1000`}></div>
+        <div className="absolute inset-0 bg-black/50 backdrop-brightness-75"></div>
         
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 px-4 md:px-6">
-          {filteredTracks.map(item => {
-            const isActive = currentTrack.id === item.id;
-            return (
-              <button 
-                key={item.id} 
-                onClick={() => handleTrackSelect(item)} 
-                className={`group relative flex items-center gap-3 p-4 rounded-2xl transition-all duration-300 text-left overflow-hidden outline-none ${isActive && !isMuted ? 'bg-slate-950 dark:bg-teal-900 text-white shadow-lg ring-2 ring-teal-500/30 dark:ring-teal-700/30' : 'bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 border border-slate-100 dark:border-slate-700'}`}
-                aria-label={`Select track: ${item.name}`}
-              >
-                <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 transition-all duration-300 ${isActive && !isMuted ? 'bg-teal-600/20' : `bg-gradient-to-br ${item.color} text-white shadow-sm group-hover:scale-105`}`}>
-                  {isActive && isLoading ? <Loader2 size={18} className="animate-spin text-teal-400" /> : isActive && isPlaying && !isMuted ? <Pause size={18} fill="currentColor" className="text-teal-400" /> : <item.icon size={18} />}
-                </div>
-                <div className="space-y-0.5 min-w-0 flex-1">
-                  <p className="text-sm font-black tracking-tight leading-tight truncate text-slate-900 dark:text-white transition-colors duration-300">{item.name}</p>
-                  <p className={`text-[8px] uppercase font-black tracking-[0.2em] ${isActive && !isMuted ? 'text-teal-400' : 'text-slate-400 dark:text-slate-500'}`}>{item.genre}</p>
-                </div>
-              </button>
-            );
-          })}
+        <canvas ref={canvasRef} width={1000} height={200} className="absolute bottom-0 left-0 w-full opacity-30"></canvas>
+
+        <div className="relative z-10 flex flex-col items-center text-white text-center space-y-6 md:space-y-10">
+          <div className="inline-flex items-center gap-3 px-6 py-2.5 bg-white/10 backdrop-blur-3xl rounded-full border border-white/25 shadow-2xl">
+            <Sparkles size={16} className="text-indigo-300 animate-pulse" />
+            <p className="text-[10px] md:text-sm font-black uppercase tracking-[0.5em] text-white">GENERATIVE AUDIO</p>
+          </div>
+          <h3 className="text-4xl md:text-6xl font-black tracking-tight drop-shadow-[0_20px_50px_rgba(0,0,0,0.8)] leading-none text-white italic transition-all duration-300">{currentTrack.name}</h3>
+          <p className="text-base md:text-xl text-indigo-100 font-medium italic tracking-wide max-w-2xl mx-auto drop-shadow-lg opacity-90 leading-relaxed">"{currentTrack.benefit}"</p>
         </div>
+
+        <div className="relative z-10 flex items-center gap-8 md:gap-12 mt-10 md:mt-16">
+          <button 
+            onClick={playPreviousTrack}
+            disabled={isLoading}
+            className="w-16 h-16 md:w-20 md:h-20 flex items-center justify-center rounded-full bg-white/10 text-white hover:bg-white/20 active:scale-90 transition-all shadow-lg"
+            aria-label="Previous track"
+          >
+            <SkipBack size={24} />
+          </button>
+          <button 
+            onClick={togglePlayPause}
+            disabled={isLoading}
+            className="w-24 h-24 md:w-32 md:h-32 flex items-center justify-center rounded-full bg-white text-slate-900 shadow-[0_0_80px_rgba(255,255,255,0.4)] hover:scale-110 active:scale-90 transition-all"
+            aria-label={isPlaying ? "Pause meditation" : "Play meditation"}
+          >
+            {isLoading ? <Loader2 size={40} className="animate-spin text-indigo-600" /> : (isPlaying ? <Pause size={48} fill="currentColor" /> : <Play size={48} fill="currentColor" className="ml-2" />)}
+          </button>
+          <button 
+            onClick={playNextTrack}
+            disabled={isLoading}
+            className="w-16 h-16 md:w-20 md:h-20 flex items-center justify-center rounded-full bg-white/10 text-white hover:bg-white/20 active:scale-90 transition-all shadow-lg"
+            aria-label="Next track"
+          >
+            <SkipForward size={24} />
+          </button>
+        </div>
+
+        <div className="absolute bottom-10 md:bottom-14 right-10 md:right-14 z-10 flex items-center gap-4">
+          <button 
+            onClick={toggleMute}
+            className={`transition-all hover:scale-110 active:scale-95 outline-none ${isMuted ? 'text-slate-400' : 'text-white'}`}
+            aria-label={isMuted ? "Unmute audio" : "Mute audio"}
+          >
+            {isMuted ? <VolumeX size={20} /> : <Volume2 size={20} />}
+          </button>
+          <input 
+            type="range" min="0" max="1" step="0.01" 
+            className="w-20 md:w-32 h-1 bg-white/30 rounded-full appearance-none cursor-pointer accent-white"
+            value={volume}
+            onChange={(e) => {
+              const val = parseFloat(e.target.value);
+              setVolume(val);
+              if (masterGainRef.current && audioContextRef.current && !isMuted) {
+                masterGainRef.current.gain.setValueAtTime(val, audioContextRef.current.currentTime);
+              }
+            }}
+          />
+        </div>
+        <div className="absolute bottom-10 md:bottom-14 left-10 md:left-14 z-10 text-white/80">
+          <p className="text-[10px] font-black uppercase tracking-widest">Session Time</p>
+          <p className="text-xl md:text-3xl font-black font-display tracking-tight">{formatTime(sessionTime)}</p>
+        </div>
+      </div>
+
+      <div className="px-2 md:px-0">
+        <h3 className="text-2xl md:text-4xl font-black text-slate-900 tracking-tight mb-6 transition-colors duration-300">Track Categories</h3>
+        <div className="flex flex-wrap gap-3">
+          {CATEGORIES.map(cat => (
+            <button
+              key={cat.id}
+              onClick={() => setActiveCat(cat.id)}
+              className={`flex items-center gap-2 px-5 py-2.5 rounded-full border transition-all ${activeCat === cat.id ? `${cat.bg} ${cat.color} border-current shadow-lg` : 'bg-white text-slate-500 border-slate-200 hover:border-slate-400 hover:text-slate-700'}`}
+              aria-label={`Select ${cat.label} category`}
+            >
+              <cat.icon size={16} />
+              <span className="text-sm font-black uppercase tracking-widest">{cat.label}</span>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 md:gap-8 px-2 md:px-0">
+        {filteredTracks.map(track => (
+          <button 
+            key={track.id}
+            onClick={() => {
+              setCurrentTrack(track);
+              if (!isPlaying && !isMuted) togglePlayPause(); // Auto-play if not already playing and not muted
+            }}
+            className={`group glass-card p-6 md:p-8 rounded-[2.5rem] text-left space-y-4 transition-all hover:scale-[1.03] hover:shadow-xl border-none ring-1 ring-slate-100/50 dark:ring-slate-200/50 ${currentTrack.id === track.id ? 'bg-indigo-50/80 dark:bg-indigo-900/40 border-indigo-200 dark:border-indigo-700 ring-indigo-500/30' : ''}`}
+            aria-label={`Play ${track.name} (${track.genre})`}
+          >
+            <div className={`relative w-12 h-12 md:w-14 md:h-14 bg-gradient-to-br ${track.color} text-white flex items-center justify-center rounded-2xl shadow-lg transition-transform group-hover:rotate-6`}>
+              {currentTrack.id === track.id && isPlaying && !isLoading ? (
+                <WavesIcon size={24} className="animate-pulse" />
+              ) : (
+                <track.icon size={24} />
+              )}
+            </div>
+            <div>
+              <h4 className={`text-lg md:text-xl font-black text-slate-900 dark:text-white tracking-tight leading-tight transition-colors duration-300`}>
+                {track.name}
+              </h4>
+              <p className="text-[10px] md:text-xs font-semibold text-slate-500 dark:text-slate-400 mt-1 leading-tight transition-colors duration-300">{track.genre}</p>
+            </div>
+            {currentTrack.id === track.id && (isPlaying || isLoading) && (
+              <div className="absolute top-4 right-4 text-indigo-500 dark:text-indigo-300">
+                {isLoading ? <Loader2 size={20} className="animate-spin" /> : <Play size={20} fill="currentColor" />}
+              </div>
+            )}
+          </button>
+        ))}
       </div>
     </div>
   );

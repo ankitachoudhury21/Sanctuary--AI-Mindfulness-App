@@ -1,6 +1,6 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { GoogleGenAI, Modality, LiveServerMessage } from '@google/genai';
-import { X, Mic, MicOff, Save, Sparkles, MessageCircle, AlertCircle } from 'lucide-react';
+import { X, Mic, MicOff, Save, Sparkles, MessageCircle, AlertCircle, KeyRound, Radio } from 'lucide-react';
 import { TranscriptionMessage } from '../types';
 
 interface Props {
@@ -66,6 +66,14 @@ const LiveVoiceSession: React.FC<Props> = ({ onClose, onSave, userName }) => {
   const [isMuted, setIsMuted] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [errorState, setErrorState] = useState<string | null>(null);
+  const [isKeySelectionRequired, setIsKeySelectionRequired] = useState(false);
+  const [isKeySelecting, setIsKeySelecting] = useState(false);
+  const [isLoadingSession, setIsLoadingSession] = useState(true);
+
+  // Refs for audio state that needs to be current within callbacks
+  const isMutedRef = useRef(isMuted);
+  const mediaStreamRef = useRef<MediaStream | null>(null);
+  const inputSourceRef = useRef<MediaStreamAudioSourceNode | null>(null);
 
   const sessionRef = useRef<any>(null);
   const audioContextInRef = useRef<AudioContext | null>(null);
@@ -81,165 +89,286 @@ const LiveVoiceSession: React.FC<Props> = ({ onClose, onSave, userName }) => {
     messagesRef.current = messages;
   }, [messages]);
 
+  // Keep isMutedRef always up-to-date with the state
   useEffect(() => {
-    const initSession = async () => {
-      try {
-        const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-        
-        audioContextInRef.current = new (window.AudioContext || (window as any).webkitAudioContext)({ sampleRate: 16000 });
-        audioContextOutRef.current = new (window.AudioContext || (window as any).webkitAudioContext)({ sampleRate: 24000 });
+    isMutedRef.current = isMuted;
+  }, [isMuted]);
 
-        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+  const cleanupAudio = useCallback(() => {
+    console.log("Cleaning up audio resources...");
+    if (sessionRef.current) {
+      try { sessionRef.current.close(); } catch (e) { console.warn("Error closing session", e); }
+      sessionRef.current = null;
+    }
+    if (scriptProcessorRef.current) {
+      try { scriptProcessorRef.current.disconnect(); } catch (e) { console.warn("Error disconnecting scriptProcessor", e); }
+      scriptProcessorRef.current = null;
+    }
+    if (inputSourceRef.current) {
+      try { inputSourceRef.current.disconnect(); } catch (e) { console.warn("Error disconnecting inputSource", e); }
+      inputSourceRef.current = null;
+    }
+    sourcesRef.current.forEach(s => {
+      try { s.stop(); } catch (e) { console.warn("Error stopping audio source", e); }
+      try { s.disconnect(); } catch (e) { console.warn("Error disconnecting audio source", e); }
+    });
+    sourcesRef.current.clear();
 
-        const sessionPromise = ai.live.connect({
-          model: 'gemini-2.5-flash-native-audio-preview-09-2025',
-          config: {
-            responseModalities: [Modality.AUDIO],
-            speechConfig: {
-              voiceConfig: { prebuiltVoiceConfig: { voiceName: 'Puck' } },
-            },
-            inputAudioTranscription: {},
-            outputAudioTranscription: {},
-            systemInstruction: `You are a supportive, warm, and professional mindfulness companion for ${userName}, a tech professional. 
-            Help them through their journaling process by listening intently and providing empathetic, short reflections. 
-            Keep your responses concise and focused on their well-being. If they seem stressed, offer a small grounding exercise.`,
+    if (mediaStreamRef.current) {
+      mediaStreamRef.current.getTracks().forEach(track => {
+        try { track.stop(); } catch (e) { console.warn("Error stopping media stream track", e); }
+      });
+      mediaStreamRef.current = null;
+    }
+
+    if (audioContextInRef.current && audioContextInRef.current.state !== 'closed') {
+      audioContextInRef.current.close().catch(e => console.warn("Error closing input AudioContext", e));
+      audioContextInRef.current = null;
+    }
+    if (audioContextOutRef.current && audioContextOutRef.current.state !== 'closed') {
+      audioContextOutRef.current.close().catch(e => console.warn("Error closing output AudioContext", e));
+      audioContextOutRef.current = null;
+    }
+    console.log("Audio resources cleaned up.");
+  }, []);
+
+  const initSession = useCallback(async () => {
+    console.log("Initializing live session...");
+    setIsLoadingSession(true);
+    setErrorState(null);
+    setIsKeySelectionRequired(false);
+    setIsKeySelecting(false);
+
+    // Clean up any existing session or audio components before starting a new one
+    cleanupAudio(); 
+
+    try {
+      if (!(await window.aistudio.hasSelectedApiKey())) {
+        setIsKeySelectionRequired(true);
+        setIsLoadingSession(false);
+        console.log("API key selection required.");
+        return;
+      }
+
+      const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+      
+      audioContextInRef.current = new (window.AudioContext || (window as any).webkitAudioContext)({ sampleRate: 16000 });
+      audioContextOutRef.current = new (window.AudioContext || (window as any).webkitAudioContext)({ sampleRate: 24000 });
+
+      // Request new media stream on each init to ensure fresh access
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      mediaStreamRef.current = stream; // Store the stream to stop tracks later
+
+      const sessionPromise = ai.live.connect({
+        model: 'gemini-2.5-flash-native-audio-preview-09-2025',
+        config: {
+          responseModalities: [Modality.AUDIO],
+          speechConfig: {
+            voiceConfig: { prebuiltVoiceConfig: { voiceName: 'Puck' } },
           },
-          callbacks: {
-            onopen: () => {
-              setIsConnected(true);
-              setErrorState(null);
-              const source = audioContextInRef.current!.createMediaStreamSource(stream);
-              const scriptProcessor = audioContextInRef.current!.createScriptProcessor(4096, 1, 1);
-              scriptProcessorRef.current = scriptProcessor;
-              
-              scriptProcessor.onaudioprocess = (e) => {
-                if (isMuted) return;
-                const inputData = e.inputBuffer.getChannelData(0);
-                const pcmBytes = encodePCM(inputData); // Use the clamping encoder
-                const pcmBase64 = encodeBase64(pcmBytes);
-                
-                sessionPromise.then(session => {
-                  if (session) {
-                    session.sendRealtimeInput({
-                      media: { data: pcmBase64, mimeType: 'audio/pcm;rate=16000' }
-                    });
-                  }
-                }).catch(() => {});
-              };
+          inputAudioTranscription: {},
+          outputAudioTranscription: {},
+          systemInstruction: `You are a supportive, warm, and professional mindfulness companion for ${userName}, a tech professional. 
+          Help them through their journaling process by listening intently and providing empathetic, short reflections. 
+          Keep your responses concise and focused on their well-being. If they seem stressed, offer a small grounding exercise.`,
+        },
+        callbacks: {
+          onopen: () => {
+            console.log("Live session opened.");
+            setIsConnected(true);
+            setErrorState(null);
+            setIsLoadingSession(false);
 
-              source.connect(scriptProcessor);
-              scriptProcessor.connect(audioContextInRef.current!.destination);
-            },
-            onmessage: async (message: LiveServerMessage) => {
-              // Handle Transcriptions
-              if (message.serverContent?.inputTranscription) {
-                transcriptionRef.current.user += message.serverContent.inputTranscription.text;
-                setMessages(prev => {
-                   const last = prev[prev.length - 1];
-                   if (last?.role === 'user') {
+            const source = audioContextInRef.current!.createMediaStreamSource(mediaStreamRef.current!);
+            inputSourceRef.current = source; // Store source to disconnect later
+            const scriptProcessor = audioContextInRef.current!.createScriptProcessor(4096, 1, 1);
+            scriptProcessorRef.current = scriptProcessor;
+            
+            scriptProcessor.onaudioprocess = (e) => {
+              // Use the ref to get the latest isMuted state
+              if (isMutedRef.current) return; 
+
+              const inputData = e.inputBuffer.getChannelData(0);
+              const pcmBytes = encodePCM(inputData); // Use the clamping encoder
+              const pcmBase64 = encodeBase64(pcmBytes);
+              
+              sessionPromise.then(session => {
+                if (session) {
+                  session.sendRealtimeInput({
+                    media: { data: pcmBase64, mimeType: 'audio/pcm;rate=16000' }
+                  });
+                }
+              }).catch((sendErr) => {
+                // Catch sending errors without breaking the session entirely
+                console.warn("Error sending realtime input:", sendErr);
+              });
+            };
+
+            source.connect(scriptProcessor);
+            scriptProcessor.connect(audioContextInRef.current!.destination);
+          },
+          onmessage: async (message: LiveServerMessage) => {
+            // Handle Transcriptions
+            if (message.serverContent?.inputTranscription) {
+              transcriptionRef.current.user += message.serverContent.inputTranscription.text;
+              setMessages(prev => {
+                 const last = prev[prev.length - 1];
+                 if (last?.role === 'user') {
+                   // Only update if the text actually changed to avoid unnecessary re-renders
+                   if (last.text !== transcriptionRef.current.user) {
                      return [...prev.slice(0, -1), { role: 'user', text: transcriptionRef.current.user }];
                    }
-                   return [...prev, { role: 'user', text: transcriptionRef.current.user }];
-                });
-              }
+                   return prev; // No change, return previous state
+                 }
+                 return [...prev, { role: 'user', text: transcriptionRef.current.user }];
+              });
+            }
 
-              if (message.serverContent?.outputTranscription) {
-                transcriptionRef.current.model += message.serverContent.outputTranscription.text;
-                setMessages(prev => {
-                  const last = prev[prev.length - 1];
-                  if (last?.role === 'model') {
+            if (message.serverContent?.outputTranscription) {
+              transcriptionRef.current.model += message.serverContent.outputTranscription.text;
+              setMessages(prev => {
+                const last = prev[prev.length - 1];
+                if (last?.role === 'model') {
+                  // Only update if the text actually changed
+                  if (last.text !== transcriptionRef.current.model) {
                     return [...prev.slice(0, -1), { role: 'model', text: transcriptionRef.current.model }];
                   }
-                  return [...prev, { role: 'model', text: transcriptionRef.current.model }];
-                });
-              }
-
-              if (message.serverContent?.turnComplete) {
-                transcriptionRef.current = { user: '', model: '' };
-              }
-
-              // Handle Audio Output
-              const audioBase64 = message.serverContent?.modelTurn?.parts[0]?.inlineData?.data;
-              if (audioBase64 && audioContextOutRef.current) {
-                setIsSpeaking(true);
-                const ctx = audioContextOutRef.current;
-                nextStartTimeRef.current = Math.max(nextStartTimeRef.current, ctx.currentTime);
-                
-                try {
-                  const buffer = await decodeAudioData(decodeBase64(audioBase64), ctx, 24000, 1);
-                  const source = ctx.createBufferSource();
-                  source.buffer = buffer;
-                  source.connect(ctx.destination);
-                  source.onended = () => {
-                    sourcesRef.current.delete(source);
-                    if (sourcesRef.current.size === 0) setIsSpeaking(false);
-                  };
-                  source.start(nextStartTimeRef.current);
-                  nextStartTimeRef.current += buffer.duration;
-                  sourcesRef.current.add(source);
-                } catch (e) {
-                  console.error("PCM Decoding failed", e);
+                  return prev; // No change, return previous state
                 }
-              }
+                return [...prev, { role: 'model', text: transcriptionRef.current.model }];
+              });
+            }
 
-              if (message.serverContent?.interrupted) {
-                sourcesRef.current.forEach(s => {
-                  try { s.stop(); } catch (e) {}
-                  s.disconnect();
-                });
-                sourcesRef.current.clear();
-                nextStartTimeRef.current = 0;
-                setIsSpeaking(false);
+            if (message.serverContent?.turnComplete) {
+              console.log("Turn complete.");
+              transcriptionRef.current = { user: '', model: '' };
+            }
+
+            // Handle Audio Output
+            const audioBase64 = message.serverContent?.modelTurn?.parts[0]?.inlineData?.data;
+            if (audioBase64 && audioContextOutRef.current) {
+              setIsSpeaking(true);
+              const ctx = audioContextOutRef.current;
+              nextStartTimeRef.current = Math.max(nextStartTimeRef.current, ctx.currentTime);
+              
+              try {
+                const buffer = await decodeAudioData(decodeBase64(audioBase64), ctx, 24000, 1);
+                const source = ctx.createBufferSource();
+                source.buffer = buffer;
+                source.connect(ctx.destination);
+                source.onended = () => {
+                  sourcesRef.current.delete(source);
+                  if (sourcesRef.current.size === 0) setIsSpeaking(false);
+                };
+                source.start(nextStartTimeRef.current);
+                nextStartTimeRef.current += buffer.duration;
+                sourcesRef.current.add(source);
+              } catch (e) {
+                console.error("PCM Decoding failed", e);
               }
-            },
-            onclose: () => setIsConnected(false),
-            onerror: (e) => {
-              console.error("Live session error:", e);
-              setErrorState("A connection error occurred. Reconnecting...");
-            },
+            }
+
+            if (message.serverContent?.interrupted) {
+              console.log("Model turn interrupted.");
+              sourcesRef.current.forEach(s => {
+                try { s.stop(); } catch (e) {}
+                sourcesRef.current.delete(s); // Ensure it's removed even if stop fails
+              });
+              sourcesRef.current.clear();
+              nextStartTimeRef.current = 0;
+              setIsSpeaking(false);
+            }
           },
-        });
-
-        sessionRef.current = await sessionPromise;
-      } catch (err: any) {
-        console.error("Failed to connect to Live API", err);
-        setErrorState("Could not initialize secure session. Please check your mic permissions.");
-      }
-    };
-
-    initSession();
-
-    return () => {
-      // Robust Cleanup
-      if (sessionRef.current) {
-        try { sessionRef.current.close(); } catch (e) {}
-      }
-      if (scriptProcessorRef.current) {
-        scriptProcessorRef.current.disconnect();
-      }
-      sourcesRef.current.forEach(s => {
-        try { s.stop(); } catch (e) {}
-        s.disconnect();
+          onclose: (e) => {
+            console.log("Live session closed:", e.code, e.reason);
+            setIsConnected(false);
+            setIsLoadingSession(false);
+            setErrorState("Session disconnected. Reconnecting...");
+            cleanupAudio(); // Ensure full cleanup
+            // Attempt to re-initialize after a short delay
+            setTimeout(initSession, 3000); 
+          },
+          onerror: (e) => {
+            console.error("Live session error event:", e);
+            setIsConnected(false);
+            setIsLoadingSession(false);
+            cleanupAudio(); // Ensure full cleanup
+            const errorMessage = (e as ErrorEvent).error?.message || "A network error occurred. Please check your internet connection and ensure your API key is correctly configured.";
+            
+            if (errorMessage.includes("Requested entity was not found.")) {
+              setErrorState("API key invalid or insufficient permissions. Please select a valid key from a paid GCP project.");
+              setIsKeySelectionRequired(true);
+            } else if (errorMessage.includes("403") || errorMessage.includes("Permission denied")) {
+              setErrorState("API key permissions error. Ensure billing is enabled for your GCP project.");
+              setIsKeySelectionRequired(true);
+            } else {
+              setErrorState(errorMessage);
+            }
+          },
+        },
       });
-      if (audioContextInRef.current) audioContextInRef.current.close();
-      if (audioContextOutRef.current) audioContextOutRef.current.close();
+
+      sessionRef.current = await sessionPromise;
+      console.log("Live session connection successful.");
+    } catch (err: any) {
+      console.error("Failed to connect to Live API", err);
+      setIsLoadingSession(false);
+      cleanupAudio(); // Ensure full cleanup
+      const errorMessage = err?.message || "Could not initialize secure session. Please check your mic permissions or internet connection.";
+      if (errorMessage.includes("Requested entity was not found.") || errorMessage.includes("403") || errorMessage.includes("Permission denied")) {
+        setErrorState("API key invalid or insufficient permissions. Please select a valid key from a paid GCP project.");
+        setIsKeySelectionRequired(true);
+      } else if (errorMessage.includes("network") || errorMessage.includes("fetch")) {
+        setErrorState("Network error. Please check your internet connection.");
+      } else if (errorMessage.includes("permission denied")) {
+        setErrorState("Microphone access denied. Please grant permission to use the live session.");
+      } else {
+        setErrorState(errorMessage);
+      }
+    }
+  }, [userName, cleanupAudio]); // initSession depends on userName and cleanupAudio
+
+  const handleSelectApiKey = async () => {
+    console.log("Attempting to open API key selection dialog.");
+    setIsKeySelecting(true);
+    setErrorState(null);
+    await window.aistudio.openSelectKey();
+    // As per guidelines, assume success after triggering openSelectKey()
+    setIsKeySelecting(false);
+    console.log("API key selection dialog closed. Re-initializing session.");
+    // Re-attempt session initialization immediately after opening the dialog
+    initSession(); 
+  };
+
+  useEffect(() => {
+    // Initial session setup on mount
+    initSession(); 
+
+    // Cleanup on component unmount
+    return () => {
+      console.log("LiveVoiceSession component unmounting, cleaning up.");
+      cleanupAudio();
     };
-  }, [userName]);
+  }, [initSession, cleanupAudio]); // Dependencies ensure this effect re-runs if initSession or cleanupAudio changes
 
   const handleFinish = () => {
+    console.log("Finishing live session.");
     if (messages.length > 0) {
       const fullTranscript = messages.map(m => `${m.role === 'user' ? 'Me' : 'Companion'}: ${m.text}`).join('\n');
       onSave(fullTranscript);
     }
+    cleanupAudio(); // Perform final cleanup when session is completed by user
     onClose();
   };
 
   const handleCloseRequest = () => {
+    console.log("Close request from user.");
     // Auto-save session summary on explicit close
     if (messagesRef.current.length > 0) {
       const fullTranscript = messagesRef.current.map(m => `${m.role === 'user' ? 'Me' : 'Companion'}: ${m.text}`).join('\n');
       onSave(fullTranscript);
     }
+    cleanupAudio(); // Perform final cleanup on explicit close
     onClose();
   };
 
@@ -262,14 +391,42 @@ const LiveVoiceSession: React.FC<Props> = ({ onClose, onSave, userName }) => {
         </div>
 
         <div className="flex-1 overflow-y-auto p-8 md:p-16 space-y-10 scroll-smooth custom-scrollbar bg-slate-50/20">
+          {(isLoadingSession || isKeySelecting) && (
+             <div className="h-full flex flex-col items-center justify-center text-center space-y-8 animate-in fade-in">
+                <div className="p-10 bg-teal-50 rounded-[4rem] shadow-inner">
+                  <Sparkles size={80} className="text-teal-600 animate-pulse" />
+                </div>
+                <p className="text-2xl md:text-4xl font-medium text-teal-900 italic tracking-tight leading-snug">
+                  {isKeySelecting ? "Waiting for API Key Selection..." : "Initializing session with Sanctuary..."}
+                </p>
+             </div>
+          )}
+
           {errorState && (
-            <div className="flex items-center gap-3 p-6 bg-red-50 text-red-700 rounded-3xl border border-red-100 animate-in fade-in zoom-in-95">
-              <AlertCircle size={24} />
-              <p className="font-bold text-lg">{errorState}</p>
+            <div className="flex items-start gap-4 p-6 bg-red-50 text-red-700 rounded-3xl border border-red-100 animate-in fade-in zoom-in-95">
+              <AlertCircle size={24} className="flex-shrink-0 mt-1" />
+              <div>
+                <p className="font-bold text-lg">{errorState}</p>
+                {isKeySelectionRequired && (
+                  <div className="mt-4 space-y-3">
+                    <p className="text-sm font-medium">To use this feature, please select an API key associated with a paid Google Cloud Project. This ensures full access to advanced Gemini features.</p>
+                    <button 
+                      onClick={handleSelectApiKey} 
+                      className="px-6 py-3 bg-red-600 text-white font-black rounded-2xl flex items-center gap-3 hover:bg-red-700 transition-all shadow-lg"
+                      disabled={isKeySelecting}
+                    >
+                      {isKeySelecting ? <Radio size={18} className="animate-spin" /> : <KeyRound size={18} />} Select API Key
+                    </button>
+                    <p className="text-xs text-red-500 mt-2">
+                       <a href="https://ai.google.dev/gemini-api/docs/billing" target="_blank" rel="noopener noreferrer" className="underline hover:text-red-600">Learn more about billing</a>.
+                    </p>
+                  </div>
+                )}
+              </div>
             </div>
           )}
           
-          {messages.length === 0 && !errorState ? (
+          {messages.length === 0 && !errorState && !isLoadingSession && !isKeySelectionRequired ? (
             <div className="h-full flex flex-col items-center justify-center text-center space-y-8 opacity-40">
               <div className="p-10 bg-teal-50 rounded-[4rem] shadow-inner">
                 <Sparkles size={80} className="text-teal-600 animate-pulse" />
@@ -295,13 +452,16 @@ const LiveVoiceSession: React.FC<Props> = ({ onClose, onSave, userName }) => {
           <div className="flex items-center gap-8">
             <button 
               onClick={() => setIsMuted(!isMuted)}
-              className={`w-20 h-20 md:w-28 md:h-28 rounded-[2.5rem] flex items-center justify-center shadow-2xl transition-all hover:scale-105 active:scale-95 ${isMuted ? 'bg-red-50 text-red-600' : 'bg-teal-700 text-white shadow-teal-500/20'}`}
+              className={`w-20 h-20 md:w-28 md:h-28 rounded-[2.5rem] flex items-center justify-center shadow-2xl transition-all hover:scale-110 active:scale-95 ${isMuted ? 'bg-red-50 text-red-600' : 'bg-teal-700 text-white shadow-teal-500/20'}`}
               aria-label={isMuted ? "Unmute microphone" : "Mute microphone"}
+              disabled={!isConnected && !errorState && !isKeySelectionRequired}
             >
               {isMuted ? <MicOff size={40} /> : <Mic size={40} className={!isSpeaking && isConnected ? 'animate-pulse' : ''} />}
             </button>
             <div className="hidden md:block">
-              <p className="text-2xl font-black text-teal-950 tracking-tight">{isSpeaking ? 'Companion Speaking...' : isMuted ? 'Muted' : isConnected ? 'Listening Intently' : 'Connecting...'}</p>
+              <p className="text-2xl font-black text-teal-950 tracking-tight">
+                {isKeySelectionRequired ? "API Key Needed" : isSpeaking ? 'Companion Speaking...' : isMuted ? 'Muted' : isConnected ? 'Listening Intently' : 'Connecting...'}
+              </p>
               <div className="flex items-center gap-2 text-teal-600 font-bold italic text-lg mt-1">
                 <div className="w-2 h-2 bg-teal-500 rounded-full animate-ping"></div>
                 Secure Neural Feedback
@@ -311,7 +471,7 @@ const LiveVoiceSession: React.FC<Props> = ({ onClose, onSave, userName }) => {
 
           <button 
             onClick={handleFinish}
-            disabled={messages.length === 0}
+            disabled={messages.length === 0 || isLoadingSession || isKeySelectionRequired}
             className="w-full md:w-auto px-16 py-7 rounded-[2.5rem] bg-teal-950 text-white font-black text-2xl flex items-center justify-center gap-4 shadow-2xl hover:bg-black transition-all disabled:opacity-30 active:scale-95 shadow-teal-950/20"
           >
             <Save size={28} /> Complete Session

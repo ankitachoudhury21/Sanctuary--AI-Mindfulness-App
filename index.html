@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
   <head>
@@ -27,8 +28,8 @@
         color: var(--sanctuary-text);
       }
       body.dark {
-        background-color: #0d1218; /* Darker background for dark mode */
-        color: #e2e8f0; /* Lighter text for dark mode */
+        background-color: var(--sanctuary-bg-tint); /* Keep background white in dark mode */
+        color: var(--sanctuary-text); /* Keep text dark in dark mode for readability */
       }
       h1, h2, h3, h4, .font-display, .display-number {
         font-family: 'Outfit', sans-serif;
@@ -49,10 +50,11 @@
         border: 1px solid rgba(13, 148, 136, 0.08);
         box-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.04);
       }
+      /* In dark mode, also keep it light for consistency, but adjust border/shadow for visual separation */
       body.dark .glass-card {
-        background: rgba(25, 30, 40, 0.9);
-        border: 1px solid rgba(45, 212, 191, 0.1);
-        box-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.3);
+        background: rgba(255, 255, 255, 0.96); /* Still light */
+        border: 1px solid rgba(13, 148, 136, 0.15); /* Slightly stronger border */
+        box-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.1); /* Lighter shadow than original dark mode */
       }
       .calm-btn-primary {
         background: linear-gradient(135deg, #0d9488 0%, #0369a1 100%);
@@ -124,6 +126,13 @@
       .rounded-full:focus-visible {
         border-radius: 9999px; /* Override for full rounded elements */
       }
+      /* Custom strong text shadow for legibility */
+      .text-shadow-strong {
+        text-shadow: 
+          0 0 8px rgba(0, 0, 0, 0.7), /* Stronger blur for glow effect */
+          0 0 16px rgba(0, 0, 0, 0.5),
+          1px 1px 3px rgba(0, 0, 0, 0.8); /* Solid shadow for definition */
+      }
     </style>
     <script type="importmap">
     {
@@ -140,5 +149,7 @@
   </head>
   <body class="selection:bg-teal-100 selection:text-teal-900">
     <div id="root"></div>
+    <script type="module" src="index.tsx"></script> 
   </body>
 </html>
+    

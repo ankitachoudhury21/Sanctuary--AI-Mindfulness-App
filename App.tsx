@@ -2,10 +2,11 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { AppView, UserProfile, SleepData, ActivityData, JournalEntry } from './types';
 import WelcomeJourney from './components/WelcomeJourney';
-import AuthFlow from './components/AuthFlow';
+// FIX: Changed AuthFlow from default import to named import
+import { AuthFlow } from './components/AuthFlow';
 import Dashboard from './components/Dashboard';
 import Navigation from './components/Navigation';
-import OnboardingTutorial from './components/OnboardingTutorial'; // Corrected to default import
+import OnboardingTutorial from './components/OnboardingTutorial'; 
 import BackgroundAmbience from './components/BackgroundAmbience';
 import { analyzeSleepAndHealth } from './services/geminiService';
 import { Sparkles, Play } from 'lucide-react';
@@ -168,23 +169,23 @@ const App: React.FC = () => {
         <img 
           src="https://images.unsplash.com/photo-1518241353330-0f7941c2d9b5?auto=format&fit=crop&q=80&w=2560" 
           alt="Zen landscape" 
-          className="w-full h-full object-cover opacity-60 dark:opacity-40 transition-opacity duration-1000"
+          className="w-full h-full object-cover opacity-0 transition-opacity duration-1000"
         />
-        <div className="absolute inset-0 bg-white/40 dark:bg-black/60 transition-colors duration-1000"></div>
-        <div className="absolute inset-0 bg-gradient-to-b from-transparent to-white/95 dark:to-black/95 transition-colors duration-1000"></div>
+        <div className="absolute inset-0 bg-white/80 dark:bg-white/90 backdrop-blur-md transition-colors duration-1000"></div>
+        <div className="absolute inset-0 bg-gradient-to-b from-transparent to-white/95 dark:to-white/95 transition-colors duration-1000"></div>
       </div>
 
       {!hasStarted && (
         <div className="fixed inset-0 z-[200] flex flex-col items-center justify-center p-6 text-center animate-in fade-in zoom-in-95 duration-1000">
-          <div className="absolute inset-0 bg-slate-900/10 backdrop-blur-md dark:bg-black/50 transition-colors duration-1000"></div>
+          <div className="absolute inset-0 bg-slate-900/10 backdrop-blur-md dark:bg-white/50 transition-colors duration-1000"></div>
           <div className="relative z-10 glass-card p-10 md:p-24 rounded-[3rem] md:rounded-[5rem] shadow-2xl border-white/60 dark:border-teal-500/10 max-w-2xl w-full space-y-12 transition-all duration-1000">
              <div className="space-y-6">
                 <div className="w-24 h-24 md:w-32 md:h-32 bg-teal-600/10 rounded-full flex items-center justify-center mx-auto mb-6 relative">
                    <div className="absolute inset-0 border-2 border-teal-600/30 rounded-full animate-ping opacity-20"></div>
                    <Sparkles size={48} className="text-teal-700 md:w-16 md:h-16" />
                 </div>
-                <h1 className="text-5xl md:text-7xl font-black text-slate-900 dark:text-white tracking-tighter font-display leading-tight transition-colors duration-1000">Welcome to <br/>Sanctuary</h1>
-                <p className="text-xl md:text-2xl text-slate-600 dark:text-slate-300 font-medium italic transition-colors duration-1000">Your mindful space is ready.</p>
+                <h1 className="text-5xl md:text-7xl font-black text-slate-900 dark:text-slate-900 tracking-tighter font-display leading-tight transition-colors duration-1000">Welcome to <br/>Sanctuary</h1>
+                <p className="text-xl md:text-2xl text-slate-600 dark:text-slate-700 font-medium italic transition-colors duration-1000">Your mindful space is ready.</p>
              </div>
              <button 
                 onClick={handleStartExperience}

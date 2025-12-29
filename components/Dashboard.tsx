@@ -1,12 +1,17 @@
 
+
 import React from 'react';
 import { AppView, UserProfile, SleepData, ActivityData, JournalEntry } from '../types';
-import Journal from './Journal';
-import SleepTracker from './SleepTracker';
-import MusicPlayer from './MusicPlayer';
+
+// Moved component imports from App.tsx here as needed
+import MusicPlayer from './MusicPlayer'; 
 import HomeView from './HomeView';
 import UserFlow from './UserFlow';
 import PlanetaryMission from './PlanetaryMission';
+import ImageGenerator from './ImageGenerator';
+import Journal from './Journal'; // Fix: Added missing import for Journal component
+import SleepTracker from './SleepTracker'; // Fix: Added missing import for SleepTracker component
+
 
 interface Props {
   view: AppView;
@@ -60,6 +65,8 @@ const Dashboard: React.FC<Props> = ({
       return <MusicPlayer setView={setView} setIsAnyTrackPlaying={setIsAnyTrackPlaying} />;
     case AppView.PLANETARY:
       return <PlanetaryMission setView={setView} setIsAnyTrackPlaying={setIsAnyTrackPlaying} />;
+    case AppView.IMAGE_GEN: // New case for image generation
+      return <ImageGenerator setView={setView} />;
     case AppView.ACTIVITY:
       return <UserFlow setView={setView} />;
     default:

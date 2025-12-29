@@ -110,3 +110,36 @@ export const analyzeSleepAndHealth = async (sleepHistory: SleepData[], journalHi
     };
   }
 };
+
+export const generateImage = async (prompt: string, imageSize: '1K' | '2K' | '4K') => {
+  const ai = getAI();
+  try {
+    const response = await withRetry<GenerateContentResponse>(() => ai.models.generateContent({
+      model: 'gemini-3-pro-image-preview',
+      contents: {
+        parts: [
+          {
+            text: prompt,
+          },
+        ],
+      },
+      config: {
+        imageConfig: {
+          aspectRatio: "1:1",
+          imageSize: imageSize
+        },
+      },
+    }));
+
+    for (const part of response.candidates?.[0]?.content?.parts || []) {
+      if (part.inlineData) {
+        const base64EncodeString: string = part.inlineData.data;
+        return `data:image/png;base64,${base64EncodeString}`;
+      }
+    }
+    throw new Error("No image data found in response.");
+  } catch (error) {
+    console.error("Image generation failed:", error);
+    throw error;
+  }
+};

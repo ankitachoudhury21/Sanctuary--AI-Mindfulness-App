@@ -7,7 +7,8 @@ export enum AppView {
   SLEEP = 'SLEEP',
   MUSIC = 'MUSIC',
   ACTIVITY = 'ACTIVITY',
-  PLANETARY = 'PLANETARY'
+  PLANETARY = 'PLANETARY',
+  IMAGE_GEN = 'IMAGE_GEN', // New view for image generation
 }
 
 export interface UserProfile {

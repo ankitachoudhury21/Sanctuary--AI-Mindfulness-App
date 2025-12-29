@@ -1,5 +1,6 @@
+
 import React, { useState, useEffect } from 'react';
-import { Mail, Facebook, Apple, X, ArrowRight, Loader2, Key, CheckCircle2, ShieldCheck, MailQuestion } from 'lucide-react';
+import { Mail, Facebook, Apple, X, ArrowRight, Loader2, Key, CheckCircle2, ShieldCheck, MailQuestion, AlertCircle } from 'lucide-react'; // Import Google icon is not present here
 
 interface Props {
   onAuthComplete: () => void;
@@ -8,7 +9,8 @@ interface Props {
 
 type AuthMethod = 'social' | 'email' | 'magic';
 
-const AuthFlow: React.FC<Props> = ({ onAuthComplete, userName }) => {
+// FIX: Changed to named export
+export const AuthFlow: React.FC<Props> = ({ onAuthComplete, userName }) => {
   const [method, setMethod] = useState<AuthMethod>('social');
   const [isLogin, setIsLogin] = useState(false);
   const [isLoading, setIsLoading] = useState<string | null>(null);
@@ -295,5 +297,3 @@ const AuthFlow: React.FC<Props> = ({ onAuthComplete, userName }) => {
     </div>
   );
 };
-
-export default AuthFlow;
