@@ -1,5 +1,5 @@
 
-!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
@@ -13,41 +13,4 @@
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>
-    </style>
-    <script type="importmap">
-    {
-     import React from 'react'
-import ReactDOM from 'react-dom/client'
-import App from './App.jsx'
-import './index.css' // It's okay if this line fails, you can remove it if you don't have index.css
-
-// --- DEBUGGING LOGIC ---
-console.log("System Check: Main file is running...");
-
-try {
-  const rootElement = document.getElementById('root');
-  
-  if (!rootElement) {
-    throw new Error("FATAL: Cannot find <div id='root'> in index.html");
-  }
-
-  const root = ReactDOM.createRoot(rootElement);
-  
-  root.render(
-    <React.StrictMode>
-       <App />
-    </React.StrictMode>
-  );
-  
-  console.log("System Check: React render attempted.");
-  
-} catch (error) {
-  // If anything crashes, print it on the screen!
-  document.body.innerHTML = `
-    <div style="color: red; padding: 20px;">
-      <h1>Application Crashed</h1>
-      <p><strong>Error:</strong> ${error.message}</p>
-    </div>
-  `;
-  console.error("System Crash:", error);
 }
