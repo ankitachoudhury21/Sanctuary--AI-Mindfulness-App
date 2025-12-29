@@ -171,8 +171,10 @@ const App: React.FC = () => {
           alt="Zen landscape" 
           className="w-full h-full object-cover opacity-80 transition-opacity duration-1000"
         />
-        <div className="absolute inset-0 bg-white/50 dark:bg-white/70 backdrop-blur-md transition-colors duration-1000"></div>
-        <div className="absolute inset-0 bg-gradient-to-b from-transparent to-white/80 dark:to-white/90 transition-colors duration-1000"></div>
+        {/* Changed dark mode overlay to a darker slate for better background blending */}
+        <div className="absolute inset-0 bg-white/50 dark:bg-slate-900/60 backdrop-blur-md transition-colors duration-1000"></div>
+        {/* Changed dark mode gradient to a darker slate for better background blending */}
+        <div className="absolute inset-0 bg-gradient-to-b from-transparent to-slate-50/80 dark:to-slate-950/90 transition-colors duration-1000"></div>
       </div>
 
       {!hasStarted && (
@@ -214,6 +216,8 @@ const App: React.FC = () => {
               toggleDarkMode={toggleDarkMode}
             />
             <main className="flex-1 w-full transition-all duration-500 relative px-4 sm:px-8 pb-32 pt-24 md:pt-16 md:pb-16 md:pl-[260px] max-w-[1600px] mx-auto">
+              {/* Changed main content gradient to be more subtle and darker in dark mode */}
+              <div className="fixed inset-0 bg-gradient-to-t from-slate-50/90 to-transparent dark:from-slate-900/90 dark:to-transparent pointer-events-none z-0"></div>
               <Dashboard 
                 view={view}
                 setView={setView}

@@ -1,3 +1,5 @@
+
+
 import React from 'react';
 import { AppView } from '../types';
 import { Cloud, Sunrise, Sun, Sunset, Moon, Coffee, Briefcase, Zap, ChevronLeft, Compass, CheckCircle2, CircleDashed, Clock } from 'lucide-react';
@@ -68,7 +70,7 @@ const UserFlow: React.FC<Props> = ({ setView }) => {
                   </div>
                   <div className={`
                     p-8 rounded-[2rem] border transition-all duration-500
-                    ${isCurrent ? 'bg-amber-600 text-white shadow-2xl border-none' : 'bg-white/50 dark:bg-slate-800/50 border-slate-100 dark:border-slate-700 hover:bg-white dark:hover:bg-slate-700 hover:shadow-xl'}
+                    ${isCurrent ? 'bg-amber-700/80 text-white shadow-2xl border-none' : 'bg-white/50 dark:bg-slate-800/50 border-slate-100 dark:border-slate-700 hover:bg-white dark:hover:bg-slate-700 hover:shadow-xl'}
                   `}>
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">
                       <span className={`text-[10px] md:text-xs font-black uppercase tracking-[0.3em] ${isCurrent ? 'text-amber-100' : 'text-amber-600 dark:text-amber-400'}`}>{step.time}</span>

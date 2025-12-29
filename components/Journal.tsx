@@ -1,5 +1,4 @@
 
-
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { JournalEntry, AppView, UserProfile } from '../types';
 import { 
@@ -95,28 +94,36 @@ const Journal: React.FC<Props> = ({ entries, setEntries, setView, user }) => {
   const handleTextSubmit = async () => {
     if (!textEntry.trim() || isProcessing) return;
     setIsProcessing(true);
-    setAiFeedback("Analyzing your reflection...");
+    setAiFeedback("Analyzing your reflection..."); // Show processing message
     
-    let aiResponse = "I've saved your reflection in your sanctuary. It's a beautiful step toward peace.";
-    
+    let aiResponseForEntry: string = "I've saved your reflection in your sanctuary. It's a beautiful step toward peace.";
+    let displayFeedback: string = "I've saved your reflection in your sanctuary. It's a beautiful step toward peace.";
+
     try {
-      // Attempt AI analysis
       const response = await analyzeGratitudeJournal(textEntry);
-      if (response) aiResponse = response;
+      if (response.success) {
+        aiResponseForEntry = response.message;
+        displayFeedback = response.message;
+      } else {
+        // AI analysis failed, use the error message as display feedback but save a default positive message
+        displayFeedback = response.message; // Display the error message to the user
+        aiResponseForEntry = "Sanctuary could not generate a personalized reflection at this time, but your entry is saved.";
+      }
     } catch (e) {
-      console.warn("AI analysis failed, proceeding with local save only.");
+      console.error("Unexpected error during AI analysis:", e);
+      displayFeedback = "An unexpected error occurred. Your reflection is safe, please try again later.";
+      aiResponseForEntry = "Sanctuary could not generate a personalized reflection at this time, but your entry is saved.";
     } finally {
-      // ALWAYS save the entry, regardless of AI success
       const newEntry: JournalEntry = {
         id: Date.now().toString(),
         date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
-        type: isRecording ? 'voice' : 'text',
+        type: isRecording ? 'voice' : 'text', // Assuming textEntry is the source
         transcript: textEntry,
-        aiResponse: aiResponse
+        aiResponse: aiResponseForEntry // Save the appropriate AI response
       };
       
       setEntries(prev => [newEntry, ...prev]);
-      setAiFeedback(aiResponse);
+      setAiFeedback(displayFeedback); // Display dynamic feedback
       setTextEntry('');
       localStorage.removeItem(DRAFT_STORAGE_KEY);
       setIsProcessing(false);

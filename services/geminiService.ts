@@ -28,7 +28,8 @@ async function withRetry<T>(fn: () => Promise<T>, retries = 3, delay = 2000): Pr
   }
 }
 
-export const analyzeGratitudeJournal = async (transcript: string) => {
+// Updated to return an object with success status and message
+export const analyzeGratitudeJournal = async (transcript: string): Promise<{ success: boolean, message: string }> => {
   const ai = getAI();
   try {
     const response = await withRetry<GenerateContentResponse>(() => ai.models.generateContent({
@@ -40,10 +41,11 @@ export const analyzeGratitudeJournal = async (transcript: string) => {
         topP: 0.9,
       },
     }));
-    return response.text || "I'm glad you shared that with me. It sounds like a meaningful reflection.";
+    return { success: true, message: response.text || "I'm glad you shared that with me. It sounds like a meaningful reflection." };
   } catch (error) {
     console.error("Gratitude analysis failed permanently:", error);
-    return "Thank you for sharing your thoughts in your sanctuary today. Your reflection is safe here.";
+    // Return a specific error message for the component to display
+    return { success: false, message: "Sanctuary's AI companion is currently unavailable. Please try again later, your reflection is still safe." };
   }
 };
 

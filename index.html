@@ -50,11 +50,11 @@
         border: 1px solid rgba(13, 148, 136, 0.08);
         box-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.04);
       }
-      /* In dark mode, also keep it light for consistency, but adjust border/shadow for visual separation */
+      /* In dark mode, allow glass card to be transparent to underlying background */
       body.dark .glass-card {
-        background: rgba(255, 255, 255, 0.96); /* Still light */
-        border: 1px solid rgba(13, 148, 136, 0.15); /* Slightly stronger border */
-        box-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.1); /* Lighter shadow than original dark mode */
+        background: rgba(255, 255, 255, 0.15); /* More translucent for dark mode */
+        border: 1px solid rgba(255, 255, 255, 0.1); /* Lighter border for contrast */
+        box-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.2); /* Deeper shadow for depth */
       }
       .calm-btn-primary {
         background: linear-gradient(135deg, #0d9488 0%, #0369a1 100%);
@@ -152,4 +152,3 @@
     <script type="module" src="index.tsx"></script> 
   </body>
 </html>
-    
