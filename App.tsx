@@ -167,12 +167,12 @@ const App: React.FC = () => {
       
       <div className="fixed inset-0 z-0 overflow-hidden pointer-events-none">
         <img 
-          src="https://images.unsplash.com/photo-1518241353330-0f7941c2d9b5?auto=format&fit=crop&q=80&w=2560" 
+          src="https://images.unsplash.com/photo-1490522046460-e4d658c407c0?auto=format&fit=crop&q=80&w=2560" 
           alt="Zen landscape" 
-          className="w-full h-full object-cover opacity-0 transition-opacity duration-1000"
+          className="w-full h-full object-cover opacity-80 transition-opacity duration-1000"
         />
-        <div className="absolute inset-0 bg-white/80 dark:bg-white/90 backdrop-blur-md transition-colors duration-1000"></div>
-        <div className="absolute inset-0 bg-gradient-to-b from-transparent to-white/95 dark:to-white/95 transition-colors duration-1000"></div>
+        <div className="absolute inset-0 bg-white/50 dark:bg-white/70 backdrop-blur-md transition-colors duration-1000"></div>
+        <div className="absolute inset-0 bg-gradient-to-b from-transparent to-white/80 dark:to-white/90 transition-colors duration-1000"></div>
       </div>
 
       {!hasStarted && (

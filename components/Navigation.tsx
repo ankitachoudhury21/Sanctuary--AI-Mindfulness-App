@@ -1,6 +1,7 @@
+
 import React from 'react';
 import { AppView } from '../types';
-import { Home, BookHeart, Moon, Music, Compass, LogOut, Brain, Rocket, Stars, Volume2, VolumeX, Sun, CloudMoon, ImageIcon } from 'lucide-react';
+import { Home, BookHeart, Moon, Music, Compass, LogOut, Brain, Rocket, Stars, Volume2, VolumeX, Sun, CloudMoon } from 'lucide-react';
 
 interface Props {
   activeView: AppView;
@@ -65,7 +66,6 @@ const Navigation: React.FC<Props> = ({ activeView, setView, onLogout, isAmbientM
     { icon: Home, label: 'Home', view: AppView.DASHBOARD, color: 'bg-emerald-500' },
     { icon: Brain, label: 'Daily Meditation', view: AppView.MUSIC, color: 'bg-indigo-500' },
     { icon: Stars, label: 'Celestial Exploration', view: AppView.PLANETARY, color: 'bg-amber-600' },
-    { icon: ImageIcon, label: 'AI Image Studio', view: AppView.IMAGE_GEN, color: 'bg-orange-500'}, // New navigation item
     { icon: BookHeart, label: 'Gratitude Journal', view: AppView.JOURNAL, color: 'bg-rose-500' },
     { icon: Moon, label: 'Sleep Journal', view: AppView.SLEEP, color: 'bg-blue-600' },
     { icon: Compass, label: 'Mindful Journey', view: AppView.ACTIVITY, color: 'bg-amber-500' },

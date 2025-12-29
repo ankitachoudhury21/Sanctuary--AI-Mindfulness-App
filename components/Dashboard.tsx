@@ -8,9 +8,8 @@ import MusicPlayer from './MusicPlayer';
 import HomeView from './HomeView';
 import UserFlow from './UserFlow';
 import PlanetaryMission from './PlanetaryMission';
-import ImageGenerator from './ImageGenerator';
-import Journal from './Journal'; // Fix: Added missing import for Journal component
-import SleepTracker from './SleepTracker'; // Fix: Added missing import for SleepTracker component
+import Journal from './Journal';
+import SleepTracker from './SleepTracker';
 
 
 interface Props {
@@ -55,6 +54,7 @@ const Dashboard: React.FC<Props> = ({
     case AppView.SLEEP:
       return (
         <SleepTracker 
+          // FIX: Changed 'data' to 'sleepData' to match the prop name in Dashboard
           data={sleepData} 
           setData={setSleepData}
           aiInsights={aiInsights}
@@ -65,8 +65,6 @@ const Dashboard: React.FC<Props> = ({
       return <MusicPlayer setView={setView} setIsAnyTrackPlaying={setIsAnyTrackPlaying} />;
     case AppView.PLANETARY:
       return <PlanetaryMission setView={setView} setIsAnyTrackPlaying={setIsAnyTrackPlaying} />;
-    case AppView.IMAGE_GEN: // New case for image generation
-      return <ImageGenerator setView={setView} />;
     case AppView.ACTIVITY:
       return <UserFlow setView={setView} />;
     default:

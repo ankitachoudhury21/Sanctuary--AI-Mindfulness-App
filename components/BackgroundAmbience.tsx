@@ -1,3 +1,4 @@
+
 import React, { useEffect, useRef, useCallback } from 'react';
 
 interface Props {
@@ -61,7 +62,8 @@ const BackgroundAmbience: React.FC<Props> = ({ isActive, hasStarted }) => {
         const length = ctx.sampleRate * 5; // 5 seconds long
         const impulse = ctx.createBuffer(2, length, ctx.sampleRate);
         for (let i = 0; i < length; i++) {
-          const env = Math.pow(1 - i / length, 4); 
+          // Changed exponent to 6 for a smoother, longer decay
+          const env = Math.pow(1 - i / length, 6); 
           impulse.getChannelData(0)[i] = (Math.random() * 2 - 1) * env * 0.1; // Reduced amplitude for subtlety
           impulse.getChannelData(1)[i] = (Math.random() * 2 - 1) * env * 0.1; 
         }
@@ -199,8 +201,10 @@ const BackgroundAmbience: React.FC<Props> = ({ isActive, hasStarted }) => {
     // Lowpass filter for brown noise with LFO modulation
     const noiseLowpass = ctx.createBiquadFilter();
     noiseLowpass.type = 'lowpass';
-    noiseLowpass.frequency.setValueAtTime(localSafeFreq(800), now); // Initial lowpass frequency
-    noiseLowpass.Q.setValueAtTime(localSafeQ(1), now);
+    // Lowered lowpass frequency for a warmer, less 'hissy' sound
+    noiseLowpass.frequency.setValueAtTime(localSafeFreq(500), now); 
+    // Increased Q for a slightly more resonant, smoother 'whoosh'
+    noiseLowpass.Q.setValueAtTime(localSafeQ(2), now); 
 
     const noiseFreqLfo = ctx.createOscillator();
     noiseFreqLfo.type = 'sine';
@@ -276,9 +280,9 @@ const BackgroundAmbience: React.FC<Props> = ({ isActive, hasStarted }) => {
     
     nodesRef.current = newNodes; // Update the list of active nodes
 
-    // Fade in the ambient track
-    ambientGain.gain.linearRampToValueAtTime(localSafeGain(0.1), now + CROSSFADE_TIME); // Increased target gain
-    console.log("startAudio: Ambient gain scheduled to ramp to:", localSafeGain(0.1), "at time:", now + CROSSFADE_TIME, "from current value:", ambientGain.gain.value);
+    // Fade in the ambient track - reduced target gain for subtler effect
+    ambientGain.gain.linearRampToValueAtTime(localSafeGain(0.08), now + CROSSFADE_TIME); 
+    console.log("startAudio: Ambient gain scheduled to ramp to:", localSafeGain(0.08), "at time:", now + CROSSFADE_TIME, "from current value:", ambientGain.gain.value);
 
   }, [hasStarted, stopAudio, safeValue, isActive]);
 
