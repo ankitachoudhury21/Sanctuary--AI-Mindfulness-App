@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { AppView } from '../types';
 import { Home, BookHeart, Moon, Music, Compass, LogOut, Brain, Rocket, Stars, Volume2, VolumeX } from 'lucide-react';
