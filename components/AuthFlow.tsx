@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Mail, Facebook, Apple, X, ArrowRight, Loader2, Key, CheckCircle2, ShieldCheck, MailQuestion } from 'lucide-react';
 
@@ -70,7 +69,8 @@ const AuthFlow: React.FC<Props> = ({ onAuthComplete, userName }) => {
     <button 
       onClick={() => handleSocialAuth(provider)}
       disabled={!!isLoading}
-      className={`w-full flex items-center justify-center gap-4 py-4 px-6 rounded-2xl border bg-white border-slate-200 text-slate-800 hover:bg-slate-50 transition-all font-display font-bold text-lg disabled:opacity-50 relative overflow-hidden group shadow-sm`}
+      className={`w-full flex items-center justify-center gap-4 py-4 px-6 rounded-2xl border bg-white dark:bg-slate-700 border-slate-200 dark:border-slate-600 text-slate-800 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-600 transition-all font-display font-bold text-lg disabled:opacity-50 relative overflow-hidden group shadow-sm hover:shadow-lg focus-visible:ring-2 focus-visible:ring-teal-400`}
+      aria-label={`Continue with ${label}`}
     >
       {isLoading === provider ? (
         <Loader2 size={24} className="animate-spin text-teal-600" />
@@ -87,14 +87,14 @@ const AuthFlow: React.FC<Props> = ({ onAuthComplete, userName }) => {
   if (showSuccess) {
     return (
       <div className="min-h-screen relative flex items-center justify-center p-4 overflow-hidden">
-        <div className="absolute inset-0 bg-teal-900/10 backdrop-blur-xl"></div>
-        <div className="relative z-10 glass-card p-12 md:p-20 rounded-[3rem] text-center space-y-8 animate-in zoom-in-95 duration-500 border-teal-500/20 shadow-2xl">
-          <div className="w-24 h-24 bg-teal-500 rounded-full flex items-center justify-center mx-auto text-white shadow-xl animate-bounce">
+        <div className="absolute inset-0 bg-teal-900/10 backdrop-blur-xl animate-in fade-in duration-700"></div>
+        <div className="relative z-10 glass-card p-12 md:p-20 rounded-[3rem] text-center space-y-8 animate-in zoom-in-95 duration-500 border-teal-500/20 dark:border-teal-700/30 shadow-2xl">
+          <div className="w-24 h-24 bg-teal-500 rounded-full flex items-center justify-center mx-auto text-white shadow-xl animate-bounce delay-200 duration-1000">
             <CheckCircle2 size={48} />
           </div>
           <div className="space-y-4">
-            <h2 className="text-4xl md:text-5xl font-black text-slate-900 tracking-tight leading-tight">Welcome Home, <br/>{userName}.</h2>
-            <p className="text-xl text-slate-600 font-medium italic">Your sanctuary is initializing...</p>
+            <h2 className="text-4xl md:text-5xl font-black text-slate-900 dark:text-white tracking-tight leading-tight transition-colors duration-300">Welcome Home, <br/>{userName}.</h2>
+            <p className="text-xl text-slate-600 dark:text-slate-300 font-medium italic transition-colors duration-300">Your sanctuary is initializing...</p>
           </div>
         </div>
       </div>
@@ -105,8 +105,8 @@ const AuthFlow: React.FC<Props> = ({ onAuthComplete, userName }) => {
     <div className="min-h-screen relative flex items-center justify-center p-4 overflow-hidden">
       {/* Dynamic Background */}
       <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1499750310107-5fef28a66643?auto=format&fit=crop&q=80&w=2560')] bg-cover bg-center">
-        <div className="absolute inset-0 bg-white/30 backdrop-blur-[4px]"></div>
-        <div className="absolute inset-0 bg-gradient-to-tr from-teal-50/80 via-transparent to-blue-50/80"></div>
+        <div className="absolute inset-0 bg-white/30 dark:bg-black/40 backdrop-blur-[4px] transition-colors duration-300"></div>
+        <div className="absolute inset-0 bg-gradient-to-tr from-teal-50/80 via-transparent to-blue-50/80 dark:from-slate-900/80 dark:to-indigo-900/80 transition-colors duration-300"></div>
       </div>
 
       {/* Header Controls */}
@@ -115,21 +115,21 @@ const AuthFlow: React.FC<Props> = ({ onAuthComplete, userName }) => {
           <div className="w-10 h-10 bg-teal-500 rounded-xl flex items-center justify-center text-white shadow-lg">
             <ShieldCheck size={24} />
           </div>
-          <span className="font-black text-slate-900 tracking-tight text-xl font-display">Secure Entry</span>
+          <span className="font-black text-slate-900 dark:text-white tracking-tight text-xl font-display transition-colors duration-300">Secure Entry</span>
         </div>
       </div>
 
       <div className="relative w-full max-w-[580px] animate-in fade-in zoom-in-95 duration-700">
-        <div className="glass-card p-8 md:p-14 rounded-[3.5rem] shadow-[0_50px_100px_-20px_rgba(0,0,0,0.15)] border-white/60">
+        <div className="glass-card p-8 md:p-14 rounded-[3.5rem] shadow-[0_50px_100px_-20px_rgba(0,0,0,0.15)] dark:shadow-[0_50px_100px_-20px_rgba(0,0,0,0.3)] border-white/60 dark:border-teal-500/10">
           
           <div className="text-center mb-10 space-y-4">
-            <div className="label-caps px-4 py-1.5 bg-teal-100 text-teal-700 rounded-full inline-block mb-2">
+            <div className="label-caps px-4 py-1.5 bg-teal-100 dark:bg-teal-900 text-teal-700 dark:text-teal-300 rounded-full inline-block mb-2 transition-colors duration-300">
               Step 2 of 2
             </div>
-            <h3 className="text-3xl md:text-4xl font-black text-slate-900 tracking-tight leading-tight text-balance">
+            <h3 className="text-3xl md:text-4xl font-black text-slate-900 dark:text-white tracking-tight leading-tight text-balance transition-colors duration-300">
               {method === 'social' ? 'Join Sanctuary' : method === 'magic' ? 'Magic Link' : isLogin ? 'Sign In' : 'Create Account'}
             </h3>
-            <p className="text-slate-500 text-lg font-semibold leading-relaxed">
+            <p className="text-slate-500 dark:text-slate-300 text-lg font-semibold leading-relaxed transition-colors duration-300">
               {method === 'social' 
                 ? "Choose your preferred way to keep your journey secure."
                 : method === 'magic'
@@ -147,7 +147,8 @@ const AuthFlow: React.FC<Props> = ({ onAuthComplete, userName }) => {
                   <button 
                     onClick={() => handleSocialAuth('google')}
                     disabled={!!isLoading}
-                    className="w-full flex items-center justify-center gap-4 py-4 px-6 rounded-2xl border bg-white border-slate-200 text-slate-800 hover:bg-slate-50 transition-all font-display font-bold text-lg shadow-sm"
+                    className="w-full flex items-center justify-center gap-4 py-4 px-6 rounded-2xl border bg-white dark:bg-slate-700 border-slate-200 dark:border-slate-600 text-slate-800 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-600 transition-all font-display font-bold text-lg shadow-sm hover:shadow-lg focus-visible:ring-2 focus-visible:ring-teal-400"
+                    aria-label="Continue with Google"
                   >
                     {isLoading === 'google' ? <Loader2 size={24} className="animate-spin text-teal-600" /> : (
                       <>
@@ -163,29 +164,31 @@ const AuthFlow: React.FC<Props> = ({ onAuthComplete, userName }) => {
                     )}
                   </button>
                   <SocialButton icon={Facebook} label="Facebook" provider="facebook" color="text-[#1877F2]" />
-                  <SocialButton icon={Apple} label="Apple" provider="apple" color="text-black" />
+                  <SocialButton icon={Apple} label="Apple" provider="apple" color="text-black dark:text-white" />
                 </div>
 
                 <div className="flex items-center gap-4 my-8">
-                  <div className="h-[1px] flex-1 bg-slate-200"></div>
-                  <span className="label-caps text-slate-400">or use email</span>
-                  <div className="h-[1px] flex-1 bg-slate-200"></div>
+                  <div className="h-[1px] flex-1 bg-slate-200 dark:bg-slate-600"></div>
+                  <span className="label-caps text-slate-400 dark:text-slate-500">or use email</span>
+                  <div className="h-[1px] flex-1 bg-slate-200 dark:bg-slate-600"></div>
                 </div>
 
                 <div className="grid grid-cols-2 gap-3">
                   <button 
                     onClick={() => setMethod('email')}
-                    className="flex flex-col items-center gap-2 p-5 rounded-2xl bg-slate-50 border border-slate-100 hover:bg-slate-100 transition-all group"
+                    className="flex flex-col items-center gap-2 p-5 rounded-2xl bg-slate-50 dark:bg-slate-700 border border-slate-100 dark:border-slate-600 hover:bg-slate-100 dark:hover:bg-slate-600 transition-all group"
+                    aria-label="Authenticate with email and password"
                   >
                     <Mail className="text-teal-600 group-hover:scale-110 transition-transform" size={24} />
-                    <span className="text-xs font-black uppercase tracking-widest text-slate-600">Password</span>
+                    <span className="text-xs font-black uppercase tracking-widest text-slate-600 dark:text-slate-300">Password</span>
                   </button>
                   <button 
                     onClick={() => setMethod('magic')}
-                    className="flex flex-col items-center gap-2 p-5 rounded-2xl bg-slate-50 border border-slate-100 hover:bg-slate-100 transition-all group"
+                    className="flex flex-col items-center gap-2 p-5 rounded-2xl bg-slate-50 dark:bg-slate-700 border border-slate-100 dark:border-slate-600 hover:bg-slate-100 dark:hover:bg-slate-600 transition-all group"
+                    aria-label="Authenticate with a magic link"
                   >
                     <MailQuestion className="text-blue-600 group-hover:scale-110 transition-transform" size={24} />
-                    <span className="text-xs font-black uppercase tracking-widest text-slate-600">Magic Link</span>
+                    <span className="text-xs font-black uppercase tracking-widest text-slate-600 dark:text-slate-300">Magic Link</span>
                   </button>
                 </div>
               </>
@@ -198,16 +201,18 @@ const AuthFlow: React.FC<Props> = ({ onAuthComplete, userName }) => {
               >
                 <div className="space-y-4">
                   <div className="space-y-1.5">
-                    <label className="label-caps text-slate-500 ml-2">Email Address</label>
+                    <label htmlFor="email-input" className="label-caps text-slate-500 dark:text-slate-400 ml-2">Email Address</label>
                     <div className="relative">
                       <Mail className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
                       <input 
+                        id="email-input"
                         type="email" 
                         required
-                        className="w-full bg-slate-50 border-2 border-slate-100 p-5 pl-14 rounded-2xl text-lg font-bold outline-none focus:border-teal-500/50 transition-all"
+                        className="w-full bg-slate-50 dark:bg-slate-700 border-2 border-slate-100 dark:border-slate-600 p-5 pl-14 rounded-2xl text-lg font-bold outline-none focus:border-teal-500/50 dark:text-white transition-all focus:ring-2 focus:ring-teal-400 focus:ring-offset-2 focus:ring-offset-white dark:focus:ring-offset-slate-800"
                         placeholder="name@company.com"
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
+                        aria-label="Email address"
                       />
                     </div>
                   </div>
@@ -215,18 +220,20 @@ const AuthFlow: React.FC<Props> = ({ onAuthComplete, userName }) => {
                   {method === 'email' && (
                     <div className="space-y-1.5">
                       <div className="flex justify-between items-end">
-                        <label className="label-caps text-slate-500 ml-2">Password</label>
-                        {isLogin && <button type="button" className="text-xs font-bold text-teal-600 mb-1 hover:underline">Forgot?</button>}
+                        <label htmlFor="password-input" className="label-caps text-slate-500 dark:text-slate-400 ml-2">Password</label>
+                        {isLogin && <button type="button" className="text-xs font-bold text-teal-600 dark:text-teal-400 mb-1 hover:underline" aria-label="Forgot password?">Forgot?</button>}
                       </div>
                       <div className="relative">
                         <Key className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
                         <input 
+                          id="password-input"
                           type="password" 
                           required
-                          className="w-full bg-slate-50 border-2 border-slate-100 p-5 pl-14 rounded-2xl text-lg font-bold outline-none focus:border-teal-500/50 transition-all"
+                          className="w-full bg-slate-50 dark:bg-slate-700 border-2 border-slate-100 dark:border-slate-600 p-5 pl-14 rounded-2xl text-lg font-bold outline-none focus:border-teal-500/50 dark:text-white transition-all focus:ring-2 focus:ring-teal-400 focus:ring-offset-2 focus:ring-offset-white dark:focus:ring-offset-slate-800"
                           placeholder="••••••••"
                           value={password}
                           onChange={(e) => setPassword(e.target.value)}
+                          aria-label="Password"
                         />
                       </div>
                     </div>
@@ -234,7 +241,7 @@ const AuthFlow: React.FC<Props> = ({ onAuthComplete, userName }) => {
                 </div>
 
                 {error && (
-                  <div className="p-4 bg-red-50 text-red-600 rounded-xl text-sm font-bold animate-in fade-in duration-300 flex items-center gap-3">
+                  <div className="p-4 bg-red-50 text-red-600 dark:bg-red-900/30 dark:text-red-300 rounded-xl text-sm font-bold animate-in fade-in duration-300 flex items-center gap-3">
                     <X size={16} /> {error}
                   </div>
                 )}
@@ -243,6 +250,7 @@ const AuthFlow: React.FC<Props> = ({ onAuthComplete, userName }) => {
                   type="submit"
                   disabled={!!isLoading}
                   className="w-full calm-btn-primary py-5 rounded-2xl text-xl font-black shadow-xl flex items-center justify-center gap-3"
+                  aria-label={method === 'magic' ? 'Send Magic Link' : isLogin ? 'Sign In to your account' : 'Create your account'}
                 >
                   {isLoading ? <Loader2 className="animate-spin" /> : (
                     <>
@@ -259,14 +267,16 @@ const AuthFlow: React.FC<Props> = ({ onAuthComplete, userName }) => {
                       if (method === 'magic') setMethod('email');
                       else setMethod('social');
                     }}
-                    className="text-slate-400 font-bold text-sm hover:text-slate-600"
+                    className="text-slate-400 dark:text-slate-500 font-bold text-sm hover:text-slate-600 dark:hover:text-slate-300 transition-colors duration-300"
+                    aria-label="Go back to previous authentication method selection"
                   >
                     Go Back
                   </button>
                   <button 
                     type="button"
                     onClick={() => setIsLogin(!isLogin)}
-                    className="text-teal-700 font-black tracking-tight"
+                    className="text-teal-700 dark:text-teal-400 font-black tracking-tight hover:underline transition-colors duration-300"
+                    aria-label={isLogin ? "Need an account? Sign up" : "Already have an account? Sign in"}
                   >
                     {isLogin ? "Need an account? Sign up" : "Already have an account? Sign in"}
                   </button>
@@ -275,9 +285,9 @@ const AuthFlow: React.FC<Props> = ({ onAuthComplete, userName }) => {
             )}
           </div>
 
-          <div className="mt-12 pt-8 border-t border-slate-100 text-center">
-            <p className="text-[12px] text-slate-400 leading-relaxed max-w-[400px] mx-auto font-medium">
-              By entering Sanctuary, you agree to our <a href="#" className="text-teal-600 font-bold hover:underline">Community Terms</a> and acknowledge our <a href="#" className="text-teal-600 font-bold hover:underline">Privacy Commitment</a> to keep your reflections safe.
+          <div className="mt-12 pt-8 border-t border-slate-100 dark:border-slate-700 text-center transition-colors duration-300">
+            <p className="text-[12px] text-slate-400 dark:text-slate-500 leading-relaxed max-w-[400px] mx-auto font-medium">
+              By entering Sanctuary, you agree to our <a href="#" className="text-teal-600 dark:text-teal-400 font-bold hover:underline">Community Terms</a> and acknowledge our <a href="#" className="text-teal-600 dark:text-teal-400 font-bold hover:underline">Privacy Commitment</a> to keep your reflections safe.
             </p>
           </div>
         </div>

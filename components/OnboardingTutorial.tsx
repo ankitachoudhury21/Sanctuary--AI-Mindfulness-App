@@ -73,28 +73,29 @@ const OnboardingTutorial: React.FC<Props> = ({ userName, onComplete, onViewChang
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm animate-in fade-in duration-500" />
       
-      <div className="relative w-full max-w-md glass-card p-8 rounded-[2.5rem] shadow-2xl animate-in zoom-in-95 duration-300 border-2 border-blue-500/30">
+      <div className="relative w-full max-w-md glass-card p-8 rounded-[2.5rem] shadow-2xl animate-in zoom-in-95 duration-300 border-2 border-blue-500/30 dark:border-blue-700/30">
         <button 
           onClick={handleSkip}
-          className="absolute top-6 right-6 p-2 text-slate-400 hover:text-slate-600 transition-colors"
+          className="absolute top-6 right-6 p-2 text-slate-400 hover:text-slate-600 transition-colors focus-visible:ring-2 focus-visible:ring-teal-400 focus-visible:rounded-full"
+          aria-label="Skip tutorial"
         >
           <X size={20} />
         </button>
 
         <div className="flex flex-col items-center text-center">
-          <div className="w-20 h-20 bg-blue-600 rounded-3xl flex items-center justify-center text-white mb-6 rotate-3 shadow-xl shadow-blue-500/20">
+          <div className="w-20 h-20 bg-blue-600 rounded-3xl flex items-center justify-center text-white mb-6 rotate-3 shadow-xl shadow-blue-500/20 animate-in zoom-in-90 duration-500">
             {Icon && <Icon size={40} />}
           </div>
 
-          <div className="inline-flex items-center gap-2 px-3 py-1 bg-blue-100 rounded-full text-[10px] font-bold text-blue-700 uppercase tracking-widest mb-4">
+          <div className="inline-flex items-center gap-2 px-3 py-1 bg-blue-100 dark:bg-blue-900/30 rounded-full text-[10px] font-bold text-blue-700 dark:text-blue-300 uppercase tracking-widest mb-4">
             <Sparkles size={12} /> Step {currentStep + 1} of {STEPS.length}
           </div>
 
-          <h2 className="text-2xl font-bold text-blue-700 mb-4">
+          <h2 className="text-2xl font-bold text-blue-700 dark:text-blue-300 mb-4 transition-colors duration-300">
             {step.title}
           </h2>
           
-          <p className="text-slate-600 leading-relaxed mb-8">
+          <p className="text-slate-600 dark:text-slate-300 leading-relaxed mb-8 transition-colors duration-300">
             {currentStep === 0 ? `Hi ${userName}, let's explore Sanctuary. ` : ''}
             {step.description}
           </p>
@@ -104,7 +105,7 @@ const OnboardingTutorial: React.FC<Props> = ({ userName, onComplete, onViewChang
               {STEPS.map((_, i) => (
                 <div 
                   key={i} 
-                  className={`h-1.5 rounded-full transition-all duration-300 ${i === currentStep ? 'w-8 bg-blue-600' : 'w-1.5 bg-blue-200'}`} 
+                  className={`h-1.5 rounded-full transition-all duration-300 ${i === currentStep ? 'w-8 bg-blue-600 dark:bg-blue-400' : 'w-1.5 bg-blue-200 dark:bg-blue-700'}`} 
                 />
               ))}
             </div>
@@ -112,6 +113,7 @@ const OnboardingTutorial: React.FC<Props> = ({ userName, onComplete, onViewChang
             <button 
               onClick={handleNext}
               className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-2xl flex items-center gap-2 shadow-lg shadow-blue-500/20 transition-all active:scale-95"
+              aria-label={currentStep === STEPS.length - 1 ? 'Finish tour' : 'Next step'}
             >
               {currentStep === STEPS.length - 1 ? 'Finish Tour' : 'Next'} <ArrowRight size={18} />
             </button>
@@ -122,4 +124,4 @@ const OnboardingTutorial: React.FC<Props> = ({ userName, onComplete, onViewChang
   );
 };
 
-export default OnboardingTutorial;
+export default OnboardingTutorial; // Corrected to default export

@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
   <head>
@@ -14,6 +13,8 @@
         --sanctuary-blue: #0369a1;
         --sanctuary-bg-tint: #f8fafc; 
         --sanctuary-text: #0f172a;
+        --sanctuary-primary-light: #2dd4bf; /* A lighter tint of primary teal */
+        --sanctuary-focus-ring: rgba(45, 212, 191, 0.4);
       }
       body {
         font-family: 'Quicksand', sans-serif;
@@ -24,6 +25,10 @@
         overscroll-behavior-y: none;
         line-height: 1.6;
         color: var(--sanctuary-text);
+      }
+      body.dark {
+        background-color: #0d1218; /* Darker background for dark mode */
+        color: #e2e8f0; /* Lighter text for dark mode */
       }
       h1, h2, h3, h4, .font-display, .display-number {
         font-family: 'Outfit', sans-serif;
@@ -44,6 +49,11 @@
         border: 1px solid rgba(13, 148, 136, 0.08);
         box-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.04);
       }
+      body.dark .glass-card {
+        background: rgba(25, 30, 40, 0.9);
+        border: 1px solid rgba(45, 212, 191, 0.1);
+        box-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.3);
+      }
       .calm-btn-primary {
         background: linear-gradient(135deg, #0d9488 0%, #0369a1 100%);
         color: white;
@@ -54,31 +64,65 @@
         transform: translateY(-2px);
         box-shadow: 0 15px 30px rgba(13, 148, 136, 0.25);
       }
+      body.dark .calm-btn-primary:hover {
+        box-shadow: 0 15px 30px rgba(45, 212, 191, 0.25);
+      }
       .calm-btn-primary:active {
         transform: scale(0.97);
       }
       ::-webkit-scrollbar {
-        width: 6px;
+        width: 8px;
+        height: 8px;
       }
       ::-webkit-scrollbar-thumb {
-        background: #0d948833;
+        background: var(--sanctuary-primary-light);
         border-radius: 10px;
+        border: 2px solid transparent; /* Gives a subtle padding */
+        background-clip: content-box; /* Ensures border doesn't get filled */
+      }
+      ::-webkit-scrollbar-track {
+        background: rgba(var(--sanctuary-primary-light), 0.1);
+        border-radius: 10px;
+      }
+      body.dark ::-webkit-scrollbar-thumb {
+        background: var(--sanctuary-primary-light);
+        border-color: #25282d; /* Darker border for dark mode */
+      }
+      body.dark ::-webkit-scrollbar-track {
+        background: rgba(45, 212, 191, 0.05);
       }
       .hero-text-shadow {
         text-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
       }
       .custom-scrollbar::-webkit-scrollbar {
-        width: 4px;
+        width: 6px;
+        height: 6px;
       }
       .custom-scrollbar::-webkit-scrollbar-thumb {
-        background: rgba(13, 148, 136, 0.15);
+        background: rgba(var(--sanctuary-teal), 0.3);
         border-radius: 10px;
+      }
+      body.dark .custom-scrollbar::-webkit-scrollbar-thumb {
+        background: rgba(45, 212, 191, 0.25);
       }
       .text-balance {
         text-wrap: balance;
       }
       html {
         -webkit-text-size-adjust: 100%;
+      }
+      /* Global Focus Styles */
+      :focus-visible {
+        outline: 3px solid var(--sanctuary-focus-ring);
+        outline-offset: 2px;
+        border-radius: 8px; /* Default for most elements */
+      }
+      button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visible {
+        outline: 3px solid var(--sanctuary-focus-ring);
+        outline-offset: 2px;
+      }
+      .rounded-full:focus-visible {
+        border-radius: 9999px; /* Override for full rounded elements */
       }
     </style>
     <script type="importmap">

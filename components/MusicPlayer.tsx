@@ -546,7 +546,7 @@ const MusicPlayer: React.FC<Props> = ({ setView, setIsAnyTrackPlaying }) => {
       
       // Muffled Rain Engine (Brownian noise + aggressive low-pass)
       const bufferSize = ctx.sampleRate * 4;
-      const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+      const buffer = ctx.createBuffer(1, ctx.sampleRate, ctx.sampleRate);
       const data = buffer.getChannelData(0);
       let lo = 0;
       for (let i = 0; i < bufferSize; i++) {
@@ -1136,34 +1136,70 @@ const MusicPlayer: React.FC<Props> = ({ setView, setIsAnyTrackPlaying }) => {
   return (
     <div className="space-y-6 md:space-y-10 animate-in slide-in-from-bottom-8 duration-1000 px-2 md:px-0 pb-40">
       <div className="flex justify-between items-center px-4 md:px-0">
-        <button onClick={() => { stopAllVoices(false); setView(AppView.DASHBOARD); }} className="flex items-center gap-2 text-teal-800 label-caps text-[10px] md:text-xs hover:gap-3 transition-all outline-none">
+        <button onClick={() => { stopAllVoices(false); setView(AppView.DASHBOARD); }} className="flex items-center gap-2 text-teal-800 dark:text-teal-300 label-caps text-[10px] md:text-xs hover:gap-3 transition-all outline-none"
+        aria-label="Exit Meditation Player"
+        >
           <ChevronLeft size={16} /> Exit Sanctuary
         </button>
         <div className="flex items-center gap-3">
-           <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 bg-white/60 backdrop-blur-3xl rounded-lg border border-white shadow-sm">
-             <Timer size={14} className="text-teal-600" />
-             <span className="text-[10px] font-black uppercase tracking-widest">{Math.floor(sessionTime/60)}:{(sessionTime%60).toString().padStart(2,'0')}</span>
+           <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 bg-white/60 dark:bg-slate-800/60 backdrop-blur-3xl rounded-lg border border-white dark:border-slate-700 shadow-sm transition-colors duration-300">
+             <Timer size={14} className="text-teal-600 dark:text-teal-400" />
+             <span className="text-[10px] font-black uppercase tracking-widest text-slate-900 dark:text-slate-200">{Math.floor(sessionTime/60)}:{(sessionTime%60).toString().padStart(2,'0')}</span>
            </div>
-           <div className="flex items-center gap-2 bg-white/80 backdrop-blur-md px-3 py-1.5 rounded-lg border border-white shadow-sm">
-            <button onClick={toggleMute} className={`transition-colors outline-none ${isMuted ? 'text-slate-400' : 'text-teal-700'}`}>
+           <div className="flex items-center gap-2 bg-white/80 dark:bg-slate-800/80 backdrop-blur-md px-3 py-1.5 rounded-lg border border-white dark:border-slate-700 shadow-sm transition-colors duration-300">
+            <button onClick={toggleMute} className={`transition-colors outline-none focus-visible:ring-2 focus-visible:ring-teal-400 focus-visible:rounded-full ${isMuted ? 'text-slate-400' : 'text-teal-700 dark:text-teal-400'}`}
+            aria-label={isMuted ? "Unmute audio" : "Mute audio"}
+            >
               {isMuted ? <VolumeX size={14} /> : <Volume2 size={14} />}
             </button>
-            <input type="range" min="0" max="1" step="0.01" className="w-16 md:w-20 h-1 bg-teal-100 rounded-full appearance-none cursor-pointer accent-teal-700" value={volume} onChange={(e) => {
+            <input type="range" min="0" max="1" step="0.01" className="w-16 md:w-20 h-1 bg-teal-100 dark:bg-teal-900/50 rounded-full appearance-none cursor-pointer accent-teal-700 dark:accent-teal-400 custom-range-slider-music" value={volume} onChange={(e) => {
                 const val = parseFloat(e.target.value); setVolume(val);
                 if (masterGainRef.current && audioContextRef.current && !isMuted) masterGainRef.current.gain.setValueAtTime(val, audioContextRef.current.currentTime);
               }}
+              aria-label="Volume slider"
             />
+            <style jsx>{`
+              .custom-range-slider-music::-webkit-slider-thumb {
+                -webkit-appearance: none;
+                appearance: none;
+                width: 16px;
+                height: 16px;
+                border-radius: 50%;
+                background: var(--sanctuary-teal);
+                cursor: grab;
+                box-shadow: 0 0 0 3px rgba(45, 212, 191, 0.2);
+                transition: background 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+              }
+              .custom-range-slider-music::-moz-range-thumb {
+                width: 16px;
+                height: 16px;
+                border-radius: 50%;
+                background: var(--sanctuary-teal);
+                cursor: grab;
+                box-shadow: 0 0 0 3px rgba(45, 212, 191, 0.2);
+                transition: background 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+                border: none;
+              }
+              .custom-range-slider-music::-webkit-slider-thumb:hover {
+                background: var(--sanctuary-blue);
+                box-shadow: 0 0 0 5px rgba(45, 212, 191, 0.3);
+              }
+              .custom-range-slider-music::-moz-range-thumb:hover {
+                background: var(--sanctuary-blue);
+                box-shadow: 0 0 0 5px rgba(45, 212, 191, 0.3);
+              }
+            `}</style>
           </div>
         </div>
       </div>
       
-      <div className="relative h-[320px] md:h-[480px] rounded-[2.5rem] md:rounded-[4rem] overflow-hidden group shadow-[0_30px_80px_-15px_rgba(0,0,0,0.3)] transition-all duration-1000 ring-1 ring-white/15">
+      <div className="relative h-[320px] md:h-[480px] rounded-[2.5rem] md:rounded-[4rem] overflow-hidden group shadow-[0_30px_80px_-15px_rgba(0,0,0,0.3)] dark:shadow-[0_30px_80px_-15px_rgba(0,0,0,0.6)] transition-all duration-1000 ring-1 ring-white/15 dark:ring-white/5">
         <div className={`absolute inset-0 bg-gradient-to-br ${currentTrack.color} transition-all duration-[2500ms] scale-105 group-hover:scale-100`}></div>
         <div className="absolute inset-0 bg-black/45 backdrop-blur-[2px]"></div>
         <canvas ref={canvasRef} width={1000} height={1000} className="absolute inset-0 w-full h-full opacity-70 pointer-events-none mix-blend-screen" />
         <div className="absolute inset-0 flex flex-col items-center justify-center p-6 md:p-12 z-10 text-center">
           <div className="space-y-4 md:space-y-6 animate-in zoom-in-95 duration-1000 max-w-4xl">
-             <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-white/10 backdrop-blur-3xl rounded-full border border-white/20 mx-auto">
+             <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-white/10 dark:bg-black/20 backdrop-blur-3xl rounded-full border border-white/20 dark:border-white/10 mx-auto">
                <Sparkles size={14} className="text-teal-300" />
                <p className="text-[10px] md:text-xs font-black uppercase tracking-[0.3em] text-white/90">Mode: {currentTrack.genre}</p>
              </div>
@@ -1173,7 +1209,9 @@ const MusicPlayer: React.FC<Props> = ({ setView, setIsAnyTrackPlaying }) => {
              </div>
           </div>
           <div className="mt-8 md:mt-12">
-            <button onClick={() => handleTrackSelect(currentTrack)} disabled={isLoading} className={`w-14 h-14 md:w-20 md:h-20 bg-white text-teal-950 rounded-full flex items-center justify-center shadow-xl hover:scale-110 active:scale-95 transition-all ${isLoading ? 'opacity-50' : ''}`}>
+            <button onClick={() => handleTrackSelect(currentTrack)} disabled={isLoading} className={`w-14 h-14 md:w-20 md:h-20 bg-white text-teal-950 rounded-full flex items-center justify-center shadow-xl hover:scale-110 active:scale-95 transition-all ${isLoading ? 'opacity-50' : ''}`}
+            aria-label={isPlaying && !isMuted ? "Pause current track" : "Play current track"}
+            >
               {isLoading ? <Loader2 size={24} className="animate-spin text-teal-700" /> : isPlaying && !isMuted ? <Pause size={32} fill="currentColor" /> : <Play size={32} className="ml-1" fill="currentColor" />}
             </button>
           </div>
@@ -1183,13 +1221,16 @@ const MusicPlayer: React.FC<Props> = ({ setView, setIsAnyTrackPlaying }) => {
       <div className="space-y-8">
         <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-4 px-4 md:px-6">
           <div className="space-y-1">
-            <h3 className="text-2xl md:text-4xl font-black text-slate-900 tracking-tight leading-none">Meditation Library</h3>
-            <p className="text-slate-500 font-bold text-xs md:text-sm">Clinical-grade procedural audio for neural reset.</p>
+            <h3 className="text-2xl md:text-4xl font-black text-slate-900 dark:text-white tracking-tight leading-none transition-colors duration-300">Meditation Library</h3>
+            <p className="text-slate-500 dark:text-slate-300 font-bold text-xs md:text-sm transition-colors duration-300">Clinical-grade procedural audio for neural reset.</p>
           </div>
-          <div className="flex p-1 bg-slate-100/80 backdrop-blur-3xl rounded-xl gap-0.5 border border-white shadow-inner flex-wrap">
+          <div className="flex p-1 bg-slate-100/80 dark:bg-slate-800/80 backdrop-blur-3xl rounded-xl gap-0.5 border border-white dark:border-slate-700 shadow-inner flex-wrap">
             {CATEGORIES.map((cat) => (
-              <button key={cat.id} onClick={() => setActiveCat(cat.id)} className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all ${activeCat === cat.id ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-800'}`}>
-                <cat.icon size={12} className={activeCat === cat.id ? cat.color : ''} />{cat.label}
+              <button key={cat.id} onClick={() => setActiveCat(cat.id)} className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all ${activeCat === cat.id ? 'bg-white text-slate-900 shadow-sm dark:bg-slate-700 dark:text-white' : 'text-slate-500 hover:text-slate-800 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-700'}`}
+              aria-pressed={activeCat === cat.id}
+              aria-label={`Filter by ${cat.label} category`}
+              >
+                <cat.icon size={12} className={activeCat === cat.id ? `${cat.color} dark:text-teal-400` : ''} />{cat.label}
               </button>
             ))}
           </div>
@@ -1202,14 +1243,15 @@ const MusicPlayer: React.FC<Props> = ({ setView, setIsAnyTrackPlaying }) => {
               <button 
                 key={item.id} 
                 onClick={() => handleTrackSelect(item)} 
-                className={`group relative flex items-center gap-3 p-4 rounded-2xl transition-all duration-300 text-left overflow-hidden outline-none ${isActive && !isMuted ? 'bg-slate-950 text-white shadow-lg ring-2 ring-teal-500/30' : 'bg-white hover:bg-slate-50 border border-slate-100'}`}
+                className={`group relative flex items-center gap-3 p-4 rounded-2xl transition-all duration-300 text-left overflow-hidden outline-none ${isActive && !isMuted ? 'bg-slate-950 dark:bg-teal-900 text-white shadow-lg ring-2 ring-teal-500/30 dark:ring-teal-700/30' : 'bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 border border-slate-100 dark:border-slate-700'}`}
+                aria-label={`Select track: ${item.name}`}
               >
                 <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 transition-all duration-300 ${isActive && !isMuted ? 'bg-teal-600/20' : `bg-gradient-to-br ${item.color} text-white shadow-sm group-hover:scale-105`}`}>
                   {isActive && isLoading ? <Loader2 size={18} className="animate-spin text-teal-400" /> : isActive && isPlaying && !isMuted ? <Pause size={18} fill="currentColor" className="text-teal-400" /> : <item.icon size={18} />}
                 </div>
                 <div className="space-y-0.5 min-w-0 flex-1">
-                  <p className="text-sm font-black tracking-tight leading-tight truncate">{item.name}</p>
-                  <p className={`text-[8px] uppercase font-black tracking-[0.2em] ${isActive && !isMuted ? 'text-teal-400' : 'text-slate-400'}`}>{item.genre}</p>
+                  <p className="text-sm font-black tracking-tight leading-tight truncate text-slate-900 dark:text-white transition-colors duration-300">{item.name}</p>
+                  <p className={`text-[8px] uppercase font-black tracking-[0.2em] ${isActive && !isMuted ? 'text-teal-400' : 'text-slate-400 dark:text-slate-500'}`}>{item.genre}</p>
                 </div>
               </button>
             );

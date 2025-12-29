@@ -1,6 +1,6 @@
 import React from 'react';
 import { AppView } from '../types';
-import { Home, BookHeart, Moon, Music, Compass, LogOut, Brain, Rocket, Stars, Volume2, VolumeX } from 'lucide-react';
+import { Home, BookHeart, Moon, Music, Compass, LogOut, Brain, Rocket, Stars, Volume2, VolumeX, Sun, CloudMoon } from 'lucide-react';
 
 interface Props {
   activeView: AppView;
@@ -8,6 +8,8 @@ interface Props {
   onLogout: () => void;
   isAmbientMuted: boolean;
   toggleAmbient: () => void;
+  isDarkMode: boolean;
+  toggleDarkMode: () => void;
 }
 
 const DesktopNavItem: React.FC<{ item: any; activeView: AppView; setView: (view: AppView) => void }> = ({ item, activeView, setView }) => {
@@ -16,12 +18,13 @@ const DesktopNavItem: React.FC<{ item: any; activeView: AppView; setView: (view:
   return (
     <button 
       onClick={() => setView(item.view)}
-      className="w-full flex items-center gap-4 px-6 py-3 group transition-all duration-300 outline-none"
+      className="w-full flex items-center gap-4 px-6 py-3 group transition-all duration-300 outline-none focus-visible:ring-2 focus-visible:ring-teal-400 focus-visible:ring-offset-2 focus-visible:rounded-xl"
+      aria-label={`Navigate to ${item.label}`}
     >
       <div className={`
         w-10 h-10 rounded-full flex items-center justify-center border-2 transition-all duration-300
         ${isActive 
-          ? `${item.color} border-transparent text-white shadow-lg shadow-amber-500/20` 
+          ? `${item.color} border-transparent text-white shadow-lg shadow-amber-500/20 dark:shadow-teal-500/20` 
           : 'border-white/20 text-white/70 group-hover:border-white/40 group-hover:text-white'}
       `}>
         <Icon size={18} fill={isActive ? 'currentColor' : 'none'} />
@@ -39,7 +42,8 @@ const MobileNavItem: React.FC<{ item: any; activeView: AppView; setView: (view: 
   return (
     <button 
       onClick={() => setView(item.view)}
-      className="flex flex-col items-center justify-center flex-1 min-w-0 py-2 gap-1 outline-none transition-all active:opacity-60"
+      className="flex flex-col items-center justify-center flex-1 min-w-0 py-2 gap-1 outline-none transition-all active:opacity-60 focus-visible:ring-2 focus-visible:ring-teal-400 focus-visible:ring-offset-2 focus-visible:rounded-lg"
+      aria-label={`Navigate to ${item.label}`}
     >
       <div className={`
         w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-300
@@ -56,7 +60,7 @@ const MobileNavItem: React.FC<{ item: any; activeView: AppView; setView: (view: 
   );
 };
 
-const Navigation: React.FC<Props> = ({ activeView, setView, onLogout, isAmbientMuted, toggleAmbient }) => {
+const Navigation: React.FC<Props> = ({ activeView, setView, onLogout, isAmbientMuted, toggleAmbient, isDarkMode, toggleDarkMode }) => {
   const navItems = [
     { icon: Home, label: 'Home', view: AppView.DASHBOARD, color: 'bg-emerald-500' },
     { icon: Brain, label: 'Daily Meditation', view: AppView.MUSIC, color: 'bg-indigo-500' },
@@ -72,10 +76,11 @@ const Navigation: React.FC<Props> = ({ activeView, setView, onLogout, isAmbientM
 
   return (
     <>
-      <header className="md:hidden fixed top-0 left-0 right-0 h-16 bg-white/80 backdrop-blur-xl border-b border-slate-100 z-[70] flex items-center justify-between px-6 shadow-sm">
+      <header className="md:hidden fixed top-0 left-0 right-0 h-16 bg-white/80 dark:bg-[#0b1d2e]/95 backdrop-blur-xl border-b border-slate-100 dark:border-white/10 z-[70] flex items-center justify-between px-6 shadow-sm transition-colors duration-300">
         <button 
           onClick={() => setView(AppView.DASHBOARD)}
           className="flex items-center gap-2 outline-none active:scale-95 transition-transform"
+          aria-label="Go to Dashboard"
         >
           <div className="w-8 h-8 bg-teal-500 rounded-lg flex items-center justify-center text-white shadow-md">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -83,29 +88,39 @@ const Navigation: React.FC<Props> = ({ activeView, setView, onLogout, isAmbientM
               <circle cx="12" cy="12" r="3" fill="white" />
             </svg>
           </div>
-          <span className="font-black text-slate-900 tracking-tight text-xl font-display">Sanctuary</span>
+          <span className="font-black text-slate-900 dark:text-white tracking-tight text-xl font-display transition-colors duration-300">Sanctuary</span>
         </button>
         <div className="flex items-center gap-2">
           <button 
+            onClick={toggleDarkMode}
+            className={`w-10 h-10 flex items-center justify-center rounded-full transition-all ${isDarkMode ? 'bg-slate-700 text-amber-300' : 'bg-slate-50 text-slate-700'}`}
+            aria-label={isDarkMode ? "Switch to light mode" : "Switch to dark mode"}
+          >
+            {isDarkMode ? <Sun size={18} /> : <CloudMoon size={18} />}
+          </button>
+          <button 
             onClick={toggleAmbient}
-            className={`w-10 h-10 flex items-center justify-center rounded-full transition-all ${!isAmbientMuted ? 'bg-teal-100 text-teal-600 shadow-inner' : 'bg-slate-50 text-slate-400'}`}
+            className={`w-10 h-10 flex items-center justify-center rounded-full transition-all ${!isAmbientMuted ? 'bg-teal-100 dark:bg-teal-600/30 text-teal-600 dark:text-teal-400 shadow-inner' : 'bg-slate-50 dark:bg-slate-700 text-slate-400'}`}
+            aria-label={isAmbientMuted ? "Unmute ambient music" : "Mute ambient music"}
           >
             {!isAmbientMuted ? <Volume2 size={18} className="animate-pulse" /> : <VolumeX size={18} />}
           </button>
           <button 
             onClick={onLogout}
-            className="w-10 h-10 flex items-center justify-center text-slate-400 hover:text-red-500 active:scale-90 transition-all rounded-full bg-slate-50 border border-slate-100"
+            className="w-10 h-10 flex items-center justify-center text-slate-400 hover:text-red-500 active:scale-90 transition-all rounded-full bg-slate-50 dark:bg-slate-700 border border-slate-100 dark:border-slate-600"
             title="Log out"
+            aria-label="Log out"
           >
             <LogOut size={18} />
           </button>
         </div>
       </header>
 
-      <aside className="hidden md:flex fixed top-0 left-0 bottom-0 w-[260px] bg-[#0b1d2e] z-[70] flex-col py-10 shadow-2xl border-r border-white/5">
+      <aside className="hidden md:flex fixed top-0 left-0 bottom-0 w-[260px] bg-[#0b1d2e] z-[70] flex-col py-10 shadow-2xl border-r border-white/5 dark:border-white/10">
         <button 
           onClick={() => setView(AppView.DASHBOARD)}
           className="px-8 mb-12 flex items-center gap-3 group outline-none"
+          aria-label="Go to Dashboard"
         >
           <div className="relative w-10 h-10 flex-shrink-0 group-hover:scale-110 transition-transform">
              <div className="absolute inset-0 bg-teal-500 rounded-full opacity-20 animate-pulse"></div>
@@ -132,8 +147,22 @@ const Navigation: React.FC<Props> = ({ activeView, setView, onLogout, isAmbientM
 
         <div className="px-6 space-y-4 pt-10 border-t border-white/10 mt-auto">
           <button 
+            onClick={toggleDarkMode}
+            className={`w-full flex items-center gap-4 px-2 py-3 group transition-all duration-300 outline-none ${isDarkMode ? 'text-amber-300' : 'text-slate-400'}`}
+            aria-label={isDarkMode ? "Switch to light mode" : "Switch to dark mode"}
+          >
+            <div className={`w-10 h-10 rounded-full border-2 flex items-center justify-center transition-all ${isDarkMode ? 'border-amber-400/50 bg-amber-400/10 shadow-[0_0_15px_rgba(251,191,36,0.2)]' : 'border-white/10'}`}>
+              {isDarkMode ? <Sun size={18} /> : <CloudMoon size={18} />}
+            </div>
+            <div className="flex flex-col items-start">
+              <span className="text-sm font-black uppercase tracking-widest">Theme</span>
+              <span className="text-[9px] opacity-60 font-bold uppercase">{isDarkMode ? 'Dark Mode' : 'Light Mode'}</span>
+            </div>
+          </button>
+          <button 
             onClick={toggleAmbient}
             className={`w-full flex items-center gap-4 px-2 py-3 group transition-all duration-300 outline-none ${!isAmbientMuted ? 'text-teal-400' : 'text-slate-500'}`}
+            aria-label={isAmbientMuted ? "Unmute ambient music" : "Mute ambient music"}
           >
             <div className={`w-10 h-10 rounded-full border-2 flex items-center justify-center transition-all ${!isAmbientMuted ? 'border-teal-500/50 bg-teal-500/10 shadow-[0_0_15px_rgba(45,212,191,0.2)]' : 'border-white/10'}`}>
               {!isAmbientMuted ? <Volume2 size={18} /> : <VolumeX size={18} />}
@@ -147,6 +176,7 @@ const Navigation: React.FC<Props> = ({ activeView, setView, onLogout, isAmbientM
           <button 
             onClick={onLogout}
             className="w-full flex items-center gap-4 px-2 py-3 text-slate-400 hover:text-red-400 transition-colors font-display"
+            aria-label="Log out of Sanctuary"
           >
             <div className="w-10 h-10 rounded-full border border-white/20 flex items-center justify-center">
               <LogOut size={18} />

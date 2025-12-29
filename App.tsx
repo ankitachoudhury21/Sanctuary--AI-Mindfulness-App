@@ -1,10 +1,11 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { AppView, UserProfile, SleepData, ActivityData, JournalEntry } from './types';
 import WelcomeJourney from './components/WelcomeJourney';
 import AuthFlow from './components/AuthFlow';
 import Dashboard from './components/Dashboard';
 import Navigation from './components/Navigation';
-import OnboardingTutorial from './components/OnboardingTutorial';
+import OnboardingTutorial from './components/OnboardingTutorial'; // Corrected to default import
 import BackgroundAmbience from './components/BackgroundAmbience';
 import { analyzeSleepAndHealth } from './services/geminiService';
 import { Sparkles, Play } from 'lucide-react';
@@ -15,7 +16,8 @@ const STORAGE_KEYS = {
   SLEEP: 'sanctuary_sleep_data',
   ACTIVITY: 'sanctuary_activity_data',
   DRAFT: 'sanctuary_journal_draft',
-  AMBIENT_MUTED: 'sanctuary_ambient_muted'
+  AMBIENT_MUTED: 'sanctuary_ambient_muted',
+  DARK_MODE: 'sanctuary_dark_mode'
 };
 
 const App: React.FC = () => {
@@ -23,6 +25,10 @@ const App: React.FC = () => {
   const [view, setView] = useState<AppView>(AppView.WELCOME);
   const [isAmbientMuted, setIsAmbientMuted] = useState(() => {
     const saved = localStorage.getItem(STORAGE_KEYS.AMBIENT_MUTED);
+    return saved === 'true';
+  });
+  const [isDarkMode, setIsDarkMode] = useState(() => {
+    const saved = localStorage.getItem(STORAGE_KEYS.DARK_MODE);
     return saved === 'true';
   });
   const [isAnyTrackPlaying, setIsAnyTrackPlaying] = useState(false);
@@ -65,6 +71,15 @@ const App: React.FC = () => {
   useEffect(() => {
     localStorage.setItem(STORAGE_KEYS.AMBIENT_MUTED, isAmbientMuted.toString());
   }, [isAmbientMuted]);
+
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEYS.DARK_MODE, isDarkMode.toString());
+    if (isDarkMode) {
+      document.body.classList.add('dark');
+    } else {
+      document.body.classList.remove('dark');
+    }
+  }, [isDarkMode]);
 
   useEffect(() => {
     if (user) {
@@ -141,6 +156,10 @@ const App: React.FC = () => {
     setHasStarted(false);
   };
 
+  const toggleDarkMode = () => {
+    setIsDarkMode(prevMode => !prevMode);
+  };
+
   return (
     <div className="min-h-screen transition-all duration-1000 relative overflow-x-hidden">
       <BackgroundAmbience hasStarted={hasStarted} isActive={!isAmbientMuted && !isAnyTrackPlaying} />
@@ -149,27 +168,28 @@ const App: React.FC = () => {
         <img 
           src="https://images.unsplash.com/photo-1518241353330-0f7941c2d9b5?auto=format&fit=crop&q=80&w=2560" 
           alt="Zen landscape" 
-          className="w-full h-full object-cover opacity-60"
+          className="w-full h-full object-cover opacity-60 dark:opacity-40 transition-opacity duration-1000"
         />
-        <div className="absolute inset-0 bg-white/40"></div>
-        <div className="absolute inset-0 bg-gradient-to-b from-transparent to-white/95"></div>
+        <div className="absolute inset-0 bg-white/40 dark:bg-black/60 transition-colors duration-1000"></div>
+        <div className="absolute inset-0 bg-gradient-to-b from-transparent to-white/95 dark:to-black/95 transition-colors duration-1000"></div>
       </div>
 
       {!hasStarted && (
         <div className="fixed inset-0 z-[200] flex flex-col items-center justify-center p-6 text-center animate-in fade-in zoom-in-95 duration-1000">
-          <div className="absolute inset-0 bg-slate-900/10 backdrop-blur-md"></div>
-          <div className="relative z-10 glass-card p-10 md:p-24 rounded-[3rem] md:rounded-[5rem] shadow-2xl border-white/60 max-w-2xl w-full space-y-12">
+          <div className="absolute inset-0 bg-slate-900/10 backdrop-blur-md dark:bg-black/50 transition-colors duration-1000"></div>
+          <div className="relative z-10 glass-card p-10 md:p-24 rounded-[3rem] md:rounded-[5rem] shadow-2xl border-white/60 dark:border-teal-500/10 max-w-2xl w-full space-y-12 transition-all duration-1000">
              <div className="space-y-6">
                 <div className="w-24 h-24 md:w-32 md:h-32 bg-teal-600/10 rounded-full flex items-center justify-center mx-auto mb-6 relative">
                    <div className="absolute inset-0 border-2 border-teal-600/30 rounded-full animate-ping opacity-20"></div>
                    <Sparkles size={48} className="text-teal-700 md:w-16 md:h-16" />
                 </div>
-                <h1 className="text-5xl md:text-7xl font-black text-slate-900 tracking-tighter font-display leading-tight">Welcome to <br/>Sanctuary</h1>
-                <p className="text-xl md:text-2xl text-slate-600 font-medium italic">Your mindful space is ready.</p>
+                <h1 className="text-5xl md:text-7xl font-black text-slate-900 dark:text-white tracking-tighter font-display leading-tight transition-colors duration-1000">Welcome to <br/>Sanctuary</h1>
+                <p className="text-xl md:text-2xl text-slate-600 dark:text-slate-300 font-medium italic transition-colors duration-1000">Your mindful space is ready.</p>
              </div>
              <button 
                 onClick={handleStartExperience}
-                className="w-full calm-btn-primary py-6 md:py-8 rounded-[1.5rem] md:rounded-[2.5rem] text-2xl md:text-3xl font-black shadow-2xl hover:scale-105 active:scale-95 transition-all flex items-center justify-center gap-4 group"
+                className="w-full calm-btn-primary py-6 md:py-8 rounded-[1.5rem] md:rounded-[2.5rem] text-2xl md:text-3xl font-black shadow-2xl hover:scale-105 active:scale-95 transition-all flex items-center justify-center gap-4 group hover:shadow-teal-500/40"
+                aria-label="Enter Sanctuary"
               >
                 <Play size={28} className="md:w-9 md:h-9 group-hover:fill-current" fill="none" /> 
                 Enter Sanctuary
@@ -189,6 +209,8 @@ const App: React.FC = () => {
               onLogout={logout}
               isAmbientMuted={isAmbientMuted}
               toggleAmbient={() => setIsAmbientMuted(!isAmbientMuted)}
+              isDarkMode={isDarkMode}
+              toggleDarkMode={toggleDarkMode}
             />
             <main className="flex-1 w-full transition-all duration-500 relative px-4 sm:px-8 pb-32 pt-24 md:pt-16 md:pb-16 md:pl-[260px] max-w-[1600px] mx-auto">
               <Dashboard 

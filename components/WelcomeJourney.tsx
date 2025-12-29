@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { UserProfile } from '../types';
 import { ArrowRight, Sparkles, Moon, Wind, Target, Heart, Plus } from 'lucide-react';
@@ -51,6 +50,7 @@ const WelcomeJourney: React.FC<Props> = ({ onComplete }) => {
       setSelectedOption(null);
     } else {
       setStep(step + 1);
+      setSelectedOption(null); // Clear selection for new step
     }
   };
 
@@ -60,6 +60,7 @@ const WelcomeJourney: React.FC<Props> = ({ onComplete }) => {
       setSelectedOption(null);
     } else {
       setStep(step - 1);
+      setSelectedOption(null); // Clear selection for new step
     }
   };
 
@@ -78,7 +79,7 @@ const WelcomeJourney: React.FC<Props> = ({ onComplete }) => {
   return (
     <div className="min-h-screen flex flex-col items-center justify-center relative overflow-hidden bg-transparent">
       {step > 1 && (
-        <div className="fixed top-0 left-0 right-0 h-1.5 md:h-2 bg-white/20 z-50">
+        <div className="fixed top-0 left-0 right-0 h-1.5 md:h-2 bg-white/20 z-50 dark:bg-slate-700/30">
           <div 
             className="h-full bg-teal-500 transition-all duration-700 ease-out shadow-[0_0_15px_rgba(45,212,191,0.5)]"
             style={{ width: `${progressPercent}%` }}
@@ -98,7 +99,7 @@ const WelcomeJourney: React.FC<Props> = ({ onComplete }) => {
               </svg>
             </div>
          </div>
-         <span className="text-2xl md:text-5xl font-black text-slate-900 font-display tracking-tight">Sanctuary</span>
+         <span className="text-2xl md:text-5xl font-black text-slate-900 dark:text-white font-display tracking-tight transition-colors duration-300">Sanctuary</span>
       </div>
       
       <div className="max-w-4xl w-full px-6 py-12 md:py-24 relative z-10 animate-in fade-in zoom-in-95 duration-700 overflow-y-auto">
@@ -106,8 +107,8 @@ const WelcomeJourney: React.FC<Props> = ({ onComplete }) => {
         {step === 1 && (
           <div className="space-y-10 md:space-y-16 text-center animate-in slide-in-from-bottom-4 duration-500">
             <div className="space-y-4 md:space-y-6">
-              <h1 className="text-4xl xs:text-5xl sm:text-6xl md:text-8xl font-black text-slate-900 drop-shadow-[0_4px_4px_rgba(255,255,255,0.8)] tracking-tight leading-[1.1]">Your quiet space.</h1>
-              <p className="text-lg sm:text-2xl md:text-3xl text-slate-800 font-bold leading-relaxed drop-shadow-sm max-w-2xl mx-auto px-2">
+              <h1 className="text-4xl xs:text-5xl sm:text-6xl md:text-8xl font-black text-slate-900 dark:text-white drop-shadow-[0_4px_4px_rgba(255,255,255,0.8)] dark:drop-shadow-none tracking-tight leading-[1.1] transition-colors duration-300">Your quiet space.</h1>
+              <p className="text-lg sm:text-2xl md:text-3xl text-slate-800 dark:text-slate-300 font-bold leading-relaxed drop-shadow-sm max-w-2xl mx-auto px-2 transition-colors duration-300">
                 Take a deep breath. Sanctuary is your forest for clarity and rest.
               </p>
             </div>
@@ -115,16 +116,18 @@ const WelcomeJourney: React.FC<Props> = ({ onComplete }) => {
             <div className="max-w-xl mx-auto space-y-6 md:space-y-8">
               <input 
                 type="text" 
-                className="w-full bg-white/95 backdrop-blur-md border-2 border-slate-200 p-6 md:p-8 rounded-[1.5rem] md:rounded-[2.5rem] text-xl md:text-3xl font-black outline-none focus:ring-4 focus:ring-teal-500/10 transition-all text-center placeholder:text-slate-400 shadow-xl"
+                className="w-full bg-white/95 dark:bg-slate-800 backdrop-blur-md border-2 border-slate-200 dark:border-slate-700 p-6 md:p-8 rounded-[1.5rem] md:rounded-[2.5rem] text-xl md:text-3xl font-black outline-none focus:ring-4 focus:ring-teal-500/10 transition-all text-center placeholder:text-slate-400 dark:placeholder:text-slate-500 shadow-xl dark:text-white"
                 placeholder="What is your name?"
                 value={profile.name}
                 onChange={(e) => setProfile({...profile, name: e.target.value})}
+                aria-label="Your name"
               />
               
               <button 
                 onClick={next}
                 disabled={!profile.name}
                 className="w-full calm-btn-primary py-6 md:py-8 rounded-[1.5rem] md:rounded-[2.5rem] text-xl md:text-3xl font-black flex items-center justify-center gap-3 md:gap-4 disabled:opacity-50 shadow-xl hover:scale-[1.02] transition-all"
+                aria-label="Continue to next step"
               >
                 Let's Begin <ArrowRight size={24} className="md:w-9 md:h-9" />
               </button>
@@ -135,8 +138,8 @@ const WelcomeJourney: React.FC<Props> = ({ onComplete }) => {
         {step === 2 && (
           <div className="space-y-8 md:space-y-12 text-center animate-in slide-in-from-right-4 duration-500">
             <div className="space-y-2 md:space-y-4">
-              <h2 className="text-3xl md:text-6xl font-black text-slate-900 drop-shadow-sm">What brings you here?</h2>
-              <p className="text-base md:text-2xl text-slate-800 font-bold">Select your intentions today.</p>
+              <h2 className="text-3xl md:text-6xl font-black text-slate-900 dark:text-white drop-shadow-sm transition-colors duration-300">What brings you here?</h2>
+              <p className="text-base md:text-2xl text-slate-800 dark:text-slate-300 font-bold transition-colors duration-300">Select your intentions today.</p>
             </div>
 
             <div className="grid grid-cols-1 gap-3 md:gap-4 max-w-3xl mx-auto">
@@ -151,12 +154,14 @@ const WelcomeJourney: React.FC<Props> = ({ onComplete }) => {
                       bg-gradient-to-r ${goal.gradient}
                       group active:scale-[0.98] shadow-md
                     `}
+                    aria-pressed={isSelected}
+                    aria-label={`Select goal: ${goal.label}`}
                   >
                     <div className={`
                       flex items-center gap-4 md:gap-6 px-6 md:px-10 py-4 md:py-6 rounded-[1.25rem] md:rounded-[2.5rem] w-full transition-all
-                      ${isSelected ? 'bg-transparent text-[#1e293b]' : 'bg-white/95 backdrop-blur-sm text-slate-800 hover:bg-white'}
+                      ${isSelected ? 'bg-transparent text-[#1e293b] dark:text-white' : 'bg-white/95 dark:bg-slate-800 backdrop-blur-sm text-slate-800 dark:text-slate-200 hover:bg-white dark:hover:bg-slate-700'}
                     `}>
-                      <goal.icon size={20} className={`md:w-8 md:h-8 ${isSelected ? 'text-[#1e293b]' : 'text-slate-500'}`} />
+                      <goal.icon size={20} className={`md:w-8 md:h-8 ${isSelected ? 'text-[#1e293b] dark:text-white' : 'text-slate-500'}`} />
                       <span className="text-lg md:text-2xl font-black truncate">{goal.label}</span>
                     </div>
                   </button>
@@ -168,12 +173,14 @@ const WelcomeJourney: React.FC<Props> = ({ onComplete }) => {
               <button 
                 onClick={next}
                 className="w-full calm-btn-primary py-5 md:py-6 rounded-2xl md:rounded-[2.5rem] text-lg md:text-2xl font-black shadow-xl"
+                aria-label="Continue to next step"
               >
                 Continue
               </button>
               <button 
                 onClick={next}
-                className="w-full py-2 text-slate-600 font-black hover:text-slate-950 text-base md:text-xl"
+                className="w-full py-2 text-slate-600 dark:text-slate-400 font-black hover:text-slate-950 dark:hover:text-white text-base md:text-xl transition-colors duration-300"
+                aria-label="Skip goal selection for now"
               >
                 Skip for now
               </button>
@@ -185,10 +192,10 @@ const WelcomeJourney: React.FC<Props> = ({ onComplete }) => {
           <div className="space-y-10 md:space-y-16 text-center animate-in slide-in-from-right-4 duration-500 max-w-3xl mx-auto">
             <div className="space-y-4 md:space-y-6">
               <p className="text-[10px] md:text-base font-black text-teal-700 tracking-[0.2em] md:tracking-[0.3em] uppercase">Step {qIndex + 1} of 3</p>
-              <h2 className="text-2xl xs:text-3xl md:text-5xl font-black text-slate-900 leading-tight text-balance">
+              <h2 className="text-2xl xs:text-3xl md:text-5xl font-black text-slate-900 dark:text-white leading-tight text-balance transition-colors duration-300">
                 {QUESTIONNAIRE[qIndex].question}
               </h2>
-              <p className="text-base md:text-2xl text-slate-800 font-bold italic px-2">{QUESTIONNAIRE[qIndex].tip}</p>
+              <p className="text-base md:text-2xl text-slate-800 dark:text-slate-300 font-bold italic px-2 transition-colors duration-300">{QUESTIONNAIRE[qIndex].tip}</p>
             </div>
 
             <div className="space-y-3 md:space-y-5">
@@ -199,9 +206,11 @@ const WelcomeJourney: React.FC<Props> = ({ onComplete }) => {
                   className={`
                     w-full py-4 px-6 md:py-7 md:px-12 rounded-2xl md:rounded-[2.5rem] text-lg md:text-2xl font-black border-2 md:border-4 transition-all text-left shadow-lg
                     ${selectedOption === option 
-                      ? 'border-teal-600 bg-teal-50/95 text-teal-950 ring-4 md:ring-8 ring-teal-500/10' 
-                      : 'border-white/60 bg-white/90 text-slate-800 hover:border-teal-300'}
+                      ? 'border-teal-600 bg-teal-50/95 dark:bg-teal-900/50 text-teal-950 dark:text-teal-50 ring-4 md:ring-8 ring-teal-500/10' 
+                      : 'border-white/60 dark:border-slate-700 bg-white/90 dark:bg-slate-800 text-slate-800 dark:text-slate-200 hover:border-teal-300 dark:hover:border-teal-600'}
                   `}
+                  aria-pressed={selectedOption === option}
+                  aria-label={`Select option: ${option}`}
                 >
                   {option}
                 </button>
@@ -214,14 +223,16 @@ const WelcomeJourney: React.FC<Props> = ({ onComplete }) => {
                 disabled={!selectedOption}
                 className={`
                   w-full py-5 md:py-7 rounded-2xl md:rounded-[2.5rem] text-xl md:text-3xl font-black transition-all shadow-xl
-                  ${selectedOption ? 'calm-btn-primary' : 'bg-white/50 text-slate-400 cursor-not-allowed border border-white/20'}
+                  ${selectedOption ? 'calm-btn-primary' : 'bg-white/50 dark:bg-slate-700 text-slate-400 cursor-not-allowed border border-white/20 dark:border-slate-600'}
                 `}
+                aria-label="Continue to next step"
               >
                 Continue
               </button>
               <button 
                 onClick={back}
-                className="text-slate-600 font-black hover:text-slate-950 text-base md:text-xl"
+                className="text-slate-600 dark:text-slate-400 font-black hover:text-slate-950 dark:hover:text-white text-base md:text-xl transition-colors duration-300"
+                aria-label="Go back to previous question"
               >
                 Go back
               </button>
@@ -232,27 +243,59 @@ const WelcomeJourney: React.FC<Props> = ({ onComplete }) => {
         {step === 4 && (
           <div className="space-y-8 md:space-y-12 animate-in slide-in-from-right-4 duration-500 max-w-2xl mx-auto">
             <div className="text-center space-y-2 md:space-y-4">
-              <h2 className="text-3xl md:text-5xl font-black text-slate-900">Personalize Experience</h2>
-              <p className="text-base md:text-2xl text-slate-800 font-bold">Tailoring Sanctuary to you.</p>
+              <h2 className="text-3xl md:text-5xl font-black text-slate-900 dark:text-white transition-colors duration-300">Personalize Experience</h2>
+              <p className="text-base md:text-2xl text-slate-800 dark:text-slate-300 font-bold transition-colors duration-300">Tailoring Sanctuary to you.</p>
             </div>
 
-            <div className="space-y-8 md:space-y-12 glass-card p-6 md:p-12 rounded-[2rem] md:rounded-[4rem] shadow-xl border-2 border-teal-200/30">
+            <div className="space-y-8 md:space-y-12 glass-card p-6 md:p-12 rounded-[2rem] md:rounded-[4rem] shadow-xl border-2 border-teal-200/30 dark:border-teal-700/30">
               <div className="space-y-4 md:space-y-6">
                 <div className="flex justify-between items-end">
-                  <span className="text-[10px] md:text-sm font-black text-slate-500 uppercase tracking-widest">Stress Level</span>
-                  <span className="text-3xl md:text-5xl font-black text-teal-700">{profile.stressLevel}/10</span>
+                  <span className="text-[10px] md:text-sm font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest">Stress Level</span>
+                  <span className="text-3xl md:text-5xl font-black text-teal-700 dark:text-teal-400">{profile.stressLevel}/10</span>
                 </div>
                 <input 
                   type="range" 
                   min="1" max="10" 
-                  className="w-full h-3 md:h-4 bg-slate-200 rounded-full appearance-none cursor-pointer accent-teal-600"
+                  className="w-full h-3 md:h-4 bg-slate-200 dark:bg-slate-700 rounded-full appearance-none cursor-pointer accent-teal-600 custom-range-slider"
                   value={profile.stressLevel}
                   onChange={(e) => setProfile({...profile, stressLevel: parseInt(e.target.value)})}
+                  aria-label={`Set stress level to ${profile.stressLevel} out of 10`}
                 />
+                <style jsx>{`
+                  .custom-range-slider::-webkit-slider-thumb {
+                    -webkit-appearance: none;
+                    appearance: none;
+                    width: 24px;
+                    height: 24px;
+                    border-radius: 50%;
+                    background: var(--sanctuary-teal);
+                    cursor: grab;
+                    box-shadow: 0 0 0 4px rgba(45, 212, 191, 0.2);
+                    transition: background 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+                  }
+                  .custom-range-slider::-moz-range-thumb {
+                    width: 24px;
+                    height: 24px;
+                    border-radius: 50%;
+                    background: var(--sanctuary-teal);
+                    cursor: grab;
+                    box-shadow: 0 0 0 4px rgba(45, 212, 191, 0.2);
+                    transition: background 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+                    border: none; /* Firefox requires removing default border */
+                  }
+                  .custom-range-slider::-webkit-slider-thumb:hover {
+                    background: var(--sanctuary-blue);
+                    box-shadow: 0 0 0 6px rgba(45, 212, 191, 0.3);
+                  }
+                  .custom-range-slider::-moz-range-thumb:hover {
+                    background: var(--sanctuary-blue);
+                    box-shadow: 0 0 0 6px rgba(45, 212, 191, 0.3);
+                  }
+                `}</style>
               </div>
 
               <div className="space-y-4 md:space-y-6">
-                <span className="text-[10px] md:text-sm font-black text-slate-500 uppercase tracking-widest">Hydration Goal</span>
+                <span className="text-[10px] md:text-sm font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest">Hydration Goal</span>
                 <div className="grid grid-cols-2 xs:grid-cols-4 gap-3 md:gap-4">
                   {[1.5, 2, 2.5, 3].map(val => (
                     <button 
@@ -261,8 +304,10 @@ const WelcomeJourney: React.FC<Props> = ({ onComplete }) => {
                       className={`py-4 md:py-6 rounded-xl md:rounded-3xl font-black text-lg md:text-xl transition-all border-2 md:border-4 ${
                         profile.waterGoal === val 
                           ? 'bg-teal-700 border-teal-700 text-white shadow-lg scale-105 md:scale-110' 
-                          : 'bg-white border-slate-100 text-slate-600'
+                          : 'bg-white dark:bg-slate-800 border-slate-100 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:border-teal-300 dark:hover:border-teal-600'
                       }`}
+                      aria-pressed={profile.waterGoal === val}
+                      aria-label={`Set hydration goal to ${val} liters`}
                     >
                       {val}L
                     </button>
@@ -274,12 +319,14 @@ const WelcomeJourney: React.FC<Props> = ({ onComplete }) => {
                 <button 
                   onClick={() => onComplete(profile)}
                   className="w-full calm-btn-primary py-6 md:py-8 rounded-2xl md:rounded-[2.5rem] text-xl md:text-3xl font-black shadow-2xl transition-transform"
+                  aria-label="Enter My Sanctuary"
                 >
                   Enter My Sanctuary
                 </button>
                 <button 
                   onClick={back}
-                  className="w-full py-2 text-slate-500 font-black hover:text-slate-800 text-base md:text-lg"
+                  className="w-full py-2 text-slate-500 dark:text-slate-400 font-black hover:text-slate-800 dark:hover:text-white text-base md:text-lg transition-colors duration-300"
+                  aria-label="Go back to previous step"
                 >
                   Back
                 </button>
