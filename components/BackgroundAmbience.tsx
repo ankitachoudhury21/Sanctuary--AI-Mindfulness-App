@@ -14,18 +14,13 @@ const BackgroundAmbience: React.FC<Props> = ({ isActive, hasStarted }) => {
   const reverbNodeRef = useRef<ConvolverNode | null>(null);
   const nodesRef = useRef<any[]>([]); // Stores all current active audio nodes
 
-  // Helper for clamping values to valid AudioParam ranges
+  // Helper for clamping values to valid AudioParam ranges - this is truly independent
   const safeValue = useCallback((value: number, min: number, max: number, defaultValue: number) => {
     if (isNaN(value) || !isFinite(value)) {
       return defaultValue;
     }
     return Math.max(min, Math.min(max, value));
   }, []);
-
-  const safeFreq = useCallback((value: number) => safeValue(value, 0.001, audioContextRef.current!.sampleRate / 2 - 1, 0.001), [safeValue]);
-  const safeGain = useCallback((value: number) => safeValue(value, 0.0001, 100, 0.0001), [safeValue]); // Max gain 100
-  const safeQ = useCallback((value: number) => safeValue(value, 0.0001, 1000, 0.0001), [safeValue]); // Max Q 1000
-  const safePan = useCallback((value: number) => safeValue(value, -1, 1, 0), [safeValue]); // Pan -1 to 1
 
   // Initialize AudioContext and core nodes once
   useEffect(() => {
@@ -57,7 +52,9 @@ const BackgroundAmbience: React.FC<Props> = ({ isActive, hasStarted }) => {
       if (!reverbNodeRef.current) {
         const reverb = ctx.createConvolver();
         const reverbGain = ctx.createGain();
-        reverbGain.gain.setValueAtTime(safeGain(0.35), ctx.currentTime); // Wet signal mix
+        // Define safeGain locally for this initial setup, capturing current ctx.sampleRate indirectly via safeValue
+        const localSafeGain = (value: number) => safeValue(value, 0.0001, 100, 0.0001);
+        reverbGain.gain.setValueAtTime(localSafeGain(0.35), ctx.currentTime); // Wet signal mix
         reverb.connect(reverbGain).connect(masterGainRef.current); 
 
         // Generate a simple impulse response for a subtle, long decay
@@ -86,7 +83,7 @@ const BackgroundAmbience: React.FC<Props> = ({ isActive, hasStarted }) => {
         nodesRef.current = [];
       }
     };
-  }, [safeGain, safeValue]);
+  }, []); // <--- Changed dependency array to [] to ensure it runs only once.
 
   // Stop all active audio nodes and clear the nodes array
   const stopAudio = useCallback(() => {
@@ -108,19 +105,38 @@ const BackgroundAmbience: React.FC<Props> = ({ isActive, hasStarted }) => {
       }
     });
     nodesRef.current = []; // Clear the array of nodes
-  }, []);
+  }, []); // Dependencies are correct for stopAudio (refs are stable, currentTime is fresh).
 
   // Start the background ambience audio
-  const startAudio = useCallback(() => {
+  const startAudio = useCallback(async () => { // Marked as async
     if (!hasStarted || !audioContextRef.current || !ambientGainRef.current) return;
 
     const ctx = audioContextRef.current;
     const ambientGain = ambientGainRef.current;
     const reverb = reverbNodeRef.current;
 
+    // Define helper functions locally, capturing `ctx` and `safeValue` from outer scope.
+    // This ensures they always use the current AudioContext's sampleRate.
+    const localSafeFreq = (value: number) => safeValue(value, 0.001, ctx.sampleRate / 2 - 1, 0.001);
+    const localSafeGain = (value: number) => safeValue(value, 0.0001, 100, 0.0001); // Max gain 100
+    const localSafeQ = (value: number) => safeValue(value, 0.0001, 1000, 0.0001); // Max Q 1000
+    const localSafePan = (value: number) => safeValue(value, -1, 1, 0); // Pan -1 to 1
+
+    console.log("Attempting to start ambient audio. isActive:", isActive, "hasStarted:", hasStarted, "AudioContext state:", ctx.state);
+
     // Ensure audio context is running
     if (ctx.state === 'suspended') {
-      ctx.resume().catch(e => console.warn("Background audio resume interrupted on start", e));
+      console.log("AudioContext is suspended, attempting to resume...");
+      try {
+        await ctx.resume(); // Await this to ensure it's running
+        console.log("AudioContext resumed. State:", ctx.state);
+      } catch (e) {
+        console.warn("Background audio resume interrupted on start", e);
+        // Optionally, you might propagate this error to a user-facing state if needed
+        return; // Exit if resume fails
+      }
+    } else {
+      console.log("AudioContext already running. State:", ctx.state);
     }
 
     // Always stop existing audio before starting new to prevent stacking
@@ -131,13 +147,13 @@ const BackgroundAmbience: React.FC<Props> = ({ isActive, hasStarted }) => {
 
     // Pre-reverb gain node to split dry/wet signal
     const preReverbGain = ctx.createGain();
-    preReverbGain.gain.setValueAtTime(safeGain(1), now); // Full dry signal
+    preReverbGain.gain.setValueAtTime(localSafeGain(1), now); // Full dry signal
     preReverbGain.connect(ambientGain); // Dry path to ambient master gain
     if (reverb) preReverbGain.connect(reverb); // Wet path to reverb
     newNodes.push(preReverbGain);
 
     // Drone Layer (3 Sine wave oscillators with frequency & gain LFOs)
-    [safeFreq(40), safeFreq(60), safeFreq(90)].forEach(freq => { 
+    [localSafeFreq(40), localSafeFreq(60), localSafeFreq(90)].forEach(freq => { 
       const osc = ctx.createOscillator();
       osc.type = 'sine'; 
       osc.frequency.setValueAtTime(freq, now);
@@ -145,19 +161,19 @@ const BackgroundAmbience: React.FC<Props> = ({ isActive, hasStarted }) => {
       // Slow frequency LFO for subtle pitch variations
       const freqLfo = ctx.createOscillator();
       freqLfo.type = 'sine';
-      freqLfo.frequency.setValueAtTime(safeFreq(0.01 + Math.random() * 0.005), now); 
+      freqLfo.frequency.setValueAtTime(localSafeFreq(0.01 + Math.random() * 0.005), now); 
       const freqLfoGain = ctx.createGain();
-      freqLfoGain.gain.setValueAtTime(safeGain(freq * 0.005), now); // Small modulation depth
+      freqLfoGain.gain.setValueAtTime(localSafeGain(freq * 0.005), now); // Small modulation depth
       freqLfo.connect(freqLfoGain).connect(osc.frequency);
       
       // Existing gain LFO for "pulse"
       const g = ctx.createGain();
       const lfo = ctx.createOscillator(); 
-      lfo.frequency.setValueAtTime(safeFreq(0.08 + Math.random() * 0.02), now); 
+      lfo.frequency.setValueAtTime(localSafeFreq(0.08 + Math.random() * 0.02), now); 
       const lfoG = ctx.createGain();
-      lfoG.gain.setValueAtTime(safeGain(0.3), now); 
+      lfoG.gain.setValueAtTime(localSafeGain(0.3), now); 
       lfo.connect(lfoG).connect(g.gain);
-      g.gain.setValueAtTime(safeGain(0.2 + Math.random() * 0.1), now); // Base gain
+      g.gain.setValueAtTime(localSafeGain(0.2 + Math.random() * 0.1), now); // Base gain
       
       osc.connect(g).connect(preReverbGain); // Connect to pre-reverb gain
       osc.start(); freqLfo.start(); lfo.start();
@@ -171,7 +187,7 @@ const BackgroundAmbience: React.FC<Props> = ({ isActive, hasStarted }) => {
     let lastOut = 0;
     for (let i = 0; i < bufferSize; i++) {
       const white = Math.random() * 2 - 1;
-      lastOut = (lastOut + (safeGain(0.02) * white)) / 1.02; // Simple brownian filter approximation
+      lastOut = (lastOut + (localSafeGain(0.02) * white)) / 1.02; // Simple brownian filter approximation
       data[i] = lastOut * 4.0; 
     }
     const noiseSrc = ctx.createBufferSource();
@@ -180,34 +196,34 @@ const BackgroundAmbience: React.FC<Props> = ({ isActive, hasStarted }) => {
     // Lowpass filter for brown noise with LFO modulation
     const noiseLowpass = ctx.createBiquadFilter();
     noiseLowpass.type = 'lowpass';
-    noiseLowpass.frequency.setValueAtTime(safeFreq(800), now); // Initial lowpass frequency
-    noiseLowpass.Q.setValueAtTime(safeQ(1), now);
+    noiseLowpass.frequency.setValueAtTime(localSafeFreq(800), now); // Initial lowpass frequency
+    noiseLowpass.Q.setValueAtTime(localSafeQ(1), now);
 
     const noiseFreqLfo = ctx.createOscillator();
     noiseFreqLfo.type = 'sine';
-    noiseFreqLfo.frequency.setValueAtTime(safeFreq(0.008), now); // Very slow LFO for filter freq
+    noiseFreqLfo.frequency.setValueAtTime(localSafeFreq(0.008), now); // Very slow LFO for filter freq
     const noiseFreqLfoG = ctx.createGain();
-    noiseFreqLfoG.gain.setValueAtTime(safeGain(600), now); // Modulation depth
+    noiseFreqLfoG.gain.setValueAtTime(localSafeGain(600), now); // Modulation depth
     noiseFreqLfo.connect(noiseFreqLfoG).connect(noiseLowpass.frequency);
 
     // Gain for noise with slow LFO
     const noiseGain = ctx.createGain();
     const noiseGainLfo = ctx.createOscillator();
     noiseGainLfo.type = 'sine';
-    noiseGainLfo.frequency.setValueAtTime(safeFreq(0.05), now); // Slow volume LFO
+    noiseGainLfo.frequency.setValueAtTime(localSafeFreq(0.05), now); // Slow volume LFO
     const noiseGainLfoG = ctx.createGain();
-    noiseGainLfoG.gain.setValueAtTime(safeGain(0.03), now); // Modulation depth
+    noiseGainLfoG.gain.setValueAtTime(localSafeGain(0.03), now); // Modulation depth
     noiseGainLfo.connect(noiseGainLfoG).connect(noiseGain.gain);
-    noiseGain.gain.setValueAtTime(safeGain(0.08), now); // Base noise gain
+    noiseGain.gain.setValueAtTime(localSafeGain(0.08), now); // Base noise gain
 
     // Stereo Panner with LFO
     const panner = ctx.createStereoPanner();
-    panner.pan.setValueAtTime(safePan(0), now); // Start center
+    panner.pan.setValueAtTime(localSafePan(0), now); // Start center
     const pannerLfo = ctx.createOscillator();
     pannerLfo.type = 'sine';
-    pannerLfo.frequency.setValueAtTime(safeFreq(0.005), now); // Very slow stereo panning
+    pannerLfo.frequency.setValueAtTime(localSafeFreq(0.005), now); // Very slow stereo panning
     const pannerLfoG = ctx.createGain();
-    pannerLfoG.gain.setValueAtTime(safeGain(0.7), now); // Wide pan range
+    pannerLfoG.gain.setValueAtTime(localSafeGain(0.7), now); // Wide pan range
     pannerLfo.connect(pannerLfoG).connect(panner.pan);
 
     noiseSrc.connect(noiseLowpass).connect(noiseGain).connect(panner).connect(preReverbGain);
@@ -219,8 +235,10 @@ const BackgroundAmbience: React.FC<Props> = ({ isActive, hasStarted }) => {
     // Fade in the ambient track
     ambientGain.gain.cancelScheduledValues(now);
     ambientGain.gain.setValueAtTime(ambientGain.gain.value, now); // Ensure current value is set for ramp
-    ambientGain.gain.linearRampToValueAtTime(safeGain(0.04), now + CROSSFADE_TIME);
-  }, [hasStarted, safeFreq, safeGain, safeQ, safePan, stopAudio]);
+    ambientGain.gain.linearRampToValueAtTime(localSafeGain(0.04), now + CROSSFADE_TIME);
+    console.log("Ambient gain scheduled to ramp to:", localSafeGain(0.04), "at time:", now + CROSSFADE_TIME);
+
+  }, [hasStarted, stopAudio, safeValue, isActive]); // Added isActive to deps to ensure re-evaluation if its value changes.
 
   // Main effect hook to control ambient audio based on props
   useEffect(() => {

@@ -661,7 +661,6 @@ const PlanetaryMission: React.FC<{ setView: (v: AppView) => void; setIsAnyTrackP
   const masterGainRef = useRef<GainNode | null>(null);
   const nodesRef = useRef<any[]>([]);
   const videoRef = useRef<HTMLVideoElement | null>(null);
-  const videoPromiseRef = useRef<Promise<void> | null>(null);
 
   const initAudio = useCallback(async () => {
     if (!audioContextRef.current) {
@@ -689,7 +688,7 @@ const PlanetaryMission: React.FC<{ setView: (v: AppView) => void; setIsAnyTrackP
     nodesRef.current = [];
     setIsPlaying(false);
     setIsAnyTrackPlaying(false);
-    setIsLoading(false);
+    // Do NOT set setIsLoading(false) here, it's controlled by startSynthesis or handlePlanetSelect directly
   }, [setIsAnyTrackPlaying]);
 
   const startSynthesis = useCallback(async (type: string) => {
@@ -732,40 +731,59 @@ const PlanetaryMission: React.FC<{ setView: (v: AppView) => void; setIsAnyTrackP
     } catch (e) { console.error("Synthesis failed", e); } finally { setIsLoading(false); }
   }, [initAudio, isMuted, setIsAnyTrackPlaying]);
 
+  // Refined useEffect for video playback
   useEffect(() => {
     const video = videoRef.current;
     if (!video) return;
 
-    if (isPlaying && !isMuted && activePlanet.videoUrl && !videoError) {
-      videoPromiseRef.current = video.play();
-      videoPromiseRef.current.catch(err => {
-        if (err.name !== 'AbortError') {
-          console.warn("Video playback failed or was interrupted:", err);
-          setVideoError(true);
-        }
-      });
-    } else {
-      if (videoPromiseRef.current !== null) {
-        videoPromiseRef.current.then(() => {
-          if (videoRef.current) videoRef.current.pause();
-        }).catch(() => {
-          if (videoRef.current) videoRef.current.pause();
+    const shouldPlayVideo = isPlaying && !isMuted && activePlanet.videoUrl && !videoError;
+
+    if (shouldPlayVideo) {
+      // Only attempt to play if not already playing or paused
+      if (video.paused || video.ended) {
+        video.play().catch(err => {
+          // Ignore AbortError if it's due to programmatic stop/restart
+          if (err.name !== 'AbortError') {
+            console.warn("Video playback failed:", err);
+            setVideoError(true);
+          }
         });
-      } else {
+      }
+    } else {
+      // Explicitly pause if not meant to be playing
+      if (!video.paused) {
         video.pause();
       }
     }
-  }, [isPlaying, isMuted, activePlanet, videoError]);
+  }, [isPlaying, isMuted, activePlanet.videoUrl, videoError]);
+
 
   const toggleMute = useCallback(() => {
     const nextMute = !isMuted;
     setIsMuted(nextMute);
-    if (nextMute) {
-      stopSynthesis();
-    } else if (isPlaying) {
-      startSynthesis(activePlanet.synthesis);
+
+    const video = videoRef.current;
+    if (video) {
+        if (nextMute) {
+            video.pause(); // Pause video when muting
+        } else {
+            // Only try to play video if audio is also playing and video URL exists
+            if (isPlaying && activePlanet.videoUrl && !videoError) {
+                video.play().catch(err => {
+                    if (err.name !== 'AbortError') console.warn("Video play on unmute failed:", err);
+                    setVideoError(true);
+                });
+            }
+        }
     }
-  }, [isMuted, isPlaying, stopSynthesis, startSynthesis, activePlanet]);
+    
+    if (nextMute) {
+      stopSynthesis(); // This will set isPlaying to false
+    } else if (isPlaying) { // If audio was playing before mute, restart synthesis
+      setIsLoading(true); // Set loading state for audio restart
+      setTimeout(() => startSynthesis(activePlanet.synthesis), 50); // Small delay to prevent race conditions
+    }
+  }, [isMuted, isPlaying, stopSynthesis, startSynthesis, activePlanet, videoError]);
 
   const handlePlanetSelect = async (p: Planet) => {
     if (isLoading) return;
@@ -775,24 +793,51 @@ const PlanetaryMission: React.FC<{ setView: (v: AppView) => void; setIsAnyTrackP
 
     setTimeout(() => setIsScanning(false), 2000);
 
+    // If the same planet is active and playing, toggle off
     if (activePlanet.id === p.id && isPlaying && !isMuted) {
-      stopSynthesis();
-      return;
+        if (videoRef.current && !videoRef.current.paused) {
+            videoRef.current.pause(); // Immediately pause video
+        }
+        stopSynthesis(); // This will set isPlaying to false
+        setIsLoading(false); // End loading state
+        return;
     }
-    setActivePlanet(p);
-    if (!isMuted) { await startSynthesis(p.synthesis); } else { stopSynthesis(); }
+
+    // New planet or starting a stopped planet
+    if (videoRef.current && !videoRef.current.paused) {
+        videoRef.current.pause(); // Immediately pause old video if playing
+    }
+    stopSynthesis(); // Stop any previous synthesis and set isPlaying to false
+    
+    setActivePlanet(p); // Update active planet immediately
+
+    if (!isMuted) {
+        // Start new synthesis. This will set isPlaying to true on completion
+        // Use a small delay to allow DOM/audio context to reset if needed
+        setTimeout(() => startSynthesis(p.synthesis), 50); 
+    } else {
+        // If muted, just update the planet and ensure synthesis is stopped
+        stopSynthesis(); // Ensure it's off
+        setIsLoading(false); // End loading state
+    }
+    // The useEffect will handle playing the video once isPlaying is true (from startSynthesis)
+    // and activePlanet.videoUrl is updated.
   };
 
   useEffect(() => {
     let timer: any;
-    if (isPlaying) timer = setInterval(() => setSessionTime(prev => prev + 1), 1000);
+    if (isPlaying && !isMuted) timer = setInterval(() => setSessionTime(prev => prev + 1), 1000);
     return () => clearInterval(timer);
-  }, [isPlaying]);
+  }, [isPlaying, isMuted]);
 
   useEffect(() => {
     return () => {
       stopSynthesis();
       setIsAnyTrackPlaying(false);
+      // Also ensure video is paused on component unmount
+      if (videoRef.current) {
+        videoRef.current.pause();
+      }
     };
   }, [stopSynthesis, setIsAnyTrackPlaying]);
 
@@ -848,7 +893,7 @@ const PlanetaryMission: React.FC<{ setView: (v: AppView) => void; setIsAnyTrackP
             key={`${activePlanet.id}-img`}
             src={activePlanet.imageUrl} 
             alt={activePlanet.name}
-            className={`absolute inset-0 w-full h-full object-cover transition-all duration-[80000ms] ${isPlaying ? 'scale-125 rotate-1' : 'scale-110'} ease-linear opacity-100`}
+            className={`absolute inset-0 w-full h-full object-cover transition-all duration-[80000ms] ${isPlaying && !isMuted ? 'scale-125 rotate-1' : 'scale-110'} ease-linear opacity-100`}
             onError={(e) => {
               const target = e.target as HTMLImageElement;
               target.src = "https://images.unsplash.com/photo-1446776811953-b23d57bd21aa?auto=format&fit=crop&q=80&w=2560"; // Space fallback
@@ -992,7 +1037,7 @@ const PlanetaryMission: React.FC<{ setView: (v: AppView) => void; setIsAnyTrackP
                   <img 
                     src={p.imageUrl} 
                     alt={p.name} 
-                    className={`w-full h-full object-cover transition-transform duration-[20000ms] group-hover:scale-150 ${isActive ? 'animate-[spin_60s_linear_infinite]' : ''}`}
+                    className={`w-full h-full object-cover transition-transform duration-[20000ms] group-hover:scale-150 ${isActive && !isMuted ? 'animate-[spin_60s_linear_infinite]' : ''}`}
                     onError={(e) => {
                       const target = e.target as HTMLImageElement;
                       target.src = "https://images.unsplash.com/photo-1446776811953-b23d57bd21aa?auto=format&fit=crop&q=40&w=300";

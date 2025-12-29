@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { AppView } from '../types';
 import { 
@@ -118,19 +117,21 @@ const MusicPlayer: React.FC<Props> = ({ setView, setIsAnyTrackPlaying }) => {
     } catch (err) { return false; }
   }, [volume, isMuted, currentTrack.cat]);
 
-  const stopAllVoices = useCallback((fade = true) => {
+  const stopAllVoices = useCallback((fade = false) => { // default to immediate stop
     const ctx = audioContextRef.current;
     if (!ctx) return;
+    
     activeVoicesRef.current.forEach(voice => {
       const now = ctx.currentTime;
+      voice.gainNode.gain.cancelScheduledValues(now); // Clear any pending ramps
       if (fade) {
-        voice.gainNode.gain.cancelScheduledValues(now);
         voice.gainNode.gain.linearRampToValueAtTime(0, now + CROSSFADE_TIME);
         setTimeout(() => {
           voice.nodes.forEach(n => { try { if(n.stop) n.stop(); n.disconnect(); } catch(e){} });
           voice.gainNode.disconnect();
         }, CROSSFADE_TIME * 1000 + 100);
-      } else {
+      } else { // Immediate stop
+        voice.gainNode.gain.setValueAtTime(0, now); // Ensure gain is 0 immediately
         voice.nodes.forEach(n => { try { if(n.stop) n.stop(); n.disconnect(); } catch(e){} });
         voice.gainNode.disconnect();
       }
@@ -1037,16 +1038,30 @@ const MusicPlayer: React.FC<Props> = ({ setView, setIsAnyTrackPlaying }) => {
 
   const handleTrackSelect = async (track: any) => {
     if (isLoading) return;
-    const success = await initAudioEngine();
-    if (!success) return;
-    if (activeVoicesRef.current.some(v => v.id === track.id) && isPlaying && !isMuted) {
-      stopAllVoices(true); return;
+
+    // Scenario 1: Toggling off the currently playing track
+    if (currentTrack.id === track.id && isPlaying && !isMuted) {
+      stopAllVoices(false); // Immediate stop
+      setCurrentTrack(track); // Keep it current but stopped for UI
+      return;
     }
+
+    // Scenario 2: Switching to a new track or starting a new one
     setIsLoading(true);
-    stopAllVoices(true);
-    if (isMuted) setIsMuted(false);
-    setCurrentTrack(track);
-    setTimeout(() => startGenerator(track.url, track.id), 200);
+    stopAllVoices(false); // Immediate stop of any existing audio to prepare for the new one
+    
+    const success = await initAudioEngine();
+    if (!success) {
+      setIsLoading(false);
+      return;
+    }
+    
+    setCurrentTrack(track); // Set the new track immediately for UI updates
+
+    // Give a small moment for the DOM/AudioContext to register the old tracks are gone.
+    // This timeout helps prevent race conditions where a new play request
+    // might overlap with a pending stop/cleanup from a previous track.
+    setTimeout(() => startGenerator(track.url, track.id), 50); 
   };
 
   const toggleMute = useCallback(() => {
@@ -1054,7 +1069,14 @@ const MusicPlayer: React.FC<Props> = ({ setView, setIsAnyTrackPlaying }) => {
     if (masterGainRef.current && audioContextRef.current) {
       masterGainRef.current.gain.linearRampToValueAtTime(next ? 0 : volume, audioContextRef.current.currentTime + 0.5);
     }
-  }, [isMuted, volume]);
+    // If muting, stop all voices immediately. If unmuting and was playing, restart current track.
+    if (next) {
+      stopAllVoices(false);
+    } else if (isPlaying && currentTrack) {
+      setIsLoading(true); // Indicate loading as audio restarts
+      setTimeout(() => startGenerator(currentTrack.url, currentTrack.id), 50);
+    }
+  }, [isMuted, volume, isPlaying, currentTrack, stopAllVoices, startGenerator]);
 
   const drawVisualizer = useCallback(() => {
     if (!canvasRef.current || !analyzerRef.current) return;
@@ -1114,7 +1136,7 @@ const MusicPlayer: React.FC<Props> = ({ setView, setIsAnyTrackPlaying }) => {
   return (
     <div className="space-y-6 md:space-y-10 animate-in slide-in-from-bottom-8 duration-1000 px-2 md:px-0 pb-40">
       <div className="flex justify-between items-center px-4 md:px-0">
-        <button onClick={() => { stopAllVoices(true); setView(AppView.DASHBOARD); }} className="flex items-center gap-2 text-teal-800 label-caps text-[10px] md:text-xs hover:gap-3 transition-all outline-none">
+        <button onClick={() => { stopAllVoices(false); setView(AppView.DASHBOARD); }} className="flex items-center gap-2 text-teal-800 label-caps text-[10px] md:text-xs hover:gap-3 transition-all outline-none">
           <ChevronLeft size={16} /> Exit Sanctuary
         </button>
         <div className="flex items-center gap-3">
@@ -1177,7 +1199,11 @@ const MusicPlayer: React.FC<Props> = ({ setView, setIsAnyTrackPlaying }) => {
           {filteredTracks.map(item => {
             const isActive = currentTrack.id === item.id;
             return (
-              <button key={item.id} onClick={() => handleTrackSelect(item)} className={`group relative flex items-center gap-3 p-4 rounded-2xl transition-all duration-300 text-left overflow-hidden outline-none ${isActive && !isMuted ? 'bg-slate-950 text-white shadow-lg ring-2 ring-teal-500/30' : 'bg-white hover:bg-slate-50 border border-slate-100'}`}>
+              <button 
+                key={item.id} 
+                onClick={() => handleTrackSelect(item)} 
+                className={`group relative flex items-center gap-3 p-4 rounded-2xl transition-all duration-300 text-left overflow-hidden outline-none ${isActive && !isMuted ? 'bg-slate-950 text-white shadow-lg ring-2 ring-teal-500/30' : 'bg-white hover:bg-slate-50 border border-slate-100'}`}
+              >
                 <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 transition-all duration-300 ${isActive && !isMuted ? 'bg-teal-600/20' : `bg-gradient-to-br ${item.color} text-white shadow-sm group-hover:scale-105`}`}>
                   {isActive && isLoading ? <Loader2 size={18} className="animate-spin text-teal-400" /> : isActive && isPlaying && !isMuted ? <Pause size={18} fill="currentColor" className="text-teal-400" /> : <item.icon size={18} />}
                 </div>
