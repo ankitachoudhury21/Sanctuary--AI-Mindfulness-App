@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { AppView, UserProfile, SleepData, ActivityData, JournalEntry } from '../types';
 import Journal from './Journal';
