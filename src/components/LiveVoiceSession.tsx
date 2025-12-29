@@ -1,3 +1,4 @@
+
 import React, { useEffect, useRef, useState } from 'react';
 import { GoogleGenAI, Modality, LiveServerMessage } from '@google/genai';
 import { X, Mic, MicOff, Save, Sparkles, MessageCircle, AlertCircle } from 'lucide-react';
