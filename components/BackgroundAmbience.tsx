@@ -83,71 +83,72 @@ const BackgroundAmbience: React.FC<Props> = ({ isActive, hasStarted }) => {
         nodesRef.current = [];
       }
     };
-  }, []); // <--- Changed dependency array to [] to ensure it runs only once.
+  }, []);
 
   // Stop all active audio nodes and clear the nodes array
   const stopAudio = useCallback(() => {
     const ctx = audioContextRef.current;
-    const ambientGain = ambientGainRef.current;
-
-    if (!ctx || !ambientGain) return;
-
-    const now = ctx.currentTime;
-    ambientGain.gain.cancelScheduledValues(now); // Clear any pending ramps
-    ambientGain.gain.setValueAtTime(0, now); // Immediately set gain to 0
+    if (!ctx) return; // ambientGain is handled separately in startAudio now
 
     nodesRef.current.forEach(node => {
       try {
-        if (node.stop) node.stop(now); // Stop at current time
+        if (node.stop) node.stop(ctx.currentTime); // Stop at current time
         if (node.disconnect) node.disconnect();
       } catch (e) {
         console.warn("Error stopping/disconnecting node:", e);
       }
     });
     nodesRef.current = []; // Clear the array of nodes
-  }, []); // Dependencies are correct for stopAudio (refs are stable, currentTime is fresh).
+    console.log("stopAudio: All individual nodes stopped and disconnected.");
+  }, []);
 
   // Start the background ambience audio
-  const startAudio = useCallback(async () => { // Marked as async
-    if (!hasStarted || !audioContextRef.current || !ambientGainRef.current) return;
+  const startAudio = useCallback(async () => {
+    if (!hasStarted || !audioContextRef.current || !ambientGainRef.current) {
+      console.warn("startAudio: Prereqs not met.", { hasStarted, audioContext: audioContextRef.current, ambientGain: ambientGainRef.current });
+      return;
+    }
 
     const ctx = audioContextRef.current;
     const ambientGain = ambientGainRef.current;
     const reverb = reverbNodeRef.current;
 
-    // Define helper functions locally, capturing `ctx` and `safeValue` from outer scope.
-    // This ensures they always use the current AudioContext's sampleRate.
     const localSafeFreq = (value: number) => safeValue(value, 0.001, ctx.sampleRate / 2 - 1, 0.001);
-    const localSafeGain = (value: number) => safeValue(value, 0.0001, 100, 0.0001); // Max gain 100
-    const localSafeQ = (value: number) => safeValue(value, 0.0001, 1000, 0.0001); // Max Q 1000
-    const localSafePan = (value: number) => safeValue(value, -1, 1, 0); // Pan -1 to 1
+    const localSafeGain = (value: number) => safeValue(value, 0.0001, 100, 0.0001);
+    const localSafeQ = (value: number) => safeValue(value, 0.0001, 1000, 0.0001);
+    const localSafePan = (value: number) => safeValue(value, -1, 1, 0);
 
-    console.log("Attempting to start ambient audio. isActive:", isActive, "hasStarted:", hasStarted, "AudioContext state:", ctx.state);
+    console.log("startAudio: Attempting to start ambient audio. isActive:", isActive, "hasStarted:", hasStarted, "AudioContext state:", ctx.state);
 
-    // Ensure audio context is running
     if (ctx.state === 'suspended') {
-      console.log("AudioContext is suspended, attempting to resume...");
+      console.log("startAudio: AudioContext is suspended, attempting to resume...");
       try {
-        await ctx.resume(); // Await this to ensure it's running
-        console.log("AudioContext resumed. State:", ctx.state);
+        await ctx.resume();
+        console.log("startAudio: AudioContext resumed. State:", ctx.state);
       } catch (e) {
-        console.warn("Background audio resume interrupted on start", e);
-        // Optionally, you might propagate this error to a user-facing state if needed
-        return; // Exit if resume fails
+        console.warn("startAudio: Background audio resume interrupted on start", e);
+        return;
       }
     } else {
-      console.log("AudioContext already running. State:", ctx.state);
+      console.log("startAudio: AudioContext already running. State:", ctx.state);
     }
 
-    // Always stop existing audio before starting new to prevent stacking
-    stopAudio();
+    const now = ctx.currentTime;
+    
+    // CRITICAL: Explicitly zero out the ambientGain IMMEDIATELY and cancel all pending ramps
+    ambientGain.gain.cancelScheduledValues(now);
+    ambientGain.gain.setValueAtTime(0, now);
+    console.log("startAudio: ambientGain immediately set to 0 at currentTime:", now);
+
+    // Now, stop and disconnect all previous individual nodes.
+    // ambientGain itself remains connected to masterGain.
+    stopAudio(); 
 
     const newNodes: any[] = [];
-    const now = ctx.currentTime;
 
     // Pre-reverb gain node to split dry/wet signal
     const preReverbGain = ctx.createGain();
-    preReverbGain.gain.setValueAtTime(localSafeGain(1), now); // Full dry signal
+    preReverbGain.gain.setValueAtTime(localSafeGain(1), now);
     preReverbGain.connect(ambientGain); // Dry path to ambient master gain
     if (reverb) preReverbGain.connect(reverb); // Wet path to reverb
     newNodes.push(preReverbGain);
@@ -176,7 +177,9 @@ const BackgroundAmbience: React.FC<Props> = ({ isActive, hasStarted }) => {
       g.gain.setValueAtTime(localSafeGain(0.2 + Math.random() * 0.1), now); // Base gain
       
       osc.connect(g).connect(preReverbGain); // Connect to pre-reverb gain
-      osc.start(); freqLfo.start(); lfo.start();
+      osc.start(now);
+      freqLfo.start(now);
+      lfo.start(now);
       newNodes.push(osc, g, lfo, lfoG, freqLfo, freqLfoGain);
     });
 
@@ -227,18 +230,19 @@ const BackgroundAmbience: React.FC<Props> = ({ isActive, hasStarted }) => {
     pannerLfo.connect(pannerLfoG).connect(panner.pan);
 
     noiseSrc.connect(noiseLowpass).connect(noiseGain).connect(panner).connect(preReverbGain);
-    noiseSrc.start(); noiseFreqLfo.start(); noiseGainLfo.start(); pannerLfo.start();
+    noiseSrc.start(now);
+    noiseFreqLfo.start(now);
+    noiseGainLfo.start(now);
+    pannerLfo.start(now);
     newNodes.push(noiseSrc, noiseLowpass, noiseFreqLfo, noiseFreqLfoG, noiseGain, noiseGainLfo, noiseGainLfoG, panner, pannerLfo, pannerLfoG);
     
     nodesRef.current = newNodes; // Update the list of active nodes
 
     // Fade in the ambient track
-    ambientGain.gain.cancelScheduledValues(now);
-    ambientGain.gain.setValueAtTime(ambientGain.gain.value, now); // Ensure current value is set for ramp
-    ambientGain.gain.linearRampToValueAtTime(localSafeGain(0.04), now + CROSSFADE_TIME);
-    console.log("Ambient gain scheduled to ramp to:", localSafeGain(0.04), "at time:", now + CROSSFADE_TIME);
+    ambientGain.gain.linearRampToValueAtTime(localSafeGain(0.1), now + CROSSFADE_TIME); // Increased target gain
+    console.log("startAudio: Ambient gain scheduled to ramp to:", localSafeGain(0.1), "at time:", now + CROSSFADE_TIME, "from current value:", ambientGain.gain.value);
 
-  }, [hasStarted, stopAudio, safeValue, isActive]); // Added isActive to deps to ensure re-evaluation if its value changes.
+  }, [hasStarted, stopAudio, safeValue, isActive]);
 
   // Main effect hook to control ambient audio based on props
   useEffect(() => {
@@ -250,11 +254,13 @@ const BackgroundAmbience: React.FC<Props> = ({ isActive, hasStarted }) => {
       const ambientGain = ambientGainRef.current;
       if (ctx && ambientGain) {
         const now = ctx.currentTime;
+        console.log("useEffect: Fading out ambient audio. ambientGain.gain.value:", ambientGain.gain.value, "at currentTime:", now);
         ambientGain.gain.cancelScheduledValues(now);
         ambientGain.gain.linearRampToValueAtTime(0, now + CROSSFADE_TIME);
         // After fade, disconnect nodes to free resources
         setTimeout(() => {
           stopAudio(); // Ensure full cleanup after fade
+          console.log("useEffect: Faded out and stopped ambient audio.");
         }, CROSSFADE_TIME * 1000 + 100);
       }
     }
