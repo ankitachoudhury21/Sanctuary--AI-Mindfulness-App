@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { UserProfile, SleepData, ActivityData, AppView } from '../types';
 import { Tooltip, ResponsiveContainer, AreaChart, Area } from 'recharts';
