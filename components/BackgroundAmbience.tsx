@@ -236,6 +236,44 @@ const BackgroundAmbience: React.FC<Props> = ({ isActive, hasStarted }) => {
     pannerLfo.start(now);
     newNodes.push(noiseSrc, noiseLowpass, noiseFreqLfo, noiseFreqLfoG, noiseGain, noiseGainLfo, noiseGainLfoG, panner, pannerLfo, pannerLfoG);
     
+    // NEW: Evolving Pad Layer (subtle, slowly shifting chords)
+    const padGain = ctx.createGain();
+    padGain.gain.setValueAtTime(localSafeGain(0.05), now); // Initial subtle volume for pad
+    padGain.connect(preReverbGain); // Connect to reverb path
+
+    // Slow gain LFO for pad to "swell" and "diminish"
+    const padGainLfo = ctx.createOscillator();
+    padGainLfo.type = 'sine';
+    padGainLfo.frequency.setValueAtTime(localSafeFreq(0.003), now); // Very slow cycle (e.g., ~5 minutes)
+    const padGainLfoG = ctx.createGain();
+    padGainLfoG.gain.setValueAtTime(localSafeGain(0.03), now); // Modulation depth
+    padGainLfo.connect(padGainLfoG).connect(padGain.gain);
+    padGainLfo.start(now);
+    newNodes.push(padGain, padGainLfo, padGainLfoG);
+
+    // Three sine oscillators for a subtle chord (e.g., C3, G3, C4)
+    [localSafeFreq(130.81), localSafeFreq(196.00), localSafeFreq(261.63)].forEach((baseFreq, i) => {
+      const osc = ctx.createOscillator();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(baseFreq, now);
+
+      // Very slow frequency LFO for gentle pitch drift/shimmer
+      const freqLfo = ctx.createOscillator();
+      freqLfo.type = 'sine';
+      freqLfo.frequency.setValueAtTime(localSafeFreq(0.005 + i * 0.001), now); // Slightly different rates
+      const freqLfoGain = ctx.createGain();
+      freqLfoGain.gain.setValueAtTime(localSafeGain(baseFreq * 0.002), now); // Small pitch modulation depth
+      freqLfo.connect(freqLfoGain).connect(osc.frequency);
+      
+      const g = ctx.createGain();
+      g.gain.setValueAtTime(localSafeGain(0.2 + Math.random() * 0.1), now); // Base gain for individual osc
+      
+      osc.connect(g).connect(padGain); // Connect to the pad's gain node
+      osc.start(now);
+      freqLfo.start(now);
+      newNodes.push(osc, g, freqLfo, freqLfoGain);
+    });
+    
     nodesRef.current = newNodes; // Update the list of active nodes
 
     // Fade in the ambient track
