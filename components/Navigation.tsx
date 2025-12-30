@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { AppView } from '../types';
-import { Home, BookHeart, Moon, Music, Compass, LogOut, Brain, Rocket, Stars, Sun, CloudMoon } from 'lucide-react';
+import { Home, BookHeart, Moon, Music, Compass, LogOut, Brain, Rocket, Stars, Sun, CloudMoon } from 'lucide-react'; // REMOVED: Volume2, VolumeX
 
 interface Props {
   activeView: AppView;
@@ -9,6 +9,8 @@ interface Props {
   onLogout: () => void;
   isDarkMode: boolean;
   toggleDarkMode: () => void;
+  // REMOVED: isBackgroundAmbienceActive: boolean; 
+  // REMOVED: toggleBackgroundAmbience: () => void; 
 }
 
 const DesktopNavItem: React.FC<{ item: any; activeView: AppView; setView: (view: AppView) => void }> = React.memo(({ item, activeView, setView }) => {
@@ -59,7 +61,7 @@ const MobileNavItem: React.FC<{ item: any; activeView: AppView; setView: (view: 
   );
 });
 
-const Navigation: React.FC<Props> = React.memo(({ activeView, setView, onLogout, isDarkMode, toggleDarkMode }) => {
+const Navigation: React.FC<Props> = React.memo(({ activeView, setView, onLogout, isDarkMode, toggleDarkMode /* REMOVED: isBackgroundAmbienceActive, toggleBackgroundAmbience */ }) => {
   const navItems = [
     { icon: Home, label: 'Home', view: AppView.DASHBOARD, color: 'bg-emerald-500' },
     { icon: Brain, label: 'Daily Meditation', view: AppView.MUSIC, color: 'bg-indigo-500' },
@@ -90,6 +92,15 @@ const Navigation: React.FC<Props> = React.memo(({ activeView, setView, onLogout,
           <span className="font-black text-slate-900 dark:text-white tracking-tight text-xl font-display transition-colors duration-300">Sanctuary</span>
         </button>
         <div className="flex items-center gap-2">
+          {/* REMOVED: Background Ambience Toggle (Mobile) */}
+          {/* REMOVED: <button 
+            onClick={toggleBackgroundAmbience}
+            className={`w-10 h-10 flex items-center justify-center rounded-full transition-all ${isBackgroundAmbienceActive ? 'bg-slate-50 text-teal-600 dark:bg-slate-700 dark:text-teal-400' : 'bg-slate-50 text-slate-400 dark:bg-slate-700 dark:text-slate-500'}`}
+            aria-label={isBackgroundAmbienceActive ? "Mute background ambience" : "Unmute background ambience"}
+          >
+            {isBackgroundAmbienceActive ? <Volume2 size={18} /> : <VolumeX size={18} />}
+          </button> */}
+          {/* Dark Mode Toggle (Mobile) */}
           <button 
             onClick={toggleDarkMode}
             className={`w-10 h-10 flex items-center justify-center rounded-full transition-all ${isDarkMode ? 'bg-slate-700 text-amber-300' : 'bg-slate-50 text-slate-700'}`}
@@ -97,6 +108,7 @@ const Navigation: React.FC<Props> = React.memo(({ activeView, setView, onLogout,
           >
             {isDarkMode ? <Sun size={18} /> : <CloudMoon size={18} />}
           </button>
+          {/* Logout (Mobile) */}
           <button 
             onClick={onLogout}
             className="w-10 h-10 flex items-center justify-center text-slate-400 hover:text-red-500 active:scale-90 transition-all rounded-full bg-slate-50 dark:bg-slate-700 border border-slate-100 dark:border-slate-600"
@@ -138,6 +150,21 @@ const Navigation: React.FC<Props> = React.memo(({ activeView, setView, onLogout,
         </nav>
 
         <div className="px-6 space-y-4 pt-10 border-t border-white/10 mt-auto">
+          {/* REMOVED: Background Ambience Toggle (Desktop) */}
+          {/* REMOVED: <button 
+            onClick={toggleBackgroundAmbience}
+            className={`w-full flex items-center gap-4 px-2 py-3 group transition-all duration-300 outline-none ${isBackgroundAmbienceActive ? 'text-teal-400' : 'text-slate-400'}`}
+            aria-label={isBackgroundAmbienceActive ? "Mute background ambience" : "Unmute background ambience"}
+          >
+            <div className={`w-10 h-10 rounded-full border-2 flex items-center justify-center transition-all ${isBackgroundAmbienceActive ? 'border-teal-400/50 bg-teal-400/10 shadow-[0_0_15px_rgba(45,212,191,0.2)]' : 'border-white/10'}`}>
+              {isBackgroundAmbienceActive ? <Volume2 size={18} /> : <VolumeX size={18} />}
+            </div>
+            <div className="flex flex-col items-start">
+              <span className="text-sm font-black uppercase tracking-widest text-slate-400 dark:text-slate-300">Background</span>
+              <span className="text-[9px] opacity-60 font-bold uppercase dark:text-white/60">{isBackgroundAmbienceActive ? 'Playing' : 'Muted'}</span>
+            </div>
+          </button> */}
+          {/* Dark Mode Toggle (Desktop) */}
           <button 
             onClick={toggleDarkMode}
             className={`w-full flex items-center gap-4 px-2 py-3 group transition-all duration-300 outline-none ${isDarkMode ? 'text-amber-300' : 'text-slate-400'}`}
@@ -151,7 +178,7 @@ const Navigation: React.FC<Props> = React.memo(({ activeView, setView, onLogout,
               <span className="text-[9px] opacity-60 font-bold uppercase dark:text-white/60">{isDarkMode ? 'Dark Mode' : 'Light Mode'}</span>
             </div>
           </button>
-          
+          {/* Logout (Desktop) */}
           <button 
             onClick={onLogout}
             className="w-full flex items-center gap-4 px-2 py-3 text-slate-400 hover:text-red-400 transition-colors font-display"

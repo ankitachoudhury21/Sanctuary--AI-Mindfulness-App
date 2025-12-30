@@ -2,12 +2,12 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { AppView, UserProfile, SleepData, ActivityData, JournalEntry } from './types';
 import WelcomeJourney from './components/WelcomeJourney';
-// FIX: Changed AuthFlow from default import to named import
 import { AuthFlow } from './components/AuthFlow';
 import Dashboard from './components/Dashboard';
 import Navigation from './components/Navigation';
 import { analyzeSleepAndHealth } from './services/geminiService';
 import { Sparkles, Play } from 'lucide-react';
+// REMOVED: import BackgroundAmbience from './components/BackgroundAmbience';
 
 const STORAGE_KEYS = {
   USER: 'sanctuary_user_profile',
@@ -15,7 +15,8 @@ const STORAGE_KEYS = {
   SLEEP: 'sanctuary_sleep_data',
   ACTIVITY: 'sanctuary_activity_data',
   DRAFT: 'sanctuary_journal_draft',
-  DARK_MODE: 'sanctuary_dark_mode'
+  DARK_MODE: 'sanctuary_dark_mode',
+  // REMOVED: BACKGROUND_AMBIENCE: 'sanctuary_background_ambience' 
 };
 
 const App: React.FC = () => {
@@ -26,6 +27,11 @@ const App: React.FC = () => {
     return saved === 'true';
   });
   const [isAnyTrackPlaying, setIsAnyTrackPlaying] = useState(false);
+  // REMOVED: New state for background ambience control
+  // REMOVED: const [backgroundAmbienceActive, setBackgroundAmbienceActive] = useState(() => {
+  // REMOVED:   const saved = localStorage.getItem(STORAGE_KEYS.BACKGROUND_AMBIENCE);
+  // REMOVED:   return saved === null ? true : saved === 'true'; // Default to true if not set
+  // REMOVED: });
 
   const [user, setUser] = useState<UserProfile | null>(() => {
     try {
@@ -70,6 +76,11 @@ const App: React.FC = () => {
     }
   }, [isDarkMode]);
 
+  // REMOVED: Save background ambience preference
+  // REMOVED: useEffect(() => {
+  // REMOVED:   localStorage.setItem(STORAGE_KEYS.BACKGROUND_AMBIENCE, backgroundAmbienceActive.toString());
+  // REMOVED: }, [backgroundAmbienceActive]);
+
   useEffect(() => {
     if (user) {
       localStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(user));
@@ -78,7 +89,6 @@ const App: React.FC = () => {
 
   const refreshAIInsights = useCallback(async () => {
     try {
-      // FIX: Corrected typo from `lastAnalyyzedJournalCount` to `lastAnalyzedJournalCount`
       lastAnalyzedJournalCount.current = journalEntries.length;
       const snippets = journalEntries.slice(0, 5).map(e => e.transcript || "");
       const result = await analyzeSleepAndHealth(sleepData, snippets, user);
@@ -94,7 +104,6 @@ const App: React.FC = () => {
     if (refreshTimerRef.current) window.clearTimeout(refreshTimerRef.current);
     
     // Only refresh insights if journal entries count has actually changed
-    // FIX: Corrected typo from `lastAnalyyzedJournalCount` to `lastAnalyzedJournalCount`
     if (journalEntries.length !== lastAnalyzedJournalCount.current) {
       refreshTimerRef.current = window.setTimeout(() => {
         if (journalEntries.length > 0 || user) refreshAIInsights();
@@ -146,8 +155,20 @@ const App: React.FC = () => {
     setIsDarkMode(prevMode => !prevMode);
   }, []);
 
+  // REMOVED: New callback to toggle background ambience
+  // REMOVED: const toggleBackgroundAmbience = useCallback(() => {
+  // REMOVED:   setBackgroundAmbienceActive(prev => !prev);
+  // REMOVED: }, []);
+
   return (
     <div className="min-h-screen transition-all duration-1000 relative overflow-x-hidden">
+      {/* REMOVED: Background Ambience Audio */}
+      {/* REMOVED: <BackgroundAmbience
+        isGloballyPlayingAudio={isAnyTrackPlaying}
+        isUserEnabled={backgroundAmbienceActive}
+        defaultVolume={0.2} 
+      /> */}
+
       <div className="fixed inset-0 z-0 overflow-hidden pointer-events-none">
         <img 
           src="https://images.unsplash.com/photo-1490522046460-e4d658c407c0?auto=format&fit=crop&q=80&w=2560" 
@@ -186,7 +207,9 @@ const App: React.FC = () => {
 
       <div className={`relative z-10 min-h-screen flex flex-col transition-all duration-1000 ${hasStarted ? 'opacity-100 blur-0 scale-100' : 'opacity-0 blur-xl scale-110 pointer-events-none'}`}>
         {view === AppView.WELCOME && <WelcomeJourney onComplete={handleStart} />}
+        {/* FIX: Changed AppView.LIFIN to AppView.LOGIN */}
         {view === AppView.LOGIN && user && <AuthFlow onAuthComplete={handleAuthComplete} userName={user.name} />}
+        {/* FIX: Changed AppView.LIFIN to AppView.LOGIN */}
         {view !== AppView.WELCOME && view !== AppView.LOGIN && (
           <div className="flex flex-col md:flex-row min-h-screen">
             <Navigation 
@@ -195,8 +218,10 @@ const App: React.FC = () => {
               onLogout={logout}
               isDarkMode={isDarkMode}
               toggleDarkMode={toggleDarkMode}
+              // REMOVED: isBackgroundAmbienceActive={backgroundAmbienceActive} 
+              // REMOVED: toggleBackgroundAmbience={toggleBackgroundAmbience} 
             />
-            <main className="flex-1 w-full transition-all duration-500 relative px-4 sm:px-8 pb-32 pt-24 md:pt-16 md:pb-16 md:pl-[260px] max-w-[1600px] mx-auto">
+            <main className="flex-1 w-full transition-all duration-500 relative px-4 sm:px-8 pb-32 pt-24 md:pt-16 md:pl-[260px] max-w-[1600px] mx-auto">
               {/* Changed main content gradient to be more subtle and darker in dark mode */}
               <div className="fixed inset-0 bg-gradient-to-t from-slate-50/90 to-transparent dark:from-slate-900/90 dark:to-transparent pointer-events-none z-0"></div>
               <Dashboard 
