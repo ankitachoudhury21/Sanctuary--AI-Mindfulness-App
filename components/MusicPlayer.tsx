@@ -69,8 +69,7 @@ const MusicPlayer: React.FC<Props> = ({ setView, setIsAnyTrackPlaying }) => {
   const animationRef = useRef<number | null>(null);
   const audioContextRef = useRef<AudioContext | null>(null);
   const masterGainRef = useRef<GainNode | null>(null);
-  // FIX: Initialized reverbNodeRef with null to prevent "Block-scoped variable used before its declaration" error.
-  const reverbNodeRef = useRef<ConvolverNode | null>(null);
+  const reverbNodeRef = useRef<ConvolverNode | null>(null); // Initialized with null
 
   const filteredTracks = useMemo(() => {
     if (activeCat === 'all') return TRACKS;
@@ -986,12 +985,12 @@ const MusicPlayer: React.FC<Props> = ({ setView, setIsAnyTrackPlaying }) => {
     if (isLoading) return;
 
     if (isPlaying) {
-      stopAllVoices(true); // Fade out
+      stopAllVoices(true); // Fade out, sets isPlaying(false)
     } else {
       setIsLoading(true);
       await initAudioEngine();
       startGenerator(currentTrack.url, currentTrack.id);
-      setIsPlaying(true);
+      setIsPlaying(true); // Sets isPlaying(true)
       setIsAnyTrackPlaying(true);
       setIsLoading(false);
     }
@@ -1001,25 +1000,21 @@ const MusicPlayer: React.FC<Props> = ({ setView, setIsAnyTrackPlaying }) => {
     const currentIndex = filteredTracks.findIndex(t => t.id === currentTrack.id);
     const nextIndex = (currentIndex + 1) % filteredTracks.length;
     setCurrentTrack(filteredTracks[nextIndex]);
-    if (isPlaying) {
-      setIsLoading(true);
-      stopAllVoices(); // Stop immediately before changing track
-      startGenerator(filteredTracks[nextIndex].url, filteredTracks[nextIndex].id);
-      setIsLoading(false);
+    if (!isPlaying) { // If not playing, ensure it starts
+      setIsPlaying(true);
     }
-  }, [currentTrack, filteredTracks, isPlaying, stopAllVoices, startGenerator]);
+    // The useEffect will handle stopping the old and starting the new via currentTrack.id change
+  }, [currentTrack, filteredTracks, isPlaying]);
 
   const playPreviousTrack = useCallback(() => {
     const currentIndex = filteredTracks.findIndex(t => t.id === currentTrack.id);
     const prevIndex = (currentIndex - 1 + filteredTracks.length) % filteredTracks.length;
     setCurrentTrack(filteredTracks[prevIndex]);
-    if (isPlaying) {
-      setIsLoading(true);
-      stopAllVoices(); // Stop immediately before changing track
-      startGenerator(filteredTracks[prevIndex].url, filteredTracks[prevIndex].id);
-      setIsLoading(false);
+    if (!isPlaying) { // If not playing, ensure it starts
+      setIsPlaying(true);
     }
-  }, [currentTrack, filteredTracks, isPlaying, stopAllVoices, startGenerator]);
+    // The useEffect will handle stopping the old and starting the new via currentTrack.id change
+  }, [currentTrack, filteredTracks, isPlaying]);
 
 
   useEffect(() => {
@@ -1030,36 +1025,48 @@ const MusicPlayer: React.FC<Props> = ({ setView, setIsAnyTrackPlaying }) => {
     return () => clearInterval(timer);
   }, [isPlaying, isMuted]);
 
+  // Main effect to manage audio synthesis based on playing state and track selection
   useEffect(() => {
-    // This effect handles starting/stopping based on the track and play state
-    if (isPlaying && !isLoading && !isMuted) {
-      stopAllVoices(); // Stop any previous track if playing
-      startGenerator(currentTrack.url, currentTrack.id);
-    } else if (!isPlaying && !isMuted) {
-      stopAllVoices();
+    // Only proceed if not in a loading state initiated by startGenerator itself
+    if (!isLoading) {
+      if (isPlaying && !isMuted) {
+        // If meant to be playing, stop any existing and start the current track
+        stopAllVoices(); 
+        setIsLoading(true); // Set loading while we initialize/start generator
+        initAudioEngine().then(success => {
+          if (success) {
+            startGenerator(currentTrack.url, currentTrack.id);
+          } else {
+            console.error("Failed to initialize audio engine.");
+            setIsPlaying(false);
+            setIsAnyTrackPlaying(false);
+          }
+          setIsLoading(false); // Clear loading state once done
+        });
+      } else {
+        // If not playing or is muted, ensure all audio is stopped
+        stopAllVoices();
+      }
     }
-  }, [currentTrack.id]); // Only re-run when track changes
+  }, [currentTrack.id, isPlaying, isMuted, initAudioEngine, startGenerator, stopAllVoices, setIsAnyTrackPlaying, isLoading]);
+
 
   // Global mute/unmute
   const toggleMute = useCallback(() => {
     const nextMuted = !isMuted;
     setIsMuted(nextMuted);
 
+    // Apply master gain change immediately
     const ctx = audioContextRef.current;
     if (ctx && masterGainRef.current) {
       masterGainRef.current.gain.cancelScheduledValues(ctx.currentTime);
-      masterGainRef.current.gain.setValueAtTime(masterGainRef.current.gain.value, ctx.currentTime); // Ensure current value is set
+      masterGainRef.current.gain.setValueAtTime(masterGainRef.current.gain.value, ctx.currentTime); 
       masterGainRef.current.gain.linearRampToValueAtTime(nextMuted ? 0 : volume, ctx.currentTime + 0.1);
     }
-
-    if (nextMuted) {
-      stopAllVoices(); // Stop all generators if muted
-    } else if (isPlaying && !isLoading) { // Only restart if was playing and not loading
-      setIsLoading(true);
-      startGenerator(currentTrack.url, currentTrack.id);
-      setIsLoading(false);
-    }
-  }, [isMuted, isPlaying, isLoading, volume, currentTrack, stopAllVoices, startGenerator]);
+    
+    // The main useEffect will react to isMuted change and handle stop/start synthesis
+    // No need to explicitly call stopSynthesis or startGenerator here.
+  }, [isMuted, volume]);
   
   // Cleanup on component unmount
   useEffect(() => {
@@ -1243,16 +1250,27 @@ const MusicPlayer: React.FC<Props> = ({ setView, setIsAnyTrackPlaying }) => {
           <button 
             key={track.id}
             onClick={() => {
-              setCurrentTrack(track);
-              if (!isPlaying && !isMuted) { // Only auto-play if not already playing and not muted
-                // This will trigger the useEffect for currentTrack.id change, which then calls startGenerator
-                // No need to explicitly call togglePlayPause here, as the useEffect will manage the play state.
-              } else if (isPlaying && currentTrack.id === track.id) {
-                // If it's the currently playing track, and user clicks it again, pause it.
+              if (currentTrack.id === track.id) {
+                // If the currently playing track is clicked, toggle play/pause
                 togglePlayPause();
-              } else if (isPlaying && currentTrack.id !== track.id) {
-                // If another track is playing, stop it and start the new one
-                // The setCurrentTrack will handle stopping the old and starting the new via useEffect
+              } else {
+                // If a new track is clicked, set it as current and ensure playing state
+                setCurrentTrack(track);
+                // Ensure it starts playing if it wasn't already (unless muted)
+                if (!isPlaying && !isMuted) { 
+                  setIsPlaying(true);
+                } else if (isPlaying && isMuted) {
+                  // If playing but muted, selecting a new track should unmute and play
+                  setIsMuted(false);
+                  setIsPlaying(true);
+                } else if (!isPlaying && isMuted) {
+                   // If not playing and muted, selecting a new track should unmute and play
+                  setIsMuted(false);
+                  setIsPlaying(true);
+                } else if (isPlaying && !isMuted) {
+                  // If already playing and unmuted, just switch track, useEffect handles restart
+                  // No need to change isPlaying here.
+                }
               }
             }}
             className={`group glass-card p-6 md:p-8 rounded-[2.5rem] text-left space-y-4 transition-all hover:scale-[1.03] hover:shadow-xl border-none ring-1 ring-slate-100/50 dark:ring-slate-200/50 ${currentTrack.id === track.id ? 'bg-indigo-50/80 dark:bg-indigo-900/40 border-indigo-200 dark:border-indigo-700 ring-indigo-500/30' : ''}`}

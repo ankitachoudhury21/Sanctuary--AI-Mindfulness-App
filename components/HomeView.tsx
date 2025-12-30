@@ -184,7 +184,8 @@ const HomeView: React.FC<Props> = ({ user, sleepData, activity, setActivity, aiI
                     <p className="label-caps text-slate-400 dark:text-slate-700 font-bold text-[10px] mt-1">Recovery Score</p>
                   </div>
                 </div>
-                <div className="h-48 md:h-64 -mx-4">
+                {/* FIX: Added w-full to the div wrapping ResponsiveContainer for explicit width */}
+                <div className="w-full h-48 md:h-64 -mx-4">
                   <ResponsiveContainer width="100%" height="100%">
                     <AreaChart data={sleepData}>
                       <defs>

@@ -129,7 +129,8 @@ const SleepTracker: React.FC<Props> = ({ data, aiInsights, setView }) => {
              >Monthly</button>
           </div>
         </div>
-        <div className="h-[400px] -mx-4">
+        {/* FIX: Added w-full to the div wrapping ResponsiveContainer for explicit width */}
+        <div className="w-full h-[400px] -mx-4">
           <ResponsiveContainer width="100%" height="100%">
             <ComposedChart data={data}>
               <defs>
@@ -138,7 +139,7 @@ const SleepTracker: React.FC<Props> = ({ data, aiInsights, setView }) => {
                   <stop offset="100%" stopColor="#3b82f6" stopOpacity={0.1}/>
                 </linearGradient>
               </defs>
-              <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontSize: 12, fontWeight: 700, fontFamily: 'Outfit' }} dy={20} />
+              <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{ fill: '#94a3b_8', fontSize: 12, fontWeight: 700, fontFamily: 'Outfit' }} dy={20} />
               <YAxis hide />
               <Tooltip 
                 cursor={{ fill: 'rgba(59, 130, 246, 0.05)', radius: 24 }} 

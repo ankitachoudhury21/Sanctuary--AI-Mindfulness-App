@@ -6,7 +6,7 @@ import WelcomeJourney from './components/WelcomeJourney';
 import { AuthFlow } from './components/AuthFlow';
 import Dashboard from './components/Dashboard';
 import Navigation from './components/Navigation';
-import OnboardingTutorial from './components/OnboardingTutorial'; 
+// Removed: import OnboardingTutorial from './components/OnboardingTutorial'; 
 // Removed: import BackgroundAmbience from './components/BackgroundAmbience';
 import { analyzeSleepAndHealth } from './services/geminiService';
 import { Sparkles, Play } from 'lucide-react';
@@ -40,7 +40,7 @@ const App: React.FC = () => {
       return saved ? JSON.parse(saved) : null;
     } catch { return null; }
   });
-  const [showTutorial, setShowTutorial] = useState(false);
+  // Removed: const [showTutorial, setShowTutorial] = useState(false);
   const [journalEntries, setJournalEntries] = useState<JournalEntry[]>(() => {
     try {
       const saved = localStorage.getItem(STORAGE_KEYS.JOURNAL);
@@ -128,13 +128,13 @@ const App: React.FC = () => {
 
   const handleAuthComplete = () => {
     setView(AppView.DASHBOARD);
-    setShowTutorial(true);
+    // Removed: setShowTutorial(true);
     refreshAIInsights();
   };
 
-  const handleTutorialComplete = () => {
-    setShowTutorial(false);
-  };
+  // Removed: const handleTutorialComplete = () => {
+  // Removed:   setShowTutorial(false);
+  // Removed: };
 
   const refreshAIInsights = async () => {
     try {
@@ -153,7 +153,7 @@ const App: React.FC = () => {
     
     setUser(null);
     setView(AppView.WELCOME);
-    setShowTutorial(false);
+    // Removed: setShowTutorial(false);
     setHasStarted(false);
   };
 
@@ -232,7 +232,7 @@ const App: React.FC = () => {
                 setIsAnyTrackPlaying={setIsAnyTrackPlaying}
               />
             </main>
-            {showTutorial && user && <OnboardingTutorial userName={user.name} onComplete={handleTutorialComplete} onViewChange={setView} />}
+            {/* Removed: {showTutorial && user && <OnboardingTutorial userName={user.name} onComplete={handleTutorialComplete} onViewChange={setView} />} */}
           </div>
         )}
       </div>

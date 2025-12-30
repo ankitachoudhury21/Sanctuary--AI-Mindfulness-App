@@ -41,10 +41,3 @@ export interface ActivityData {
   steps: number;
   waterIntake: number; // glasses
 }
-
-export interface TutorialStep {
-  title: string;
-  description: string;
-  targetView: AppView;
-  highlightIcon?: any;
-}
