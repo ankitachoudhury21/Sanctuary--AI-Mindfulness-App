@@ -1,10 +1,9 @@
 
-
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { AppView } from '../types';
 import { 
   ChevronLeft, Play, Pause, Rocket, Loader2, Volume2, VolumeX, 
-  Timer, Sparkles, Activity, Shield, Zap, Music, Radio, Map, Eye
+  Timer, Sparkles, Activity, Shield, Zap, Music, Radio, Map, Eye, Brain
 } from 'lucide-react';
 
 interface Planet {
@@ -843,4 +842,208 @@ export const PlanetaryMission: React.FC<{ setView: (v: AppView) => void; setIsAn
             className="flex items-center gap-2 text-teal-800 label-caps text-[10px] md:text-xs hover:gap-3 transition-all mb-2"
             aria-label="Exit Observation Deck"
           >
-            <ChevronLeft size={1
+            <ChevronLeft size={16} /> Back to Sanctuary
+          </button>
+          <div className="flex flex-col md:flex-row md:items-center gap-4">
+            <h2 className="text-4xl md:text-7xl font-black text-slate-950 dark:text-white tracking-tighter leading-none transition-colors duration-300">Observation Deck</h2>
+            <span className="label-caps px-3 py-1 bg-teal-100 dark:bg-teal-100/30 text-teal-700 dark:text-teal-700 rounded-full border border-teal-200 dark:border-teal-200 w-fit">BETA</span>
+          </div>
+          <p className="text-slate-500 dark:text-slate-300 font-semibold text-lg md:text-2xl transition-colors duration-300">
+            Embark on an auditory odyssey through our solar system.
+          </p>
+        </div>
+
+        <div className="flex items-center gap-4 bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl p-3 rounded-[2.5rem] border border-white dark:border-slate-700 shadow-sm ring-1 ring-teal-500/5 transition-colors duration-300">
+           <Radio className="text-teal-600 dark:text-teal-400 ml-2" />
+           <p className="text-slate-900 dark:text-white font-black uppercase tracking-widest text-[10px] pr-4">Spectral Link Active</p>
+        </div>
+      </div>
+
+      {/* Main Celestial Body View */}
+      <div className="glass-card p-8 md:p-14 rounded-[3rem] md:rounded-[5rem] relative overflow-hidden flex flex-col justify-between min-h-[500px] shadow-2xl border-none ring-1 ring-teal-500/10 dark:ring-teal-700/10 hover:shadow-teal-500/20 transition-all duration-300">
+        <div className={`absolute inset-0 bg-gradient-to-br ${activePlanet.color} opacity-60 mix-blend-multiply transition-all duration-1000`}></div>
+        <div className="absolute inset-0 bg-black/50 backdrop-brightness-75"></div>
+        
+        {activePlanet.videoUrl && !videoError ? (
+            <video 
+                ref={videoRef}
+                src={activePlanet.videoUrl} 
+                loop 
+                muted 
+                autoPlay 
+                playsInline 
+                className="absolute inset-0 w-full h-full object-cover z-0 opacity-50"
+                onError={() => setVideoError(true)}
+            ></video>
+        ) : (
+            <img 
+                src={activePlanet.imageUrl} 
+                alt={activePlanet.name} 
+                className="absolute inset-0 w-full h-full object-cover z-0 opacity-50" 
+            />
+        )}
+        
+        {isScanning && (
+          <div className="absolute inset-0 flex items-center justify-center bg-black/70 z-30 animate-in fade-in duration-500">
+            <Loader2 className="w-16 h-16 text-teal-400 animate-spin" />
+            <p className="absolute bottom-1/4 text-white text-xl font-bold tracking-widest animate-pulse">SCANNING...</p>
+          </div>
+        )}
+
+        <div className="relative z-10 flex flex-col items-center text-white text-center space-y-6 md:space-y-10 pt-10">
+          <div className="inline-flex items-center gap-3 px-6 py-2.5 bg-white/10 backdrop-blur-3xl rounded-full border border-white/25 shadow-2xl">
+            <Rocket size={16} className="text-teal-300 animate-pulse" />
+            <p className="text-[10px] md:text-sm font-black uppercase tracking-[0.5em] text-white">ACTIVE MISSION</p>
+          </div>
+          <h3 className="text-4xl md:text-6xl font-black tracking-tight drop-shadow-[0_20px_50px_rgba(0,0,0,0.8)] leading-none text-white italic transition-all duration-300">{activePlanet.name}</h3>
+          <p className="text-base md:text-xl text-white/80 font-medium italic tracking-wide max-w-2xl mx-auto drop-shadow-lg opacity-90 leading-relaxed">"{activePlanet.mission}"</p>
+        </div>
+
+        <div className="relative z-10 flex flex-col md:flex-row items-center justify-center gap-8 md:gap-12 mt-auto pb-10">
+          <button 
+            onClick={() => {
+              if (isPlaying) stopSynthesis();
+              else startSynthesis(activePlanet.synthesis);
+            }}
+            disabled={isLoading || isScanning}
+            className="w-24 h-24 md:w-32 md:h-32 flex items-center justify-center rounded-full bg-white text-slate-900 shadow-[0_0_80px_rgba(255,255,255,0.4)] hover:scale-110 active:scale-90 transition-all"
+            aria-label={isPlaying ? "Pause exploration audio" : "Start exploration audio"}
+          >
+            {isLoading ? <Loader2 size={40} className="animate-spin text-teal-600" /> : (isPlaying ? <Pause size={48} fill="currentColor" /> : <Play size={48} fill="currentColor" className="ml-2" />)}
+          </button>
+        </div>
+
+        <div className="absolute bottom-10 md:bottom-14 right-10 md:right-14 z-10 flex items-center gap-4">
+          <button 
+            onClick={toggleMute}
+            className={`transition-all hover:scale-110 active:scale-95 outline-none ${isMuted ? 'text-slate-400' : 'text-white'}`}
+            aria-label={isMuted ? "Unmute audio" : "Mute audio"}
+          >
+            {isMuted ? <VolumeX size={20} /> : <Volume2 size={20} />}
+          </button>
+          <input 
+            type="range" min="0" max="1" step="0.01" 
+            className="w-20 md:w-32 h-1 bg-white/30 rounded-full appearance-none cursor-pointer accent-white"
+            value={volume}
+            onChange={(e) => {
+              const val = parseFloat(e.target.value);
+              setVolume(val);
+              if (masterGainRef.current && audioContextRef.current && !isMuted) {
+                masterGainRef.current.gain.setValueAtTime(val, audioContextRef.current.currentTime);
+              }
+            }}
+          />
+        </div>
+        <div className="absolute bottom-10 md:bottom-14 left-10 md:left-14 z-10 text-white/80">
+          <p className="text-[10px] font-black uppercase tracking-widest">Mission Elapsed</p>
+          <p className="text-xl md:text-3xl font-black font-display tracking-tight">{formatTime(sessionTime)}</p>
+        </div>
+
+        {/* Audio Track Name Display */}
+        <div className="absolute top-10 left-1/2 -translate-x-1/2 z-10 flex items-center gap-3 px-6 py-2.5 bg-white/10 backdrop-blur-3xl rounded-full border border-white/25 shadow-2xl">
+          <Music size={16} className="text-teal-300" />
+          <p className="text-[10px] md:text-sm font-black uppercase tracking-[0.5em] text-white">{activePlanet.audioTrackName}</p>
+        </div>
+      </div>
+
+      {/* Planetary Metrics and Status */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12">
+        <div className="glass-card p-10 md:p-14 rounded-[3rem] md:rounded-[4.5rem] bg-slate-900 text-white border-none flex flex-col justify-between shadow-2xl relative overflow-hidden group hover:shadow-indigo-500/20 transition-all duration-300 hover:scale-[1.005]">
+          <div className="absolute inset-0 bg-gradient-to-br from-blue-600/20 to-transparent opacity-50"></div>
+          <div className="relative z-10 space-y-6">
+            <div className="w-16 h-16 bg-white/10 rounded-3xl flex items-center justify-center backdrop-blur-xl border border-white/20">
+              <Activity size={32} className="text-blue-400" />
+            </div>
+            <h4 className="text-3xl md:text-4xl font-black tracking-tight leading-tight">Orbital <br/>Stability</h4>
+            <p className="text-white/40 dark:text-white/80 font-medium text-lg leading-relaxed italic">
+              "Current orbital parameters indicate minor flux deviations. Maintaining course."
+            </p>
+            <div className="grid grid-cols-2 gap-4 pt-4">
+              <div>
+                <p className="label-caps text-white/40 dark:text-white/80">Anomaly Index</p>
+                <p className="text-2xl font-black text-white display-number">0.03</p>
+              </div>
+              <div>
+                <p className="label-caps text-white/40 dark:text-white/80">Gravity Well</p>
+                <p className="text-2xl font-black text-white display-number">7.82N</p>
+              </div>
+            </div>
+          </div>
+          <button className="relative z-10 w-full py-5 bg-white text-slate-900 rounded-3xl font-black text-lg transition-all hover:scale-[1.02] active:scale-95 shadow-xl font-display hover:bg-slate-100"
+          aria-label="Access orbital diagnostics"
+          >
+            Access Diagnostics
+          </button>
+        </div>
+
+        <div className="glass-card p-10 md:p-14 rounded-[3rem] md:rounded-[4.5rem] bg-indigo-900 text-white border-none flex flex-col justify-between shadow-2xl relative overflow-hidden group hover:shadow-purple-500/20 transition-all duration-300 hover:scale-[1.005]">
+          <div className="absolute inset-0 bg-gradient-to-br from-purple-600/20 to-transparent opacity-50"></div>
+          <div className="relative z-10 space-y-6">
+            <div className="w-16 h-16 bg-white/10 rounded-3xl flex items-center justify-center backdrop-blur-xl border border-white/20">
+              <Brain size={32} className="text-purple-400" />
+            </div>
+            <h4 className="text-3xl md:text-4xl font-black tracking-tight leading-tight">Neural <br/>Integration</h4>
+            <p className="text-white/40 dark:text-white/80 font-medium text-lg leading-relaxed italic">
+              "Subtle cognitive entrainment active. Preparing for deep space focus protocols."
+            </p>
+            <div className="grid grid-cols-2 gap-4 pt-4">
+              <div>
+                <p className="label-caps text-white/40 dark:text-white/80">Coherence</p>
+                <p className="text-2xl font-black text-white display-number">98%</p>
+              </div>
+              <div>
+                <p className="label-caps text-white/40 dark:text-white/80">Entrainment</p>
+                <p className="text-2xl font-black text-white display-number">Alpha</p>
+              </div>
+            </div>
+          </div>
+          <button className="relative z-10 w-full py-5 bg-white text-slate-900 rounded-3xl font-black text-lg transition-all hover:scale-[1.02] active:scale-95 shadow-xl font-display hover:bg-slate-100"
+          aria-label="Adjust neural entrainment settings"
+          >
+            Adjust Settings
+          </button>
+        </div>
+      </div>
+
+
+      {/* Planet Selection Grid */}
+      <section className="space-y-6">
+          <div className="px-4 flex items-center justify-between">
+            <h3 className="text-2xl md:text-4xl font-black text-slate-950 dark:text-white tracking-tight transition-colors duration-300">Celestial Navigation</h3>
+            <p className="label-caps text-slate-500 dark:text-slate-300 font-black">Deep Space Network v4.2</p>
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 md:gap-6">
+            {PLANETS.map((planet) => (
+              <button
+                key={planet.id}
+                onClick={() => handlePlanetSelect(planet)}
+                disabled={isLoading}
+                className={`group glass-card p-6 md:p-8 rounded-[2.5rem] text-left space-y-4 transition-all hover:scale-[1.03] hover:shadow-xl border-none ring-1 ring-slate-100/50 dark:ring-slate-200/50 
+                ${activePlanet.id === planet.id ? 'bg-teal-50 dark:bg-teal-900/30 border-teal-200 dark:border-teal-700 ring-teal-500/30' : ''}
+                ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
+                aria-label={`Select ${planet.name} for exploration`}
+              >
+                <div className={`relative w-12 h-12 md:w-14 md:h-14 bg-gradient-to-br ${planet.color} text-white flex items-center justify-center rounded-2xl shadow-lg transition-transform group-hover:rotate-6`}>
+                  {activePlanet.id === planet.id && isPlaying && !isLoading ? (
+                    <Zap size={24} className="animate-pulse" />
+                  ) : (
+                    <Eye size={24} />
+                  )}
+                </div>
+                <div>
+                  <h4 className={`text-lg md:text-xl font-black text-slate-950 dark:text-white tracking-tight leading-tight transition-colors duration-300`}>
+                    {planet.name}
+                  </h4>
+                  <p className="text-[10px] md:text-xs font-semibold text-slate-500 dark:text-slate-300 mt-1 leading-tight transition-colors duration-300">{planet.desc}</p>
+                </div>
+                <div className="pt-2 border-t border-slate-100 dark:border-slate-700 space-y-1">
+                  <p className="label-caps text-slate-400 dark:text-slate-300">Hazard</p>
+                  <p className="text-sm font-bold text-slate-900 dark:text-white">{planet.metrics.hazard}</p>
+                </div>
+              </button>
+            ))}
+          </div>
+        </section>
+    </div>
+  );
+};
