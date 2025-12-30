@@ -173,7 +173,7 @@ const HomeView: React.FC<Props> = React.memo(({ user, sleepData, activity, setAc
             >Full Report</button>
           </div>
           <div className="glass-card p-8 sm:p-10 rounded-[3rem] md:rounded-[4rem] flex flex-col lg:flex-row gap-10 shadow-xl ring-1 ring-slate-100/50 dark:ring-slate-700/50 hover:shadow-blue-500/20 transition-all duration-300 hover:scale-[1.005]">
-            <div className="flex-1 space-y-6 min-w-0">
+            <div className="flex-1 space-y-6 min-w-0 overflow-hidden">
                 <div className="flex justify-between items-center">
                   <div className="space-y-1">
                     <p className="label-caps text-slate-400 dark:text-slate-500 font-bold">Biometric Recovery</p>
@@ -184,8 +184,8 @@ const HomeView: React.FC<Props> = React.memo(({ user, sleepData, activity, setAc
                     <p className="label-caps text-slate-400 dark:text-slate-500 font-bold text-[10px] mt-1">Recovery Score</p>
                   </div>
                 </div>
-                <div className="w-full h-48 md:h-64 -mx-4 min-w-0 min-h-[192px] md:min-h-[256px]">
-                  <ResponsiveContainer width="100%" height="100%">
+                <div className="w-full h-48 md:h-64 min-w-0 min-h-[192px] md:min-h-[256px] relative">
+                  <ResponsiveContainer width="100%" height="100%" minWidth={0}>
                     <AreaChart data={sleepData}>
                       <defs>
                         <linearGradient id="colorHours" x1="0" y1="0" x2="0" y2="1">
