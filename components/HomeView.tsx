@@ -185,7 +185,7 @@ const HomeView: React.FC<Props> = React.memo(({ user, sleepData, activity, setAc
                   </div>
                 </div>
                 <div className="w-full h-48 md:h-64 min-w-full min-h-[192px] md:min-h-[256px] relative">
-                  <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
+                  <ResponsiveContainer width="100%" height="100%" minWidth="100%" minHeight="100%">
                     <AreaChart data={sleepData}>
                       <defs>
                         <linearGradient id="colorHours" x1="0" y1="0" x2="0" y2="1">

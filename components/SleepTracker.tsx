@@ -130,7 +130,7 @@ const SleepTracker: React.FC<Props> = React.memo(({ data, aiInsights, setView })
           </div>
         </div>
         <div className="w-full h-[400px] min-w-full min-h-[400px] relative overflow-hidden">
-          <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
+          <ResponsiveContainer width="100%" height="100%" minWidth="100%" minHeight="100%">
             <ComposedChart data={data}>
               <defs>
                 <linearGradient id="chartGradient" x1="0" y1="0" x2="0" y2="1">
