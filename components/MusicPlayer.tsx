@@ -69,8 +69,8 @@ const MusicPlayer: React.FC<Props> = ({ setView, setIsAnyTrackPlaying }) => {
   const animationRef = useRef<number | null>(null);
   const audioContextRef = useRef<AudioContext | null>(null);
   const masterGainRef = useRef<GainNode | null>(null);
+  // FIX: Initialized reverbNodeRef with null to prevent "Block-scoped variable used before its declaration" error.
   const reverbNodeRef = useRef<ConvolverNode | null>(null);
-  const activeVoicesRef = useRef<AudioVoice[]>([]);
 
   const filteredTracks = useMemo(() => {
     if (activeCat === 'all') return TRACKS;
@@ -90,6 +90,7 @@ const MusicPlayer: React.FC<Props> = ({ setView, setIsAnyTrackPlaying }) => {
         masterGainRef.current.gain.setValueAtTime(isMuted ? 0 : volume, ctx.currentTime);
         masterGainRef.current.connect(ctx.destination);
       }
+      // Reverb Setup - only if not already initialized
       if (!reverbNodeRef.current) {
         const reverb = ctx.createConvolver();
         const length = ctx.sampleRate * 4.0;
@@ -116,6 +117,9 @@ const MusicPlayer: React.FC<Props> = ({ setView, setIsAnyTrackPlaying }) => {
       return true;
     } catch (err) { return false; }
   }, [volume, isMuted, currentTrack.cat]);
+  
+  // Use activeVoicesRef to manage all dynamically created audio voices for each track type
+  const activeVoicesRef = useRef<AudioVoice[]>([]);
 
   const stopAllVoices = useCallback((fade = false) => { // default to immediate stop
     const ctx = audioContextRef.current;
@@ -975,7 +979,7 @@ const MusicPlayer: React.FC<Props> = ({ setView, setIsAnyTrackPlaying }) => {
     // Add all nodes for this voice to the activeVoicesRef for cleanup
     activeVoicesRef.current.push({ id: trackId, gainNode: voiceGain, nodes: extraNodes.concat(mainNode) });
 
-  }, [volume, isMuted, setIsAnyTrackPlaying]); // Added setIsAnyTrackPlaying to dependencies
+  }, [volume, isMuted, setIsAnyTrackPlaying, reverbNodeRef]);
 
 
   const togglePlayPause = useCallback(async () => {
@@ -1129,7 +1133,7 @@ const MusicPlayer: React.FC<Props> = ({ setView, setIsAnyTrackPlaying }) => {
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
         <div className="space-y-1">
           <button 
-            onClick={() => { togglePlayPause(); setView(AppView.DASHBOARD); }}
+            onClick={() => { stopAllVoices(true); setView(AppView.DASHBOARD); }} // Ensure fade out when exiting
             className="flex items-center gap-2 text-indigo-800 label-caps text-[10px] md:text-xs hover:gap-3 transition-all mb-2"
             aria-label="Back to Sanctuary Dashboard"
           >
@@ -1240,7 +1244,16 @@ const MusicPlayer: React.FC<Props> = ({ setView, setIsAnyTrackPlaying }) => {
             key={track.id}
             onClick={() => {
               setCurrentTrack(track);
-              if (!isPlaying && !isMuted) togglePlayPause(); // Auto-play if not already playing and not muted
+              if (!isPlaying && !isMuted) { // Only auto-play if not already playing and not muted
+                // This will trigger the useEffect for currentTrack.id change, which then calls startGenerator
+                // No need to explicitly call togglePlayPause here, as the useEffect will manage the play state.
+              } else if (isPlaying && currentTrack.id === track.id) {
+                // If it's the currently playing track, and user clicks it again, pause it.
+                togglePlayPause();
+              } else if (isPlaying && currentTrack.id !== track.id) {
+                // If another track is playing, stop it and start the new one
+                // The setCurrentTrack will handle stopping the old and starting the new via useEffect
+              }
             }}
             className={`group glass-card p-6 md:p-8 rounded-[2.5rem] text-left space-y-4 transition-all hover:scale-[1.03] hover:shadow-xl border-none ring-1 ring-slate-100/50 dark:ring-slate-200/50 ${currentTrack.id === track.id ? 'bg-indigo-50/80 dark:bg-indigo-900/40 border-indigo-200 dark:border-indigo-700 ring-indigo-500/30' : ''}`}
             aria-label={`Play ${track.name} (${track.genre})`}
@@ -1253,7 +1266,7 @@ const MusicPlayer: React.FC<Props> = ({ setView, setIsAnyTrackPlaying }) => {
               )}
             </div>
             <div>
-              <h4 className={`text-lg md:text-xl font-black text-slate-900 dark:text-white tracking-tight leading-tight transition-colors duration-300`}>
+              <h4 className={`text-lg md:text-xl font-black text-slate-900 dark:text-slate-900 tracking-tight leading-tight transition-colors duration-300`}>
                 {track.name}
               </h4>
               <p className="text-[10px] md:text-xs font-semibold text-slate-500 dark:text-slate-400 mt-1 leading-tight transition-colors duration-300">{track.genre}</p>
