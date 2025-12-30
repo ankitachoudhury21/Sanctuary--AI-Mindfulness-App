@@ -174,6 +174,8 @@ const App: React.FC = () => {
           src="https://images.unsplash.com/photo-1490522046460-e4d658c407c0?auto=format&fit=crop&q=80&w=2560" 
           alt="Zen landscape" 
           className="w-full h-full object-cover opacity-80 transition-opacity duration-1000"
+          decoding="async" 
+          fetchpriority="high"
         />
         {/* Changed dark mode overlay to a darker slate for better background blending */}
         <div className="absolute inset-0 bg-white/50 dark:bg-slate-900/60 backdrop-blur-md transition-colors duration-1000"></div>

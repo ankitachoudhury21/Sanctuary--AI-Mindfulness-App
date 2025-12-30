@@ -89,7 +89,13 @@ const HomeView: React.FC<Props> = React.memo(({ user, sleepData, activity, setAc
     <div className="space-y-8 md:space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-1000 pb-20 px-4 md:px-6">
         {/* Hero Section */}
         <section className="relative min-h-[350px] md:h-[500px] rounded-[2.5rem] md:rounded-[4.5rem] overflow-hidden group shadow-2xl border border-white/20 dark:border-white/5">
-          <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1441974231531-c6227db76b6e?auto=format&fit=crop&q=80&w=2560')] bg-cover bg-center transition-transform duration-[15000ms] group-hover:scale-110"></div>
+          <img 
+            src="https://images.unsplash.com/photo-1441974231531-c6227db76b6e?auto=format&fit=crop&q=80&w=2560" 
+            alt="Forest clearing" 
+            className="absolute inset-0 w-full h-full object-cover transition-transform duration-[15000ms] group-hover:scale-110"
+            decoding="async" 
+            fetchpriority="high"
+          />
           <div className="absolute inset-0 bg-gradient-to-r from-white/95 via-white/80 to-transparent dark:from-white/95 dark:via-white/80 dark:to-transparent transition-colors duration-300"></div>
           <div className="absolute inset-0 flex flex-col items-start justify-center px-8 md:px-20 py-12 space-y-6 max-w-4xl">
             <div className="space-y-3">

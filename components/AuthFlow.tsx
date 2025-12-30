@@ -107,6 +107,13 @@ export const AuthFlow: React.FC<Props> = ({ onAuthComplete, userName }) => {
     <div className="min-h-screen relative flex items-center justify-center p-4 overflow-hidden">
       {/* Dynamic Background */}
       <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1499750310107-5fef28a66643?auto=format&fit=crop&q=80&w=2560')] bg-cover bg-center">
+        <img 
+          src="https://images.unsplash.com/photo-1499750310107-5fef28a66643?auto=format&fit=crop&q=80&w=2560" 
+          alt="Forest path" 
+          className="absolute inset-0 w-full h-full object-cover -z-10"
+          decoding="async" 
+          fetchpriority="high"
+        />
         <div className="absolute inset-0 bg-white/30 dark:bg-black/40 backdrop-blur-[4px] transition-colors duration-300"></div>
         <div className="absolute inset-0 bg-gradient-to-tr from-teal-50/80 via-transparent to-blue-50/80 dark:from-slate-900/80 dark:to-indigo-900/80 transition-colors duration-300"></div>
       </div>

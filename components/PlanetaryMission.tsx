@@ -33,7 +33,7 @@ const PLANETS: Planet[] = [
     desc: 'Solar Core: G-Type Star', 
     color: 'from-orange-600 to-yellow-500', 
     videoUrl: 'https://cdn.pixabay.com/vimeo/312061265/sun-1358.mp4?width=1280', 
-    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/b/b4/The_Sun_by_the_Atmospheric_Imaging_Assembly_of_NASA%27s_Solar_Dynamics_Observatory_-_20100819.jpg',
+    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/b/b4/The_Sun_by_the_Atmospheric_Imaging_Assembly_of_NASA%27s_Solar_Dynamics_Observatory_-_20100819.jpg/1920px-The_Sun_by_the_Atmospheric_Imaging_Assembly_of_NASA%27s_Solar_Dynamics_Observatory_-_20100819.jpg',
     synthesis: 'SUN', 
     mission: 'Harness the raw energy of existence.', 
     audioTrackName: 'Solar Flare Resonance',
@@ -153,7 +153,7 @@ const PLANETS: Planet[] = [
     desc: 'Dwarf: Glacial Heart', 
     color: 'from-slate-600 to-amber-900', 
     videoUrl: '', 
-    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/2/2a/Nh-pluto-in-true-color_2x_Full-Res.jpg',
+    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/2/2a/Nh-pluto-in-true-color_2x_Full-Res.jpg/1920px-Nh-pluto-in-true-color_2x_Full-Res.jpg',
     synthesis: 'PLUTO', 
     mission: 'Reflect at the final frontier of home.', 
     audioTrackName: 'Kuiper Belt Void',
@@ -881,7 +881,10 @@ export const PlanetaryMission: React.FC<{ setView: (v: AppView) => void; setIsAn
             <img 
                 src={activePlanet.imageUrl} 
                 alt={activePlanet.name} 
-                className="absolute inset-0 w-full h-full object-cover z-0 opacity-50" 
+                className="absolute inset-0 w-full h-full object-cover z-0 opacity-50"
+                decoding="async" 
+                fetchpriority="high"
+                loading="lazy"
             />
         )}
         
