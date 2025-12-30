@@ -48,8 +48,3 @@ export interface TutorialStep {
   targetView: AppView;
   highlightIcon?: any;
 }
-
-export interface TranscriptionMessage {
-  role: 'user' | 'model';
-  text: string;
-}

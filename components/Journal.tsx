@@ -2,13 +2,12 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { JournalEntry, AppView, UserProfile } from '../types';
 import { 
-  Mic, Square, Sparkles, Send, Quote, Heart, MessageCircle, 
+  Mic, Square, Sparkles, Send, Quote, Heart, 
   Loader2, Trash2, Calendar, CheckCircle2, ChevronLeft, ChevronRight, 
   Download, Eraser, AlertCircle
 } from 'lucide-react';
 import { analyzeGratitudeJournal } from '../services/geminiService';
-// Fix: LiveVoiceSession is a default export, not a named export
-import LiveVoiceSession from './LiveVoiceSession';
+// Removed: import LiveVoiceSession from './LiveVoiceSession';
 
 interface Props {
   entries: JournalEntry[];
@@ -24,7 +23,7 @@ const Journal: React.FC<Props> = ({ entries, setEntries, setView, user }) => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [textEntry, setTextEntry] = useState(() => localStorage.getItem(DRAFT_STORAGE_KEY) || '');
   const [aiFeedback, setAiFeedback] = useState<string | null>(null);
-  const [showLiveSession, setShowLiveSession] = useState(false);
+  // Removed: const [showLiveSession, setShowLiveSession] = useState(false);
   const [lastSaved, setLastSaved] = useState<string | null>(null);
   const [showClearConfirm, setShowClearConfirm] = useState(false);
   const recognitionRef = useRef<any>(null);
@@ -58,6 +57,7 @@ const Journal: React.FC<Props> = ({ entries, setEntries, setView, user }) => {
         recognizer.onerror = (event: any) => {
           console.warn("Speech recognition error:", event.error);
           setIsRecording(false);
+          setAiFeedback("Microphone error. Please check your browser permissions.");
         };
         recognitionRef.current = recognizer;
       } catch (e) {
@@ -79,14 +79,21 @@ const Journal: React.FC<Props> = ({ entries, setEntries, setView, user }) => {
     if (isRecording) {
       recognitionRef.current.stop();
       setIsRecording(false);
+      if (textEntry.trim()) {
+        setAiFeedback("Your spoken thoughts are ready. Click 'Save Reflection' to get Sanctuary's response.");
+      } else {
+        setAiFeedback(null); // Clear feedback if nothing was recorded
+      }
     } else {
       try {
+        setTextEntry(''); // Clear previous text if starting a new voice note
         recognitionRef.current.start();
         setIsRecording(true);
         setAiFeedback("Sanctuary is listening...");
       } catch (err) { 
         console.error("Recognition start error", err);
         setIsRecording(false);
+        setAiFeedback("Could not start microphone. Please check permissions.");
       }
     }
   };
@@ -117,7 +124,7 @@ const Journal: React.FC<Props> = ({ entries, setEntries, setView, user }) => {
       const newEntry: JournalEntry = {
         id: Date.now().toString(),
         date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
-        type: isRecording ? 'voice' : 'text', // Assuming textEntry is the source
+        type: isRecording ? 'voice' : 'text', // Assuming textEntry is the source. Note: isRecording is false at this point for quick note after it's stopped.
         transcript: textEntry,
         aiResponse: aiResponseForEntry // Save the appropriate AI response
       };
@@ -185,17 +192,7 @@ const Journal: React.FC<Props> = ({ entries, setEntries, setView, user }) => {
         </div>
         <div className="flex flex-col lg:flex-row items-center justify-between gap-6 md:gap-10">
           <div className="flex gap-4 w-full lg:w-auto items-center">
-             <button 
-                onClick={() => setShowLiveSession(true)} 
-                className="flex-1 sm:flex-none h-16 md:h-24 px-6 md:px-10 rounded-2xl md:rounded-[2.5rem] bg-teal-900 text-white flex items-center gap-4 transition-all active:scale-95 group shadow-2xl shadow-teal-100/20 dark:shadow-teal-100/20"
-                aria-label="Start live AI voice session"
-              >
-              <MessageCircle size={24} className="md:w-8 md:h-8 group-hover:rotate-12 transition-transform" />
-              <div className="text-left">
-                <p className="text-[10px] font-black uppercase tracking-widest opacity-60">Conversation</p>
-                <p className="text-sm md:text-xl font-black tracking-tight">Live Session</p>
-              </div>
-            </button>
+             {/* Removed Live Session Button */}
             <button 
               onClick={handleVoiceToggle} 
               disabled={isProcessing} 
@@ -302,10 +299,7 @@ const Journal: React.FC<Props> = ({ entries, setEntries, setView, user }) => {
           ))}
         </div>
       </div>
-      {showLiveSession && <LiveVoiceSession userName={user?.name || "there"} onClose={() => setShowLiveSession(false)} onSave={(t) => {
-        setEntries(prev => [{ id: Date.now().toString(), date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }), type: 'live', transcript: t, aiResponse: "Saved conversation summary from our live session." }, ...prev]);
-        setShowLiveSession(false);
-      }} />}
+      {/* Removed LiveVoiceSession Conditional Render */}
     </div>
   );
 };
