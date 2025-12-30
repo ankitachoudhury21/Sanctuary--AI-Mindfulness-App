@@ -171,7 +171,7 @@ export const AuthFlow: React.FC<Props> = ({ onAuthComplete, userName }) => {
 
                 <div className="flex items-center gap-4 my-8">
                   <div className="h-[1px] flex-1 bg-slate-200 dark:bg-slate-600"></div>
-                  <span className="label-caps text-slate-400 dark:text-slate-500">or use email</span>
+                  <span className="label-caps text-slate-400 dark:text-slate-300">or use email</span>
                   <div className="h-[1px] flex-1 bg-slate-200 dark:bg-slate-600"></div>
                 </div>
 
@@ -269,7 +269,7 @@ export const AuthFlow: React.FC<Props> = ({ onAuthComplete, userName }) => {
                       if (method === 'magic') setMethod('email');
                       else setMethod('social');
                     }}
-                    className="text-slate-400 dark:text-slate-500 font-bold text-sm hover:text-slate-600 dark:hover:text-slate-300 transition-colors duration-300"
+                    className="text-slate-400 dark:text-slate-300 font-bold text-sm hover:text-slate-600 dark:hover:text-slate-300 transition-colors duration-300"
                     aria-label="Go back to previous authentication method selection"
                   >
                     Go Back
@@ -288,7 +288,7 @@ export const AuthFlow: React.FC<Props> = ({ onAuthComplete, userName }) => {
           </div>
 
           <div className="mt-12 pt-8 border-t border-slate-100 dark:border-slate-700 text-center transition-colors duration-300">
-            <p className="text-[12px] text-slate-400 dark:text-slate-500 leading-relaxed max-w-[400px] mx-auto font-medium">
+            <p className="text-[12px] text-slate-400 dark:text-slate-300 leading-relaxed max-w-[400px] mx-auto font-medium">
               By entering Sanctuary, you agree to our <a href="#" className="text-teal-600 dark:text-teal-400 font-bold hover:underline">Community Terms</a> and acknowledge our <a href="#" className="text-teal-600 dark:text-teal-400 font-bold hover:underline">Privacy Commitment</a> to keep your reflections safe.
             </p>
           </div>

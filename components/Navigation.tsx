@@ -87,7 +87,7 @@ const Navigation: React.FC<Props> = React.memo(({ activeView, setView, onLogout,
               <circle cx="12" cy="12" r="3" fill="white" />
             </svg>
           </div>
-          <span className="font-black text-slate-900 dark:text-slate-900 tracking-tight text-xl font-display transition-colors duration-300">Sanctuary</span>
+          <span className="font-black text-slate-900 dark:text-white tracking-tight text-xl font-display transition-colors duration-300">Sanctuary</span>
         </button>
         <div className="flex items-center gap-2">
           <button 
@@ -147,8 +147,8 @@ const Navigation: React.FC<Props> = React.memo(({ activeView, setView, onLogout,
               {isDarkMode ? <Sun size={18} /> : <CloudMoon size={18} />}
             </div>
             <div className="flex flex-col items-start">
-              <span className="text-sm font-black uppercase tracking-widest">Theme</span>
-              <span className="text-[9px] opacity-60 font-bold uppercase">{isDarkMode ? 'Dark Mode' : 'Light Mode'}</span>
+              <span className="text-sm font-black uppercase tracking-widest text-slate-400 dark:text-slate-300">Theme</span>
+              <span className="text-[9px] opacity-60 font-bold uppercase dark:text-white/60">{isDarkMode ? 'Dark Mode' : 'Light Mode'}</span>
             </div>
           </button>
           

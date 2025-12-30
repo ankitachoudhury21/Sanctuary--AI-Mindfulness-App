@@ -1147,10 +1147,10 @@ const MusicPlayer: React.FC<Props> = ({ setView, setIsAnyTrackPlaying }) => {
             <ChevronLeft size={16} /> Exit Mediation
           </button>
           <div className="flex flex-col md:flex-row md:items-center gap-4">
-            <h2 className="text-4xl md:text-7xl font-black text-slate-900 tracking-tighter leading-none transition-colors duration-300">Daily Meditation</h2>
+            <h2 className="text-4xl md:text-7xl font-black text-slate-900 dark:text-white tracking-tighter leading-none transition-colors duration-300">Daily Meditation</h2>
             <span className="px-3 py-1 bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 rounded-full border border-indigo-200 uppercase w-fit text-[10px] font-black tracking-widest">BETA</span>
           </div>
-          <p className="text-slate-500 font-semibold text-lg md:text-2xl transition-colors duration-300">Procedural forest baths for tech professionals.</p>
+          <p className="text-slate-500 dark:text-slate-300 font-semibold text-lg md:text-2xl transition-colors duration-300">Procedural forest baths for tech professionals.</p>
         </div>
 
         <div className="flex items-center gap-4 bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl p-3 rounded-[2.5rem] border border-white dark:border-slate-700 shadow-sm ring-1 ring-indigo-500/5 transition-colors duration-300">
@@ -1229,13 +1229,13 @@ const MusicPlayer: React.FC<Props> = ({ setView, setIsAnyTrackPlaying }) => {
       </div>
 
       <div className="px-2 md:px-0">
-        <h3 className="text-2xl md:text-4xl font-black text-slate-900 tracking-tight mb-6 transition-colors duration-300">Track Categories</h3>
+        <h3 className="text-2xl md:text-4xl font-black text-slate-900 dark:text-white tracking-tight mb-6 transition-colors duration-300">Track Categories</h3>
         <div className="flex flex-wrap gap-3">
           {CATEGORIES.map(cat => (
             <button
               key={cat.id}
               onClick={() => setActiveCat(cat.id)}
-              className={`flex items-center gap-2 px-5 py-2.5 rounded-full border transition-all ${activeCat === cat.id ? `${cat.bg} ${cat.color} border-current shadow-lg` : 'bg-white text-slate-500 border-slate-200 hover:border-slate-400 hover:text-slate-700'}`}
+              className={`flex items-center gap-2 px-5 py-2.5 rounded-full border transition-all ${activeCat === cat.id ? `${cat.bg} ${cat.color} border-current shadow-lg` : 'bg-white text-slate-500 dark:text-slate-300 border-slate-200 hover:border-slate-400 hover:text-slate-700 dark:hover:text-slate-100'}`}
               aria-label={`Select ${cat.label} category`}
             >
               <cat.icon size={16} />
@@ -1273,10 +1273,10 @@ const MusicPlayer: React.FC<Props> = ({ setView, setIsAnyTrackPlaying }) => {
               )}
             </div>
             <div>
-              <h4 className={`text-lg md:text-xl font-black text-slate-900 dark:text-slate-900 tracking-tight leading-tight transition-colors duration-300`}>
+              <h4 className={`text-lg md:text-xl font-black text-slate-900 dark:text-white tracking-tight leading-tight transition-colors duration-300`}>
                 {track.name}
               </h4>
-              <p className="text-[10px] md:text-xs font-semibold text-slate-500 dark:text-slate-400 mt-1 leading-tight transition-colors duration-300">{track.genre}</p>
+              <p className="text-[10px] md:text-xs font-semibold text-slate-500 dark:text-slate-300 mt-1 leading-tight transition-colors duration-300">{track.genre}</p>
             </div>
             {currentTrack.id === track.id && (isPlaying || isLoading) && (
               <div className="absolute top-4 right-4 text-indigo-500 dark:text-indigo-300">

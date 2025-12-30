@@ -93,10 +93,10 @@ const HomeView: React.FC<Props> = React.memo(({ user, sleepData, activity, setAc
           <div className="absolute inset-0 bg-gradient-to-r from-white/95 via-white/80 to-transparent dark:from-white/95 dark:via-white/80 dark:to-transparent transition-colors duration-300"></div>
           <div className="absolute inset-0 flex flex-col items-start justify-center px-8 md:px-20 py-12 space-y-6 max-w-4xl">
             <div className="space-y-3">
-              <h2 className="text-4xl xs:text-5xl md:text-7xl font-black tracking-tight text-slate-900 dark:text-slate-900 leading-[0.95] hero-text-shadow transition-all duration-300 group-hover:translate-x-1">
-                Welcome home, <br/><span className="text-teal-700 dark:text-teal-700 italic transition-colors duration-300">{user?.name || 'Friend'}</span>
+              <h2 className="text-4xl xs:text-5xl md:text-7xl font-black tracking-tight text-slate-900 dark:text-white leading-[0.95] hero-text-shadow transition-all duration-300 group-hover:translate-x-1">
+                Welcome home, <br/><span className="text-teal-700 dark:text-teal-400 italic transition-colors duration-300">{user?.name || 'Friend'}</span>
               </h2>
-              <p className="text-lg md:text-2xl text-slate-700 dark:text-slate-700 font-bold max-w-xl hero-text-shadow opacity-90 transition-colors duration-300">
+              <p className="text-lg md:text-2xl text-slate-700 dark:text-slate-300 font-bold max-w-xl hero-text-shadow opacity-90 transition-colors duration-300">
                 Ready to restore your focus in the Sanctuary?
               </p>
             </div>
@@ -125,7 +125,7 @@ const HomeView: React.FC<Props> = React.memo(({ user, sleepData, activity, setAc
                   <Sparkles size={14} className="animate-pulse" />
                   <span>Mantra for Today</span>
                 </div>
-                <h3 className="text-3xl md:text-6xl font-black text-slate-900 dark:text-slate-900 tracking-tight leading-[1.1] text-balance max-w-4xl italic transition-colors duration-300">
+                <h3 className="text-3xl md:text-6xl font-black text-slate-900 dark:text-white tracking-tight leading-[1.1] text-balance max-w-4xl italic transition-colors duration-300">
                   {aiInsights?.affirmation ? `"${aiInsights.affirmation}"` : '"I am the calm center in the stream of logic."'}
                 </h3>
                 <div className="flex items-center gap-4 pt-2">
@@ -167,7 +167,7 @@ const HomeView: React.FC<Props> = React.memo(({ user, sleepData, activity, setAc
         {/* Restfulness Section */}
         <section className="space-y-6">
           <div className="px-4 md:px-2 flex items-center justify-between">
-            <h3 className="text-2xl md:text-4xl font-black text-slate-900 dark:text-slate-900 tracking-tight transition-colors duration-300">Restfulness</h3>
+            <h3 className="text-2xl md:text-4xl font-black text-slate-900 dark:text-white tracking-tight transition-colors duration-300">Restfulness</h3>
             <button onClick={() => setView(AppView.SLEEP)} className="text-teal-700 dark:text-teal-700 font-black label-caps hover:underline"
             aria-label="View full sleep report"
             >Full Report</button>
@@ -176,12 +176,12 @@ const HomeView: React.FC<Props> = React.memo(({ user, sleepData, activity, setAc
             <div className="flex-1 space-y-6">
                 <div className="flex justify-between items-center">
                   <div className="space-y-1">
-                    <p className="label-caps text-slate-400 dark:text-slate-700 font-bold">Biometric Recovery</p>
-                    <p className="text-lg text-slate-500 dark:text-slate-700 font-semibold italic">Clinical tracking of your REM cycles.</p>
+                    <p className="label-caps text-slate-400 dark:text-slate-300 font-bold">Biometric Recovery</p>
+                    <p className="text-lg text-slate-500 dark:text-slate-300 font-semibold italic">Clinical tracking of your REM cycles.</p>
                   </div>
                   <div className="text-right">
-                    <span className="text-5xl md:text-7xl font-black text-slate-900 dark:text-slate-900 display-number tracking-tighter leading-none transition-colors duration-300">{aiInsights?.score || '72'}</span>
-                    <p className="label-caps text-slate-400 dark:text-slate-700 font-bold text-[10px] mt-1">Recovery Score</p>
+                    <span className="text-5xl md:text-7xl font-black text-slate-900 dark:text-white display-number tracking-tighter leading-none transition-colors duration-300">{aiInsights?.score || '72'}</span>
+                    <p className="label-caps text-slate-400 dark:text-slate-300 font-bold text-[10px] mt-1">Recovery Score</p>
                   </div>
                 </div>
                 {/* FIX: Added w-full to the div wrapping ResponsiveContainer for explicit width */}
@@ -206,13 +206,13 @@ const HomeView: React.FC<Props> = React.memo(({ user, sleepData, activity, setAc
             <div className="lg:w-1/3 bg-slate-50 dark:bg-slate-100 rounded-[2rem] p-8 flex flex-col justify-center gap-4 transition-colors duration-300">
                 <div className="space-y-1">
                   <p className="label-caps text-slate-400 dark:text-slate-700 font-bold">Status</p>
-                  <p className="text-lg md:text-2xl font-black text-blue-600 dark:text-blue-700 transition-colors duration-300">{aiInsights?.label || 'Calibrated'}</p>
+                  <p className="text-lg md:text-2xl font-black text-blue-600 dark:text-blue-400 transition-colors duration-300">{aiInsights?.label || 'Calibrated'}</p>
                 </div>
                 <div className="h-[2px] bg-slate-100 dark:bg-slate-200 w-full"></div>
-                <p className="text-slate-500 dark:text-slate-700 font-semibold leading-relaxed">
+                <p className="text-slate-500 dark:text-slate-300 font-semibold leading-relaxed">
                   Sleep consistency has improved by <span className="text-teal-700 dark:text-teal-700 font-black">12%</span> since last Monday. Maintain this rhythm.
                 </p>
-                <button onClick={() => setView(AppView.SLEEP)} className="mt-4 flex items-center gap-2 text-slate-900 dark:text-slate-900 font-black label-caps group hover:text-teal-700 dark:hover:text-teal-700 transition-colors"
+                <button onClick={() => setView(AppView.SLEEP)} className="mt-4 flex items-center gap-2 text-slate-900 dark:text-white font-black label-caps group hover:text-teal-700 dark:hover:text-teal-700 transition-colors"
                 aria-label="View sleep cycle details"
                 >
                   Cycle Details <ChevronRight size={14} className="group-hover:translate-x-1 transition-transform text-emerald-600 dark:text-emerald-700"/>
@@ -230,11 +230,11 @@ const HomeView: React.FC<Props> = React.memo(({ user, sleepData, activity, setAc
                 <Droplets size={32} />
               </div>
               <div className="space-y-2 min-w-0 flex-1">
-                <h4 className="text-xl md:text-3xl font-black text-slate-900 dark:text-slate-900 tracking-tight leading-none transition-colors duration-300">Hydration</h4>
+                <h4 className="text-xl md:text-3xl font-black text-slate-900 dark:text-white tracking-tight leading-none transition-colors duration-300">Hydration</h4>
                 <div className="w-full bg-slate-100 dark:bg-slate-200 h-3 rounded-full overflow-hidden shadow-inner">
                   <div className="h-full bg-cyan-600 transition-all duration-1500" style={{ width: `${waterPercent}%` }}></div>
                 </div>
-                <p className="text-[10px] md:text-xs font-black uppercase text-slate-400 dark:text-slate-700 tracking-widest">{activity.waterIntake} of {waterGoal} glasses</p>
+                <p className="text-[10px] md:text-xs font-black uppercase text-slate-400 dark:text-slate-300 tracking-widest">{activity.waterIntake} of {waterGoal} glasses</p>
               </div>
             </div>
             <button 
@@ -253,15 +253,15 @@ const HomeView: React.FC<Props> = React.memo(({ user, sleepData, activity, setAc
                 <Footprints size={32} />
               </div>
               <div className="space-y-1">
-                <h4 className="text-xl md:text-3xl font-black text-slate-900 dark:text-slate-900 tracking-tight leading-none transition-colors duration-300">Daily Steps</h4>
-                <p className="text-4xl md:text-5xl font-black text-emerald-800 dark:text-emerald-700 display-number tracking-tighter transition-colors duration-300">{activity.steps.toLocaleString()}</p>
+                <h4 className="text-xl md:text-3xl font-black text-slate-900 dark:text-white tracking-tight leading-none transition-colors duration-300">Daily Steps</h4>
+                <p className="text-4xl md:text-5xl font-black text-emerald-800 dark:text-emerald-400 display-number tracking-tighter transition-colors duration-300">{activity.steps.toLocaleString()}</p>
               </div>
             </div>
             <button onClick={() => setView(AppView.ACTIVITY)} className="text-right group"
             aria-label="View activity efficiency details"
             >
-              <span className="label-caps text-slate-400 dark:text-slate-700 font-bold mb-1 block">Efficiency</span>
-              <p className="text-2xl font-black text-slate-900 dark:text-slate-900 flex items-center gap-1 display-number transition-colors duration-300">52% <ChevronRight size={18} className="group-hover:translate-x-1 transition-transform text-emerald-600 dark:text-emerald-700"/></p>
+              <span className="label-caps text-slate-400 dark:text-slate-300 font-bold mb-1 block">Efficiency</span>
+              <p className="text-2xl font-black text-slate-900 dark:text-white flex items-center gap-1 display-number transition-colors duration-300">52% <ChevronRight size={18} className="group-hover:translate-x-1 transition-transform text-emerald-600 dark:text-emerald-700"/></p>
             </button>
           </div>
         </section>
@@ -269,8 +269,8 @@ const HomeView: React.FC<Props> = React.memo(({ user, sleepData, activity, setAc
         {/* Quick Access Modules */}
         <section className="space-y-6">
           <div className="px-4 flex items-center justify-between">
-            <h3 className="text-2xl font-black text-slate-900 dark:text-slate-900 tracking-tight transition-colors duration-300">Sanctuary Rooms</h3>
-            <p className="label-caps text-slate-400 dark:text-slate-700 font-black">Quick Entry</p>
+            <h3 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight transition-colors duration-300">Sanctuary Rooms</h3>
+            <p className="label-caps text-slate-400 dark:text-slate-300 font-black">Quick Entry</p>
           </div>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
             {modules.map((m) => (
@@ -284,11 +284,11 @@ const HomeView: React.FC<Props> = React.memo(({ user, sleepData, activity, setAc
                   <m.icon size={24} />
                 </div>
                 <div>
-                  <h4 className={`text-lg md:text-xl font-black ${m.textColor} dark:text-slate-900 tracking-tight leading-tight flex items-center transition-colors duration-300`}>
+                  <h4 className={`text-lg md:text-xl font-black ${m.textColor} dark:text-white tracking-tight leading-tight flex items-center transition-colors duration-300`}>
                     {m.title}
                     {m.beta && <BetaBadge />}
                   </h4>
-                  <p className="text-[10px] md:text-xs font-semibold text-slate-500 dark:text-slate-700 mt-1 leading-tight transition-colors duration-300">{m.desc}</p>
+                  <p className="text-[10px] md:text-xs font-semibold text-slate-500 dark:text-slate-300 mt-1 leading-tight transition-colors duration-300">{m.desc}</p>
                 </div>
               </button>
             ))}

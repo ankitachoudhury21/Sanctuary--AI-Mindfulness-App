@@ -169,10 +169,10 @@ const Journal: React.FC<Props> = React.memo(({ entries, setEntries, setView, use
         </button>
         <div className="text-center space-y-3 md:space-y-4 max-w-2xl mx-auto px-4">
           <div className="flex flex-col md:flex-row items-center justify-center gap-3">
-            <h2 className="text-4xl sm:text-5xl md:text-7xl font-black text-slate-900 dark:text-slate-900 tracking-tighter leading-tight transition-colors duration-300">Your Reflections</h2>
+            <h2 className="text-4xl sm:text-5xl md:text-7xl font-black text-slate-900 dark:text-white tracking-tighter leading-tight transition-colors duration-300">Your Reflections</h2>
             <span className="px-3 py-1 bg-rose-50 dark:bg-rose-100/30 text-rose-600 dark:text-rose-600 text-[10px] font-black tracking-[0.2em] rounded-full border border-rose-100 dark:border-rose-100 uppercase shadow-sm">BETA</span>
           </div>
-          <p className="text-lg md:text-2xl text-slate-500 dark:text-slate-700 font-bold italic leading-relaxed transition-colors duration-300">Release the workday. Your history is a record of resilience.</p>
+          <p className="text-lg md:text-2xl text-slate-500 dark:text-slate-300 font-bold italic leading-relaxed transition-colors duration-300">Release the workday. Your history is a record of resilience.</p>
         </div>
       </div>
 
@@ -180,7 +180,7 @@ const Journal: React.FC<Props> = React.memo(({ entries, setEntries, setView, use
         <div className="relative">
           <Quote className="absolute -top-6 -left-6 md:-top-10 md:-left-10 text-teal-600/10 dark:text-teal-600/20 w-24 h-24 md:w-[180px] md:h-[180px]" />
           <textarea 
-            className="w-full h-48 md:h-72 p-6 md:p-12 rounded-[2rem] md:rounded-[3.5rem] bg-white/50 dark:bg-slate-100/50 text-xl md:text-4xl font-medium italic text-slate-900 dark:text-slate-900 outline-none ring-2 ring-transparent focus:ring-teal-500/10 dark:focus:ring-teal-500/10 placeholder:text-slate-300 dark:placeholder:text-slate-400 resize-none transition-all leading-relaxed shadow-inner" 
+            className="w-full h-48 md:h-72 p-6 md:p-12 rounded-[2rem] md:rounded-[3.5rem] bg-white/50 dark:bg-slate-100/50 text-xl md:text-4xl font-medium italic text-slate-900 dark:text-white outline-none ring-2 ring-transparent focus:ring-teal-500/10 dark:focus:ring-teal-500/10 placeholder:text-slate-300 dark:placeholder:text-slate-400 resize-none transition-all leading-relaxed shadow-inner" 
             placeholder="Today, I am feeling..." 
             value={textEntry} 
             onChange={(e) => setTextEntry(e.target.value)}
@@ -221,10 +221,10 @@ const Journal: React.FC<Props> = React.memo(({ entries, setEntries, setView, use
       <div className="space-y-10 px-2 md:px-4">
         <div className="flex flex-col md:flex-row md:items-end justify-between border-b-2 border-slate-100 dark:border-slate-200 pb-6 md:pb-10 gap-6">
           <div className="space-y-2">
-             <h3 className="text-2xl md:text-5xl font-black text-slate-900 dark:text-slate-900 tracking-tighter flex items-center gap-4"><Calendar className="text-teal-600 dark:text-teal-700 md:w-10 md:h-10" /> Your History</h3>
+             <h3 className="text-2xl md:text-5xl font-black text-slate-900 dark:text-white tracking-tighter flex items-center gap-4"><Calendar className="text-teal-600 dark:text-teal-700 md:w-10 md:h-10" /> Your History</h3>
              <div className="flex items-center gap-3">
                <span className="px-3 py-1 bg-teal-50 dark:bg-teal-100/30 text-teal-700 dark:text-teal-700 text-[10px] font-black tracking-widest rounded-full border border-teal-100 dark:border-teal-100 uppercase">{entries.length} Sessions Logged</span>
-               <p className="text-slate-400 dark:text-slate-700 font-bold text-xs">All reflections are encrypted and saved locally.</p>
+               <p className="text-slate-400 dark:text-slate-300 font-bold text-xs">All reflections are encrypted and saved locally.</p>
              </div>
           </div>
           <div className="flex items-center gap-3">
@@ -281,18 +281,18 @@ const Journal: React.FC<Props> = React.memo(({ entries, setEntries, setView, use
                   </button>
                 </div>
                 <div className="flex justify-between items-center mb-4">
-                  <span className="px-4 py-1.5 bg-slate-50 dark:bg-slate-100 text-[10px] md:text-xs font-black text-slate-500 dark:text-slate-600 rounded-full uppercase tracking-[0.25em] border border-slate-100 dark:border-slate-200">{entry.date}</span>
+                  <span className="px-4 py-1.5 bg-slate-50 dark:bg-slate-100 text-[10px] md:text-xs font-black text-slate-500 dark:text-slate-300 rounded-full uppercase tracking-[0.25em] border border-slate-100 dark:border-slate-200">{entry.date}</span>
                   <div className={`flex items-center gap-2 px-4 py-1.5 rounded-full text-[10px] md:text-xs font-black uppercase tracking-widest border ${entry.type === 'live' ? 'bg-teal-50 dark:bg-teal-50 text-teal-700 dark:text-teal-700 border-teal-100 dark:border-teal-100' : entry.type === 'voice' ? 'bg-blue-50 dark:bg-blue-50 text-blue-700 dark:text-blue-700 border-blue-100 dark:border-blue-100' : 'bg-slate-50 dark:bg-slate-100 text-slate-600 dark:text-slate-600 border-slate-100 dark:border-slate-200'}`}>
                     {entry.type === 'live' ? <Sparkles size={12}/> : entry.type === 'voice' ? <Mic size={12}/> : <Send size={12}/>} {entry.type} Mode
                   </div>
                 </div>
-                <p className="text-xl sm:text-2xl md:text-3xl font-medium text-slate-900 dark:text-slate-900 italic leading-[1.3] whitespace-pre-wrap line-clamp-4 tracking-tight">"{entry.transcript}"</p>
+                <p className="text-xl sm:text-2xl md:text-3xl font-medium text-slate-900 dark:text-white italic leading-[1.3] whitespace-pre-wrap line-clamp-4 tracking-tight">"{entry.transcript}"</p>
                 {entry.aiResponse && (
                   <div className="pt-6 md:pt-10 border-t border-slate-100 dark:border-slate-200 space-y-3">
                     <div className="flex items-center gap-2 text-teal-700 dark:text-teal-700 font-black label-caps">
                       <Sparkles size={14} /> Sanctuary Reflection
                     </div>
-                    <p className="text-base md:text-2xl text-slate-600 dark:text-slate-700 font-bold italic leading-relaxed text-balance">"{entry.aiResponse}"</p>
+                    <p className="text-base md:text-2xl text-slate-600 dark:text-slate-300 font-bold italic leading-relaxed text-balance">"{entry.aiResponse}"</p>
                   </div>
                 )}
               </div>

@@ -78,6 +78,7 @@ const App: React.FC = () => {
 
   const refreshAIInsights = useCallback(async () => {
     try {
+      // FIX: Corrected typo from `lastAnalyyzedJournalCount` to `lastAnalyzedJournalCount`
       lastAnalyzedJournalCount.current = journalEntries.length;
       const snippets = journalEntries.slice(0, 5).map(e => e.transcript || "");
       const result = await analyzeSleepAndHealth(sleepData, snippets, user);
@@ -93,6 +94,7 @@ const App: React.FC = () => {
     if (refreshTimerRef.current) window.clearTimeout(refreshTimerRef.current);
     
     // Only refresh insights if journal entries count has actually changed
+    // FIX: Corrected typo from `lastAnalyyzedJournalCount` to `lastAnalyzedJournalCount`
     if (journalEntries.length !== lastAnalyzedJournalCount.current) {
       refreshTimerRef.current = window.setTimeout(() => {
         if (journalEntries.length > 0 || user) refreshAIInsights();
@@ -168,7 +170,7 @@ const App: React.FC = () => {
                    <Sparkles size={48} className="text-teal-700 md:w-16 md:h-16" />
                 </div>
                 <h1 className="text-5xl md:text-7xl font-black text-slate-900 dark:text-slate-900 tracking-tighter font-display leading-tight transition-colors duration-1000">Welcome to <br/>Sanctuary</h1>
-                <p className="text-xl md:text-2xl text-slate-600 dark:text-slate-700 font-medium italic transition-colors duration-1000">Your mindful space is ready.</p>
+                <p className="text-xl md:text-2xl text-slate-600 dark:text-slate-300 font-medium italic transition-colors duration-1000">Your mindful space is ready.</p>
              </div>
              <button 
                 onClick={handleStartExperience}
