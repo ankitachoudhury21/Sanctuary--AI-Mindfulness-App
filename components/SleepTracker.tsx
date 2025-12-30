@@ -41,21 +41,21 @@ const SleepTracker: React.FC<Props> = React.memo(({ data, aiInsights, setView })
             <ChevronLeft size={16} /> Back to Sanctuary
           </button>
           <div className="flex flex-col md:flex-row md:items-center gap-4">
-            <h2 className="text-4xl md:text-7xl font-black text-slate-900 dark:text-slate-900 tracking-tighter leading-none transition-colors duration-300">Rest & Recovery</h2>
+            <h2 className="text-4xl md:text-7xl font-black text-slate-900 dark:text-white tracking-tighter leading-none transition-colors duration-300">Rest & Recovery</h2>
             <span className="label-caps px-3 py-1 bg-blue-100 dark:bg-blue-100/30 text-blue-600 dark:text-blue-700 rounded-full border border-blue-200 dark:border-blue-200 w-fit">BETA</span>
           </div>
-          <p className="text-slate-500 dark:text-slate-700 font-semibold text-lg md:text-2xl transition-colors duration-300">Clinical-grade insights for corporate performance.</p>
+          <p className="text-slate-500 dark:text-slate-300 font-semibold text-lg md:text-2xl transition-colors duration-300">Clinical-grade insights for corporate performance.</p>
         </div>
 
-        <div className="flex items-center gap-4 bg-white/60 dark:bg-white/60 backdrop-blur-xl p-3 rounded-[2.5rem] border border-white dark:border-white shadow-sm ring-1 ring-blue-500/5 transition-colors duration-300">
+        <div className="flex items-center gap-4 bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl p-3 rounded-[2.5rem] border border-white dark:border-slate-700 shadow-sm ring-1 ring-blue-500/5 transition-colors duration-300">
            <div className="px-6 py-2 bg-blue-600 text-white rounded-full label-caps">Live Analysis</div>
-           <p className="text-slate-900 dark:text-slate-900 font-bold text-sm pr-4">Updated 2m ago</p>
+           <p className="text-slate-900 dark:text-white font-bold text-sm pr-4">Updated 2m ago</p>
         </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2 glass-card p-10 md:p-14 rounded-[3rem] md:rounded-[4.5rem] relative overflow-hidden flex flex-col justify-between shadow-2xl border-none ring-1 ring-blue-500/10 dark:ring-blue-500/10 min-h-[450px] hover:shadow-blue-500/20 transition-all duration-300 hover:scale-[1.005]">
-           <div className="absolute top-[-50px] right-[-50px] opacity-[0.03] text-blue-900 dark:text-blue-900/10">
+           <div className="absolute top-[-50px] right-[-50px] opacity-[0.03] text-blue-900 dark:text-blue-400">
              <Moon size={300} />
            </div>
            <div className="space-y-10 relative z-10">
@@ -64,34 +64,34 @@ const SleepTracker: React.FC<Props> = React.memo(({ data, aiInsights, setView })
                   <Star size={28} fill="currentColor" />
                 </div>
                 <div>
-                  <h3 className="text-2xl md:text-4xl font-black text-slate-900 dark:text-slate-900 tracking-tight transition-colors duration-300">Sleep Quality Index</h3>
-                  <p className="text-slate-500 dark:text-slate-700 font-semibold transition-colors duration-300">Comprehensive nightly analysis</p>
+                  <h3 className="text-2xl md:text-4xl font-black text-slate-900 dark:text-white tracking-tight transition-colors duration-300">Sleep Quality Index</h3>
+                  <p className="text-slate-500 dark:text-slate-300 font-semibold transition-colors duration-300">Comprehensive nightly analysis</p>
                 </div>
               </div>
               <div className="flex items-baseline gap-4">
-                <span className="text-[120px] md:text-[180px] font-black text-slate-900 dark:text-slate-900 tracking-tighter leading-none drop-shadow-2xl display-number transition-colors duration-300">
+                <span className="text-[120px] md:text-[180px] font-black text-slate-900 dark:text-white tracking-tighter leading-none drop-shadow-2xl display-number transition-colors duration-300">
                   {aiInsights?.score || '78'}
                 </span>
                 <div className="space-y-1">
-                   <div className="px-4 py-1.5 bg-emerald-100 dark:bg-emerald-100/30 text-emerald-700 dark:text-emerald-700 rounded-full label-caps inline-block">
+                   <div className="px-4 py-1.5 bg-emerald-100 dark:bg-emerald-100/30 text-emerald-700 dark:text-emerald-400 rounded-full label-caps inline-block">
                      +{Math.floor(Math.random() * 5) + 2}% Up
                    </div>
-                   <p className="label-caps text-slate-400 dark:text-slate-700 pl-1">Target 85+</p>
+                   <p className="label-caps text-slate-400 dark:text-slate-300 pl-1">Target 85+</p>
                 </div>
               </div>
            </div>
            <div className="grid grid-cols-3 gap-6 relative z-10">
               <div className="space-y-1">
-                <p className="label-caps text-slate-400 dark:text-slate-700">State</p>
-                <p className="text-lg md:text-2xl font-black text-blue-600 dark:text-blue-700 transition-colors duration-300">{aiInsights?.label || 'Optimal'}</p>
+                <p className="label-caps text-slate-400 dark:text-slate-300">State</p>
+                <p className="text-lg md:text-2xl font-black text-blue-600 dark:text-blue-400 transition-colors duration-300">{aiInsights?.label || 'Optimal'}</p>
               </div>
               <div className="space-y-1">
-                <p className="label-caps text-slate-400 dark:text-slate-700">Avg Duration</p>
-                <p className="text-lg md:text-2xl font-black text-slate-900 dark:text-slate-900 display-number transition-colors duration-300">{avgHours}h</p>
+                <p className="label-caps text-slate-400 dark:text-slate-300">Avg Duration</p>
+                <p className="text-lg md:text-2xl font-black text-slate-900 dark:text-white display-number transition-colors duration-300">{avgHours}h</p>
               </div>
               <div className="space-y-1">
-                <p className="label-caps text-slate-400 dark:text-slate-700">Deep Sleep</p>
-                <p className="text-lg md:text-2xl font-black text-slate-900 dark:text-slate-900 display-number">32%</p>
+                <p className="label-caps text-slate-400 dark:text-slate-300">Deep Sleep</p>
+                <p className="text-lg md:text-2xl font-black text-slate-900 dark:text-white display-number">32%</p>
               </div>
            </div>
         </div>
@@ -114,23 +114,22 @@ const SleepTracker: React.FC<Props> = React.memo(({ data, aiInsights, setView })
         </div>
       </div>
 
-      <div className="glass-card p-10 md:p-14 rounded-[3rem] md:rounded-[5rem] shadow-2xl border-none ring-1 ring-slate-200/50 dark:ring-slate-200/50 hover:shadow-blue-500/20 transition-all duration-300 hover:scale-[1.005]">
+      <div className="glass-card p-10 md:p-14 rounded-[3rem] md:rounded-[5rem] shadow-2xl border-none ring-1 ring-slate-200/50 dark:ring-slate-700/50 hover:shadow-blue-500/20 transition-all duration-300 hover:scale-[1.005]">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-12">
           <div className="space-y-2">
-            <h3 className="text-3xl md:text-5xl font-black text-slate-900 dark:text-slate-900 tracking-tight transition-colors duration-300">Recovery Trends</h3>
-            <p className="text-slate-500 dark:text-slate-700 font-semibold transition-colors duration-300">Historical data across past 7 sessions</p>
+            <h3 className="text-3xl md:text-5xl font-black text-slate-900 dark:text-white tracking-tight transition-colors duration-300">Recovery Trends</h3>
+            <p className="text-slate-500 dark:text-slate-300 font-semibold transition-colors duration-300">Historical data across past 7 sessions</p>
           </div>
-          <div className="flex p-1 bg-slate-100/80 dark:bg-white/80 backdrop-blur-3xl rounded-xl gap-0.5 border border-white dark:border-white shadow-inner">
-             <button className="px-6 py-3 bg-white dark:bg-slate-100 text-slate-900 dark:text-slate-900 rounded-2xl label-caps border border-slate-200 dark:border-slate-200 hover:bg-slate-100 dark:hover:bg-slate-200"
+          <div className="flex p-1 bg-slate-100/80 dark:bg-slate-800/80 backdrop-blur-3xl rounded-xl gap-0.5 border border-white dark:border-slate-700 shadow-inner">
+             <button className="px-6 py-3 bg-white dark:bg-slate-700 text-slate-900 dark:text-white rounded-2xl label-caps border border-slate-200 dark:border-slate-600 hover:bg-slate-100 dark:hover:bg-slate-600"
              aria-label="View weekly recovery trends"
              >Weekly</button>
-             <button className="px-6 py-3 text-slate-400 dark:text-slate-700 rounded-2xl label-caps hover:text-slate-900 dark:hover:text-slate-900 hover:bg-slate-50 dark:hover:bg-slate-100"
+             <button className="px-6 py-3 text-slate-400 dark:text-slate-400 rounded-2xl label-caps hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-700"
              aria-label="View monthly recovery trends"
              >Monthly</button>
           </div>
         </div>
-        {/* FIX: Added w-full min-w-0 min-h-0 to the div wrapping ResponsiveContainer for explicit width/height */}
-        <div className="w-full h-[400px] -mx-4 min-w-0 min-h-0">
+        <div className="w-full h-[400px] -mx-4 min-w-0 min-h-0 relative">
           <ResponsiveContainer width="100%" height="100%">
             <ComposedChart data={data}>
               <defs>
@@ -139,7 +138,7 @@ const SleepTracker: React.FC<Props> = React.memo(({ data, aiInsights, setView })
                   <stop offset="100%" stopColor="#3b82f6" stopOpacity={0.1}/>
                 </linearGradient>
               </defs>
-              <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{ fill: '#94a3b_8', fontSize: 12, fontWeight: 700, fontFamily: 'Outfit' }} dy={20} />
+              <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontSize: 12, fontWeight: 700, fontFamily: 'Outfit' }} dy={20} />
               <YAxis hide />
               <Tooltip 
                 cursor={{ fill: 'rgba(59, 130, 246, 0.05)', radius: 24 }} 
@@ -158,36 +157,36 @@ const SleepTracker: React.FC<Props> = React.memo(({ data, aiInsights, setView })
 
       <div className="space-y-8">
         <div className="px-2">
-          <h3 className="text-3xl md:text-5xl font-black text-slate-900 dark:text-slate-900 tracking-tight flex items-center gap-4 transition-colors duration-300">
-            <ShieldAlert className="text-blue-600 dark:text-blue-700 w-10 h-10 md:w-14 md:h-14" /> Wellness Forecasts
+          <h3 className="text-3xl md:text-5xl font-black text-slate-900 dark:text-white tracking-tight flex items-center gap-4 transition-colors duration-300">
+            <ShieldAlert className="text-blue-600 dark:text-blue-400 w-10 h-10 md:w-14 md:h-14" /> Wellness Forecasts
           </h3>
-          <p className="text-slate-500 dark:text-slate-700 font-semibold text-lg md:text-2xl transition-colors duration-300">Predictive health alerts based on biometric patterns.</p>
+          <p className="text-slate-500 dark:text-slate-300 font-semibold text-lg md:text-2xl transition-colors duration-300">Predictive health alerts based on biometric patterns.</p>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {(aiInsights?.predictions || ["Cognitive Fatigue Risk", "Elevated Cortisol Levels", "Social Withdrawal Signal"]).map((pred: string, i: number) => (
-            <div key={i} className="glass-card p-10 rounded-[3rem] space-y-8 hover:shadow-2xl hover:-translate-y-2 transition-all hover:shadow-blue-500/20 border-none ring-1 ring-slate-100 dark:ring-slate-200">
-               <div className="w-16 h-16 bg-blue-50 dark:bg-blue-100/30 text-blue-600 dark:text-blue-700 rounded-3xl flex items-center justify-center">
+            <div key={i} className="glass-card p-10 rounded-[3rem] space-y-8 hover:shadow-2xl hover:-translate-y-2 transition-all hover:shadow-blue-500/20 border-none ring-1 ring-slate-100 dark:ring-slate-700">
+               <div className="w-16 h-16 bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-3xl flex items-center justify-center">
                  <Sparkles size={32} />
                </div>
                <div className="space-y-3">
-                 <h4 className="text-2xl font-black text-slate-900 dark:text-slate-900 tracking-tight leading-snug">{pred}</h4>
-                 <p className="text-slate-500 dark:text-slate-700 font-semibold">Detected in late REM cycles during Tuesday - Thursday interval.</p>
+                 <h4 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight leading-snug">{pred}</h4>
+                 <p className="text-slate-500 dark:text-slate-300 font-semibold">Detected in late REM cycles during Tuesday - Thursday interval.</p>
                </div>
-               <button className="flex items-center gap-2 label-caps text-blue-700 dark:text-blue-700 hover:underline"
+               <button className="flex items-center gap-2 label-caps text-blue-700 dark:text-blue-400 hover:underline"
                aria-label={`Read protocol for ${pred}`}
                >
                  Read Protocol <TrendingUp size={16} />
                </button>
             </div>
           ))}
-          <button className="glass-card p-10 rounded-[3rem] border-2 border-dashed border-blue-200 dark:border-blue-200 flex flex-col items-center justify-center text-center space-y-4 hover:bg-blue-50 dark:hover:bg-blue-100 transition-all group outline-none"
+          <button className="glass-card p-10 rounded-[3rem] border-2 border-dashed border-blue-200 dark:border-blue-700 flex flex-col items-center justify-center text-center space-y-4 hover:bg-blue-50 dark:hover:bg-slate-800 transition-all group outline-none"
           aria-label="Unlock full bio-report by connecting your wearable"
           >
-            <div className="w-14 h-14 bg-white dark:bg-white rounded-full flex items-center justify-center shadow-md group-hover:scale-110 transition-transform">
-              <Info className="text-blue-600 dark:text-blue-700" />
+            <div className="w-14 h-14 bg-white dark:bg-slate-700 rounded-full flex items-center justify-center shadow-md group-hover:scale-110 transition-transform">
+              <Info className="text-blue-600 dark:text-blue-400" />
             </div>
-            <span className="text-xl font-black text-blue-900 dark:text-blue-900 font-display">Unlock Full Bio-Report</span>
-            <p className="text-sm text-slate-500 dark:text-slate-700 font-semibold">Connect your wearable for heart-rate variability tracking.</p>
+            <span className="text-xl font-black text-blue-900 dark:text-white font-display">Unlock Full Bio-Report</span>
+            <p className="text-sm text-slate-500 dark:text-slate-400 font-semibold">Connect your wearable for heart-rate variability tracking.</p>
           </button>
         </div>
       </div>

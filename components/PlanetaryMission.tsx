@@ -171,9 +171,9 @@ type SynthesizerFunc = (ctx: AudioContext, dest: AudioNode) => any[];
 const PLANET_SYNTHESIZERS: Record<string, SynthesizerFunc> = {
   SUN: (ctx, dest) => {
     const safeFreq = (value: number) => safeValue(value, 0.001, ctx.sampleRate / 2 - 1, 220);
-    const safeGain = (value: number) => safeValue(value, 0.0001, 1, 0.05);
+    const safeGainValue = (value: number) => safeValue(value, 0.0001, 1, 0.05);
     const mainGain = ctx.createGain();
-    mainGain.gain.setValueAtTime(safeGain(0.25), ctx.currentTime);
+    mainGain.gain.setValueAtTime(safeGainValue(0.25), ctx.currentTime);
     mainGain.connect(dest);
     const nodes: any[] = [mainGain];
     const coreOsc = ctx.createOscillator();
@@ -183,7 +183,7 @@ const PLANET_SYNTHESIZERS: Record<string, SynthesizerFunc> = {
     coreLowpass.type = 'lowpass';
     coreLowpass.frequency.setValueAtTime(safeFreq(200), ctx.currentTime);
     const coreG = ctx.createGain();
-    coreG.gain.setValueAtTime(safeGain(0.4), ctx.currentTime);
+    coreG.gain.setValueAtTime(safeGainValue(0.4), ctx.currentTime);
     coreOsc.connect(coreLowpass).connect(coreG).connect(mainGain);
     coreOsc.start();
     nodes.push(coreOsc, coreLowpass, coreG);
@@ -191,11 +191,11 @@ const PLANET_SYNTHESIZERS: Record<string, SynthesizerFunc> = {
     harmOsc.type = 'triangle';
     harmOsc.frequency.setValueAtTime(safeFreq(126.22 * 1.5), ctx.currentTime);
     const harmG = ctx.createGain();
-    harmG.gain.setValueAtTime(safeGain(0.15), ctx.currentTime);
+    harmG.gain.setValueAtTime(safeGainValue(0.15), ctx.currentTime);
     const harmLfo = ctx.createOscillator();
     harmLfo.frequency.setValueAtTime(0.1, ctx.currentTime);
     const harmLfoG = ctx.createGain();
-    harmLfoG.gain.setValueAtTime(0.05, ctx.currentTime);
+    harmLfoG.gain.setValueAtTime(safeGainValue(0.05), ctx.currentTime);
     harmLfo.connect(harmLfoG).connect(harmG.gain);
     harmOsc.connect(harmG).connect(mainGain);
     harmOsc.start(); harmLfo.start();
@@ -216,10 +216,10 @@ const PLANET_SYNTHESIZERS: Record<string, SynthesizerFunc> = {
     const breathLfo = ctx.createOscillator();
     breathLfo.frequency.setValueAtTime(safeFreq(0.05), ctx.currentTime);
     const breathLfoG = ctx.createGain();
-    breathLfoG.gain.setValueAtTime(safeGain(100), ctx.currentTime);
+    breathLfoG.gain.setValueAtTime(safeGainValue(100), ctx.currentTime);
     breathLfo.connect(breathLfoG).connect(breathFilter.frequency);
     const breathGain = ctx.createGain();
-    breathGain.gain.setValueAtTime(safeGain(0.1), ctx.currentTime);
+    breathGain.gain.setValueAtTime(safeGainValue(0.1), ctx.currentTime);
     noiseSrc.connect(breathFilter).connect(breathGain).connect(mainGain);
     noiseSrc.start(); breathLfo.start();
     nodes.push(noiseSrc, breathFilter, breathLfo, breathLfoG, breathGain);
@@ -230,7 +230,7 @@ const PLANET_SYNTHESIZERS: Record<string, SynthesizerFunc> = {
       fOsc.frequency.setValueAtTime(safeFreq(504.88 + Math.random() * 100), now);
       const fEnv = ctx.createGain();
       fEnv.gain.setValueAtTime(0, now);
-      fEnv.gain.linearRampToValueAtTime(safeGain(0.04), now + 3);
+      fEnv.gain.linearRampToValueAtTime(safeGainValue(0.04), now + 3);
       fEnv.gain.exponentialRampToValueAtTime(0.0001, now + 10);
       fOsc.connect(fEnv).connect(mainGain);
       fOsc.start(now); fOsc.stop(now + 11);
@@ -240,16 +240,16 @@ const PLANET_SYNTHESIZERS: Record<string, SynthesizerFunc> = {
   },
   MERCURY: (ctx, dest) => {
     const safeFreq = (value: number) => safeValue(value, 0.001, ctx.sampleRate / 2 - 1, 220); 
-    const safeGain = (value: number) => safeValue(value, 0.0001, 1, 0.05); 
+    const safeGainValue = (value: number) => safeValue(value, 0.0001, 1, 0.05); 
     const mainGain = ctx.createGain();
-    mainGain.gain.setValueAtTime(safeGain(0.18), ctx.currentTime);
+    mainGain.gain.setValueAtTime(safeGainValue(0.18), ctx.currentTime);
     mainGain.connect(dest);
     const nodes: any[] = [mainGain];
     const core = ctx.createOscillator();
     core.type = 'sine';
     core.frequency.setValueAtTime(safeFreq(48.99), ctx.currentTime); 
     const coreG = ctx.createGain();
-    coreG.gain.setValueAtTime(safeGain(0.35), ctx.currentTime);
+    coreG.gain.setValueAtTime(safeGainValue(0.35), ctx.currentTime);
     core.connect(coreG).connect(mainGain);
     core.start();
     nodes.push(core, coreG);
@@ -261,9 +261,9 @@ const PLANET_SYNTHESIZERS: Record<string, SynthesizerFunc> = {
       const hLfo = ctx.createOscillator();
       hLfo.frequency.setValueAtTime(safeFreq(0.1 + (i * 0.05)), ctx.currentTime);
       const hLfoG = ctx.createGain();
-      hLfoG.gain.setValueAtTime(safeGain(0.05), ctx.currentTime);
+      hLfoG.gain.setValueAtTime(safeGainValue(0.05), ctx.currentTime);
       hLfo.connect(hLfoG).connect(hGain.gain);
-      hGain.gain.setValueAtTime(safeGain(0.1 / (i + 1)), ctx.currentTime);
+      hGain.gain.setValueAtTime(safeGainValue(0.1 / (i + 1)), ctx.currentTime);
       harmonic.connect(hGain).connect(mainGain);
       harmonic.start(); hLfo.start();
       nodes.push(harmonic, hGain, hLfo, hLfoG);
@@ -277,7 +277,7 @@ const PLANET_SYNTHESIZERS: Record<string, SynthesizerFunc> = {
     hpFilter.type = 'highpass';
     hpFilter.frequency.setValueAtTime(safeFreq(6000), ctx.currentTime);
     const nGain = ctx.createGain();
-    nGain.gain.setValueAtTime(safeGain(0.04), ctx.currentTime);
+    nGain.gain.setValueAtTime(safeGainValue(0.04), ctx.currentTime);
     noiseSrc.connect(hpFilter).connect(nGain).connect(mainGain);
     noiseSrc.start();
     nodes.push(noiseSrc, hpFilter, nGain);
@@ -285,7 +285,7 @@ const PLANET_SYNTHESIZERS: Record<string, SynthesizerFunc> = {
   },
   VENUS: (ctx, dest) => {
     const safeFreq = (value: number) => safeValue(value, 0.001, ctx.sampleRate / 2 - 1, 220); 
-    const safeGain = (value: number) => safeValue(value, 0.0001, 1, 0.05); 
+    const safeGainValue = (value: number) => safeValue(value, 0.0001, 1, 0.05); 
     const buffer = ctx.createBuffer(1, ctx.sampleRate * 2, ctx.sampleRate);
     const data = buffer.getChannelData(0);
     for (let i = 0; i < buffer.length; i++) data[i] = Math.random() * 2 - 1;
@@ -295,16 +295,16 @@ const PLANET_SYNTHESIZERS: Record<string, SynthesizerFunc> = {
     hp.type = 'highpass';
     hp.frequency.setValueAtTime(safeFreq(5000), ctx.currentTime);
     const g = ctx.createGain();
-    g.gain.setValueAtTime(safeGain(0.04), ctx.currentTime);
+    g.gain.setValueAtTime(safeGainValue(0.04), ctx.currentTime);
     src.connect(hp).connect(g).connect(dest);
     src.start();
     return [src, hp, g];
   },
   EARTH: (ctx, dest) => {
     const safeFreq = (value: number) => safeValue(value, 0.001, ctx.sampleRate / 2 - 1, 220); 
-    const safeGain = (value: number) => safeValue(value, 0.0001, 1, 0.05); 
+    const safeGainValue = (value: number) => safeValue(value, 0.0001, 1, 0.05); 
     const masterGain = ctx.createGain();
-    masterGain.gain.setValueAtTime(safeGain(0.18), ctx.currentTime);
+    masterGain.gain.setValueAtTime(safeGainValue(0.18), ctx.currentTime);
     masterGain.connect(dest);
     const nodes: any[] = [masterGain];
     const heart = ctx.createOscillator();
@@ -314,9 +314,9 @@ const PLANET_SYNTHESIZERS: Record<string, SynthesizerFunc> = {
     const heartLfo = ctx.createOscillator();
     heartLfo.frequency.setValueAtTime(safeFreq(0.66), ctx.currentTime);
     const heartLfoG = ctx.createGain();
-    heartLfoG.gain.setValueAtTime(safeGain(0.1), ctx.currentTime);
+    heartLfoG.gain.setValueAtTime(safeGainValue(0.1), ctx.currentTime);
     heartLfo.connect(heartLfoG).connect(heartG.gain);
-    heartG.gain.setValueAtTime(safeGain(0.2), ctx.currentTime);
+    heartG.gain.setValueAtTime(safeGainValue(0.2), ctx.currentTime);
     heart.connect(heartG).connect(masterGain);
     heart.start(); heartLfo.start();
     nodes.push(heart, heartG, heartLfo, heartLfoG);
@@ -336,10 +336,10 @@ const PLANET_SYNTHESIZERS: Record<string, SynthesizerFunc> = {
     const windLfo = ctx.createOscillator();
     windLfo.frequency.setValueAtTime(safeFreq(0.05), ctx.currentTime);
     const windLfoG = ctx.createGain();
-    windLfoG.gain.setValueAtTime(safeGain(300), ctx.currentTime);
+    windLfoG.gain.setValueAtTime(safeGainValue(300), ctx.currentTime);
     windLfo.connect(windLfoG).connect(windFilter.frequency);
     const windG = ctx.createGain();
-    windG.gain.setValueAtTime(safeGain(0.08), ctx.currentTime);
+    windG.gain.setValueAtTime(safeGainValue(0.08), ctx.currentTime);
     noise.connect(windFilter).connect(windG).connect(masterGain);
     noise.start(); windLfo.start();
     nodes.push(noise, windFilter, windLfo, windLfoG, windG);
@@ -351,7 +351,7 @@ const PLANET_SYNTHESIZERS: Record<string, SynthesizerFunc> = {
         const sLfo = ctx.createOscillator();
         sLfo.frequency.setValueAtTime(safeFreq(0.1 + (i * 0.05)), ctx.currentTime);
         const sLfoG = ctx.createGain();
-        sLfoG.gain.setValueAtTime(safeGain(0.02), ctx.currentTime);
+        sLfoG.gain.setValueAtTime(safeGainValue(0.02), ctx.currentTime);
         sLfo.connect(sLfoG).connect(sG.gain);
         shimmer.connect(sG).connect(masterGain);
         shimmer.start(); sLfo.start();
@@ -361,18 +361,18 @@ const PLANET_SYNTHESIZERS: Record<string, SynthesizerFunc> = {
   },
   MOON: (ctx, dest) => {
     const safeFreq = (value: number) => safeValue(value, 0.001, ctx.sampleRate / 2 - 1, 220); 
-    const safeGain = (value: number) => safeValue(value, 0.0001, 1, 0.05); 
+    const safeGainValue = (value: number) => safeValue(value, 0.0001, 1, 0.05); 
     const osc = ctx.createOscillator();
     osc.frequency.setValueAtTime(safeFreq(220), ctx.currentTime);
     const g = ctx.createGain();
-    g.gain.setValueAtTime(safeGain(0.1), ctx.currentTime);
+    g.gain.setValueAtTime(safeGainValue(0.1), ctx.currentTime);
     osc.connect(g).connect(dest);
     osc.start();
     return [osc, g];
   },
   MARS: (ctx, dest) => {
     const safeFreq = (value: number) => safeValue(value, 0.001, ctx.sampleRate / 2 - 1, 220); 
-    const safeGain = (value: number) => safeValue(value, 0.0001, 1, 0.05); 
+    const safeGainValue = (value: number) => safeValue(value, 0.0001, 1, 0.05); 
     const buffer = ctx.createBuffer(1, ctx.sampleRate * 2, ctx.sampleRate);
     const data = buffer.getChannelData(0);
     for (let i = 0; i < buffer.length; i++) data[i] = Math.random() * 2 - 1;
@@ -382,17 +382,17 @@ const PLANET_SYNTHESIZERS: Record<string, SynthesizerFunc> = {
     filter.type = 'bandpass';
     filter.frequency.setValueAtTime(safeFreq(400), ctx.currentTime);
     const g = ctx.createGain();
-    g.gain.setValueAtTime(safeGain(0.1), ctx.currentTime);
+    g.gain.setValueAtTime(safeGainValue(0.1), ctx.currentTime);
     src.connect(filter).connect(g).connect(dest);
     src.start();
     return [src, filter, g];
   },
   JUPITER: (ctx, dest) => {
     const safeFreq = (value: number) => safeValue(value, 0.001, ctx.sampleRate / 2 - 1, 220); 
-    const safeGain = (value: number) => safeValue(value, 0.0001, 1, 0.05); 
-    const safeQ = (value: number) => safeValue(value, 0.0001, 1000, 0.0001);
+    const safeGainValue = (value: number) => safeValue(value, 0.0001, 1, 0.05); 
+    const safeQValue = (value: number) => safeValue(value, 0.0001, 1000, 0.0001);
     const mainGain = ctx.createGain();
-    mainGain.gain.setValueAtTime(safeGain(0.2), ctx.currentTime);
+    mainGain.gain.setValueAtTime(safeGainValue(0.2), ctx.currentTime);
     mainGain.connect(dest);
     const nodes: any[] = [mainGain];
     const sub = ctx.createOscillator();
@@ -402,7 +402,7 @@ const PLANET_SYNTHESIZERS: Record<string, SynthesizerFunc> = {
     subFilter.type = 'lowpass';
     subFilter.frequency.setValueAtTime(safeFreq(60), ctx.currentTime);
     const subGain = ctx.createGain();
-    subGain.gain.setValueAtTime(safeGain(0.4), ctx.currentTime);
+    subGain.gain.setValueAtTime(safeGainValue(0.4), ctx.currentTime);
     sub.connect(subFilter).connect(subGain).connect(mainGain);
     sub.start();
     nodes.push(sub, subFilter, subGain);
@@ -414,19 +414,19 @@ const PLANET_SYNTHESIZERS: Record<string, SynthesizerFunc> = {
     const stormFilter = ctx.createBiquadFilter();
     stormFilter.type = 'lowpass';
     stormFilter.frequency.setValueAtTime(safeFreq(150), ctx.currentTime);
-    stormFilter.Q.setValueAtTime(safeQ(10), ctx.currentTime);
+    stormFilter.Q.setValueAtTime(safeQValue(10), ctx.currentTime);
     const stormLfo = ctx.createOscillator();
     stormLfo.frequency.setValueAtTime(safeFreq(0.05), ctx.currentTime);
     const stormLfoG = ctx.createGain();
-    stormLfoG.gain.setValueAtTime(safeGain(100), ctx.currentTime);
+    stormLfoG.gain.setValueAtTime(safeGainValue(100), ctx.currentTime);
     stormLfo.connect(stormLfoG).connect(stormFilter.frequency);
     const stormG = ctx.createGain();
-    stormG.gain.setValueAtTime(safeGain(0.15), ctx.currentTime);
+    stormG.gain.setValueAtTime(safeGainValue(0.15), ctx.currentTime);
     noise.connect(stormFilter).connect(stormG).connect(mainGain);
     noise.start(); stormLfo.start();
     nodes.push(noise, stormFilter, stormLfo, stormLfoG, stormG);
     const staticG = ctx.createGain();
-    staticG.gain.setValueAtTime(safeGain(0.02), ctx.currentTime);
+    staticG.gain.setValueAtTime(safeGainValue(0.02), ctx.currentTime);
     const staticFilter = ctx.createBiquadFilter();
     staticFilter.type = 'highpass';
     staticFilter.frequency.setValueAtTime(safeFreq(8000), ctx.currentTime);
@@ -440,9 +440,9 @@ const PLANET_SYNTHESIZERS: Record<string, SynthesizerFunc> = {
   },
   SATURN: (ctx, dest) => {
     const safeFreq = (value: number) => safeValue(value, 0.001, ctx.sampleRate / 2 - 1, 220); 
-    const safeGain = (value: number) => safeValue(value, 0.0001, 1, 0.05); 
+    const safeGainValue = (value: number) => safeValue(value, 0.0001, 1, 0.05); 
     const g = ctx.createGain();
-    g.gain.setValueAtTime(safeGain(0.15), ctx.currentTime);
+    g.gain.setValueAtTime(safeGainValue(0.15), ctx.currentTime);
     g.connect(dest);
     const osc = ctx.createOscillator();
     osc.frequency.setValueAtTime(safeFreq(220), ctx.currentTime);
@@ -452,9 +452,9 @@ const PLANET_SYNTHESIZERS: Record<string, SynthesizerFunc> = {
   },
   URANUS: (ctx, dest) => {
     const safeFreq = (value: number) => safeValue(value, 0.001, ctx.sampleRate / 2 - 1, 220); 
-    const safeGain = (value: number) => safeValue(value, 0.0001, 1, 0.05); 
+    const safeGainValue = (value: number) => safeValue(value, 0.0001, 1, 0.05); 
     const mainGain = ctx.createGain();
-    mainGain.gain.setValueAtTime(safeGain(0.15), ctx.currentTime);
+    mainGain.gain.setValueAtTime(safeGainValue(0.15), ctx.currentTime);
     mainGain.connect(dest);
     const nodes: any[] = [mainGain];
     const carrier = ctx.createOscillator();
@@ -464,10 +464,10 @@ const PLANET_SYNTHESIZERS: Record<string, SynthesizerFunc> = {
     modulator.type = 'sine';
     modulator.frequency.setValueAtTime(safeFreq(2.5), ctx.currentTime);
     const modGain = ctx.createGain();
-    modGain.gain.setValueAtTime(safeGain(30), ctx.currentTime);
+    modGain.gain.setValueAtTime(safeGainValue(30), ctx.currentTime);
     modulator.connect(modGain).connect(carrier.frequency);
     const cGain = ctx.createGain();
-    cGain.gain.setValueAtTime(safeGain(0.2), ctx.currentTime);
+    cGain.gain.setValueAtTime(safeGainValue(0.2), ctx.currentTime);
     carrier.connect(cGain).connect(mainGain);
     carrier.start(); modulator.start();
     nodes.push(carrier, modulator, modGain, cGain);
@@ -483,7 +483,7 @@ const PLANET_SYNTHESIZERS: Record<string, SynthesizerFunc> = {
     const lfo = ctx.createOscillator();
     lfo.frequency.setValueAtTime(safeFreq(0.1), ctx.currentTime);
     lfo.connect(nGain.gain);
-    nGain.gain.setValueAtTime(safeGain(0.05), ctx.currentTime);
+    nGain.gain.setValueAtTime(safeGainValue(0.05), ctx.currentTime);
     noiseSrc.connect(filter).connect(nGain).connect(mainGain);
     noiseSrc.start(); lfo.start();
     nodes.push(noiseSrc, filter, nGain, lfo);
@@ -491,10 +491,10 @@ const PLANET_SYNTHESIZERS: Record<string, SynthesizerFunc> = {
   },
   NEPTUNE: (ctx, dest) => {
     const safeFreq = (value: number) => safeValue(value, 0.001, ctx.sampleRate / 2 - 1, 220); 
-    const safeGain = (value: number) => safeValue(value, 0.0001, 1, 0.05); 
-    const safeQ = (value: number) => safeValue(value, 0.0001, 1000, 0.0001);
+    const safeGainValue = (value: number) => safeValue(value, 0.0001, 1, 0.05); 
+    const safeQValue = (value: number) => safeValue(value, 0.0001, 1000, 0.0001);
     const mainGain = ctx.createGain();
-    mainGain.gain.setValueAtTime(safeGain(0.18), ctx.currentTime);
+    mainGain.gain.setValueAtTime(safeGainValue(0.18), ctx.currentTime);
     mainGain.connect(dest);
     const nodes: any[] = [mainGain];
     const buffer = ctx.createBuffer(1, ctx.sampleRate * 4, ctx.sampleRate);
@@ -505,14 +505,14 @@ const PLANET_SYNTHESIZERS: Record<string, SynthesizerFunc> = {
     const bpFilter = ctx.createBiquadFilter();
     bpFilter.type = 'bandpass';
     bpFilter.frequency.setValueAtTime(safeFreq(1500), ctx.currentTime);
-    bpFilter.Q.setValueAtTime(safeQ(5), ctx.currentTime);
+    bpFilter.Q.setValueAtTime(safeQValue(5), ctx.currentTime);
     const sweepLfo = ctx.createOscillator();
     sweepLfo.frequency.setValueAtTime(safeFreq(0.08), ctx.currentTime);
     const sweepG = ctx.createGain();
-    sweepG.gain.setValueAtTime(safeGain(1200), ctx.currentTime);
+    sweepG.gain.setValueAtTime(safeGainValue(1200), ctx.currentTime);
     sweepLfo.connect(sweepG).connect(bpFilter.frequency);
     const windG = ctx.createGain();
-    windG.gain.setValueAtTime(safeGain(0.12), ctx.currentTime);
+    windG.gain.setValueAtTime(safeGainValue(0.12), ctx.currentTime);
     wind.connect(bpFilter).connect(windG).connect(mainGain);
     wind.start(); sweepLfo.start();
     nodes.push(wind, bpFilter, sweepLfo, sweepG, windG);
@@ -520,7 +520,7 @@ const PLANET_SYNTHESIZERS: Record<string, SynthesizerFunc> = {
     sub.type = 'sine';
     sub.frequency.setValueAtTime(safeFreq(27.5), ctx.currentTime); 
     const subG = ctx.createGain();
-    subG.gain.setValueAtTime(safeGain(0.25), ctx.currentTime);
+    subG.gain.setValueAtTime(safeGainValue(0.25), ctx.currentTime);
     sub.connect(subG).connect(mainGain);
     sub.start();
     nodes.push(sub, subG);
@@ -531,7 +531,7 @@ const PLANET_SYNTHESIZERS: Record<string, SynthesizerFunc> = {
     const fLfo = ctx.createOscillator();
     fLfo.frequency.setValueAtTime(safeFreq(12), ctx.currentTime);
     fLfo.connect(fG.gain);
-    fG.gain.setValueAtTime(safeGain(0.01), ctx.currentTime);
+    fG.gain.setValueAtTime(safeGainValue(0.01), ctx.currentTime);
     flutter.connect(fG).connect(mainGain);
     flutter.start(); fLfo.start();
     nodes.push(flutter, fG, fLfo);
@@ -539,10 +539,10 @@ const PLANET_SYNTHESIZERS: Record<string, SynthesizerFunc> = {
   },
   PLUTO: (ctx, dest) => {
     const safeFreq = (value: number) => safeValue(value, 0.001, ctx.sampleRate / 2 - 1, 220); 
-    const safeGain = (value: number) => safeValue(value, 0.0001, 1, 0.05); 
-    const safeQ = (value: number) => safeValue(value, 0.0001, 1000, 0.0001);
+    const safeGainValue = (value: number) => safeValue(value, 0.0001, 1, 0.05); 
+    const safeQValue = (value: number) => safeValue(value, 0.0001, 1000, 0.0001);
     const mainGain = ctx.createGain();
-    mainGain.gain.setValueAtTime(safeGain(0.12), ctx.currentTime);
+    mainGain.gain.setValueAtTime(safeGainValue(0.12), ctx.currentTime);
     mainGain.connect(dest);
     const nodes: any[] = [mainGain];
     const buffer = ctx.createBuffer(1, ctx.sampleRate * 5, ctx.sampleRate);
@@ -553,9 +553,9 @@ const PLANET_SYNTHESIZERS: Record<string, SynthesizerFunc> = {
     const notch = ctx.createBiquadFilter();
     notch.type = 'notch';
     notch.frequency.setValueAtTime(safeFreq(400), ctx.currentTime);
-    notch.Q.setValueAtTime(safeQ(1), ctx.currentTime);
+    notch.Q.setValueAtTime(safeQValue(1), ctx.currentTime);
     const vG = ctx.createGain();
-    vG.gain.setValueAtTime(safeGain(0.05), ctx.currentTime);
+    vG.gain.setValueAtTime(safeGainValue(0.05), ctx.currentTime);
     voidSrc.connect(notch).connect(vG).connect(mainGain);
     voidSrc.start();
     nodes.push(voidSrc, notch, vG);
@@ -567,7 +567,7 @@ const PLANET_SYNTHESIZERS: Record<string, SynthesizerFunc> = {
     const pulseLfo = ctx.createOscillator();
     pulseLfo.frequency.setValueAtTime(safeFreq(0.05), ctx.currentTime);
     const pulseLfoG = ctx.createGain();
-    pulseLfoG.gain.setValueAtTime(safeGain(0.08), ctx.currentTime);
+    pulseLfoG.gain.setValueAtTime(safeGainValue(0.08), ctx.currentTime);
     pulseLfo.connect(pulseLfoG).connect(hG.gain);
     heart.connect(hG).connect(mainGain);
     heart.start(); pulseLfo.start();
@@ -579,7 +579,7 @@ const PLANET_SYNTHESIZERS: Record<string, SynthesizerFunc> = {
       ping.frequency.setValueAtTime(safeFreq(1200 + Math.random() * 3000), pingNow);
       const pG = ctx.createGain();
       pG.gain.setValueAtTime(0, pingNow);
-      pG.gain.linearRampToValueAtTime(safeGain(0.02), pingNow + 0.1);
+      pG.gain.linearRampToValueAtTime(safeGainValue(0.02), pingNow + 0.1);
       pG.gain.exponentialRampToValueAtTime(0.0001, pingNow + 4);
       ping.connect(pG).connect(mainGain);
       ping.start(pingNow); ping.stop(pingNow + 5);
