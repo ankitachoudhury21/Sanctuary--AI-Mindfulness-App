@@ -7,7 +7,7 @@ import { AuthFlow } from './components/AuthFlow';
 import Dashboard from './components/Dashboard';
 import Navigation from './components/Navigation';
 import OnboardingTutorial from './components/OnboardingTutorial'; 
-import BackgroundAmbience from './components/BackgroundAmbience';
+// Removed: import BackgroundAmbience from './components/BackgroundAmbience';
 import { analyzeSleepAndHealth } from './services/geminiService';
 import { Sparkles, Play } from 'lucide-react';
 
@@ -17,17 +17,17 @@ const STORAGE_KEYS = {
   SLEEP: 'sanctuary_sleep_data',
   ACTIVITY: 'sanctuary_activity_data',
   DRAFT: 'sanctuary_journal_draft',
-  AMBIENT_MUTED: 'sanctuary_ambient_muted',
+  // Removed: AMBIENT_MUTED: 'sanctuary_ambient_muted',
   DARK_MODE: 'sanctuary_dark_mode'
 };
 
 const App: React.FC = () => {
   const [hasStarted, setHasStarted] = useState(false);
   const [view, setView] = useState<AppView>(AppView.WELCOME);
-  const [isAmbientMuted, setIsAmbientMuted] = useState(() => {
-    const saved = localStorage.getItem(STORAGE_KEYS.AMBIENT_MUTED);
-    return saved === 'true';
-  });
+  // Removed: const [isAmbientMuted, setIsAmbientMuted] = useState(() => {
+  // Removed:   const saved = localStorage.getItem(STORAGE_KEYS.AMBIENT_MUTED);
+  // Removed:   return saved === 'true';
+  // Removed: });
   const [isDarkMode, setIsDarkMode] = useState(() => {
     const saved = localStorage.getItem(STORAGE_KEYS.DARK_MODE);
     return saved === 'true';
@@ -69,9 +69,9 @@ const App: React.FC = () => {
   const refreshTimerRef = useRef<number | null>(null);
   const lastAnalyzedJournalCount = useRef<number>(0);
 
-  useEffect(() => {
-    localStorage.setItem(STORAGE_KEYS.AMBIENT_MUTED, isAmbientMuted.toString());
-  }, [isAmbientMuted]);
+  // Removed: useEffect(() => {
+  // Removed:   localStorage.setItem(STORAGE_KEYS.AMBIENT_MUTED, isAmbientMuted.toString());
+  // Removed: }, [isAmbientMuted]);
 
   useEffect(() => {
     localStorage.setItem(STORAGE_KEYS.DARK_MODE, isDarkMode.toString());
@@ -163,7 +163,7 @@ const App: React.FC = () => {
 
   return (
     <div className="min-h-screen transition-all duration-1000 relative overflow-x-hidden">
-      <BackgroundAmbience hasStarted={hasStarted} isActive={!isAmbientMuted && !isAnyTrackPlaying} />
+      {/* Removed: <BackgroundAmbience hasStarted={hasStarted} isActive={!isAmbientMuted && !isAnyTrackPlaying} /> */}
       
       <div className="fixed inset-0 z-0 overflow-hidden pointer-events-none">
         <img 
@@ -210,8 +210,8 @@ const App: React.FC = () => {
               activeView={view} 
               setView={setView} 
               onLogout={logout}
-              isAmbientMuted={isAmbientMuted}
-              toggleAmbient={() => setIsAmbientMuted(!isAmbientMuted)}
+              // Removed: isAmbientMuted={isAmbientMuted}
+              // Removed: toggleAmbient={() => setIsAmbientMuted(!isAmbientMuted)}
               isDarkMode={isDarkMode}
               toggleDarkMode={toggleDarkMode}
             />

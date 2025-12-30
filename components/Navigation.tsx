@@ -1,14 +1,14 @@
 
 import React from 'react';
 import { AppView } from '../types';
-import { Home, BookHeart, Moon, Music, Compass, LogOut, Brain, Rocket, Stars, Volume2, VolumeX, Sun, CloudMoon } from 'lucide-react';
+import { Home, BookHeart, Moon, Music, Compass, LogOut, Brain, Rocket, Stars, Sun, CloudMoon } from 'lucide-react';
 
 interface Props {
   activeView: AppView;
   setView: (view: AppView) => void;
   onLogout: () => void;
-  isAmbientMuted: boolean;
-  toggleAmbient: () => void;
+  // Removed: isAmbientMuted: boolean;
+  // Removed: toggleAmbient: () => void;
   isDarkMode: boolean;
   toggleDarkMode: () => void;
 }
@@ -61,7 +61,7 @@ const MobileNavItem: React.FC<{ item: any; activeView: AppView; setView: (view: 
   );
 };
 
-const Navigation: React.FC<Props> = ({ activeView, setView, onLogout, isAmbientMuted, toggleAmbient, isDarkMode, toggleDarkMode }) => {
+const Navigation: React.FC<Props> = ({ activeView, setView, onLogout, isDarkMode, toggleDarkMode }) => {
   const navItems = [
     { icon: Home, label: 'Home', view: AppView.DASHBOARD, color: 'bg-emerald-500' },
     { icon: Brain, label: 'Daily Meditation', view: AppView.MUSIC, color: 'bg-indigo-500' },
@@ -99,13 +99,7 @@ const Navigation: React.FC<Props> = ({ activeView, setView, onLogout, isAmbientM
           >
             {isDarkMode ? <Sun size={18} /> : <CloudMoon size={18} />}
           </button>
-          <button 
-            onClick={toggleAmbient}
-            className={`w-10 h-10 flex items-center justify-center rounded-full transition-all ${!isAmbientMuted ? 'bg-teal-100 dark:bg-teal-600/30 text-teal-600 dark:text-teal-400 shadow-inner' : 'bg-slate-50 dark:bg-slate-700 text-slate-400'}`}
-            aria-label={isAmbientMuted ? "Unmute ambient music" : "Mute ambient music"}
-          >
-            {!isAmbientMuted ? <Volume2 size={18} className="animate-pulse" /> : <VolumeX size={18} />}
-          </button>
+          {/* Removed ambient toggle button for mobile */}
           <button 
             onClick={onLogout}
             className="w-10 h-10 flex items-center justify-center text-slate-400 hover:text-red-500 active:scale-90 transition-all rounded-full bg-slate-50 dark:bg-slate-700 border border-slate-100 dark:border-slate-600"
@@ -160,19 +154,7 @@ const Navigation: React.FC<Props> = ({ activeView, setView, onLogout, isAmbientM
               <span className="text-[9px] opacity-60 font-bold uppercase">{isDarkMode ? 'Dark Mode' : 'Light Mode'}</span>
             </div>
           </button>
-          <button 
-            onClick={toggleAmbient}
-            className={`w-full flex items-center gap-4 px-2 py-3 group transition-all duration-300 outline-none ${!isAmbientMuted ? 'text-teal-400' : 'text-slate-500'}`}
-            aria-label={isAmbientMuted ? "Unmute ambient music" : "Mute ambient music"}
-          >
-            <div className={`w-10 h-10 rounded-full border-2 flex items-center justify-center transition-all ${!isAmbientMuted ? 'border-teal-500/50 bg-teal-500/10 shadow-[0_0_15px_rgba(45,212,191,0.2)]' : 'border-white/10'}`}>
-              {!isAmbientMuted ? <Volume2 size={18} /> : <VolumeX size={18} />}
-            </div>
-            <div className="flex flex-col items-start">
-              <span className="text-sm font-black uppercase tracking-widest">Ambient</span>
-              <span className="text-[9px] opacity-60 font-bold uppercase">{!isAmbientMuted ? 'Sanctuary Pulse' : 'Muted'}</span>
-            </div>
-          </button>
+          {/* Removed ambient toggle button for desktop */}
           
           <button 
             onClick={onLogout}
