@@ -733,7 +733,8 @@ export const PlanetaryMission: React.FC<{ setView: (v: AppView) => void; setIsAn
     const video = videoRef.current;
     if (!video) return;
 
-    const shouldPlayVideo = isPlaying && !isMuted && activePlanet.videoUrl && !videoError;
+    // Only attempt to play video if activePlanet.videoUrl is a non-empty string, not muted, and no previous error
+    const shouldPlayVideo = isPlaying && !isMuted && activePlanet.videoUrl && activePlanet.videoUrl !== '' && !videoError;
 
     if (shouldPlayVideo) {
       if (video.paused || video.ended) {
@@ -761,7 +762,8 @@ export const PlanetaryMission: React.FC<{ setView: (v: AppView) => void; setIsAn
         if (nextMute) {
             video.pause();
         } else {
-            if (isPlaying && activePlanet.videoUrl && !videoError) {
+            // Only attempt to play video if activePlanet.videoUrl is a non-empty string
+            if (isPlaying && activePlanet.videoUrl && activePlanet.videoUrl !== '' && !videoError) {
                 video.play().catch(err => {
                     if (err.name !== 'AbortError') console.warn("Video play on unmute failed:", err);
                     setVideoError(true);
@@ -864,7 +866,7 @@ export const PlanetaryMission: React.FC<{ setView: (v: AppView) => void; setIsAn
         <div className={`absolute inset-0 bg-gradient-to-br ${activePlanet.color} opacity-60 mix-blend-multiply transition-all duration-1000`}></div>
         <div className="absolute inset-0 bg-black/50 backdrop-brightness-75"></div>
         
-        {activePlanet.videoUrl && !videoError ? (
+        {activePlanet.videoUrl && activePlanet.videoUrl !== '' && !videoError ? (
             <video 
                 ref={videoRef}
                 src={activePlanet.videoUrl} 
@@ -946,66 +948,6 @@ export const PlanetaryMission: React.FC<{ setView: (v: AppView) => void; setIsAn
         </div>
       </div>
 
-      {/* Planetary Metrics and Status */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12">
-        <div className="glass-card p-10 md:p-14 rounded-[3rem] md:rounded-[4.5rem] bg-slate-900 text-white border-none flex flex-col justify-between shadow-2xl relative overflow-hidden group hover:shadow-indigo-500/20 transition-all duration-300 hover:scale-[1.005]">
-          <div className="absolute inset-0 bg-gradient-to-br from-blue-600/20 to-transparent opacity-50"></div>
-          <div className="relative z-10 space-y-6">
-            <div className="w-16 h-16 bg-white/10 rounded-3xl flex items-center justify-center backdrop-blur-xl border border-white/20">
-              <Activity size={32} className="text-blue-400" />
-            </div>
-            <h4 className="text-3xl md:text-4xl font-black tracking-tight leading-tight">Orbital <br/>Stability</h4>
-            <p className="text-white/40 dark:text-white/80 font-medium text-lg leading-relaxed italic">
-              "Current orbital parameters indicate minor flux deviations. Maintaining course."
-            </p>
-            <div className="grid grid-cols-2 gap-4 pt-4">
-              <div>
-                <p className="label-caps text-white/40 dark:text-white/80">Anomaly Index</p>
-                <p className="text-2xl font-black text-white display-number">0.03</p>
-              </div>
-              <div>
-                <p className="label-caps text-white/40 dark:text-white/80">Gravity Well</p>
-                <p className="text-2xl font-black text-white display-number">7.82N</p>
-              </div>
-            </div>
-          </div>
-          <button className="relative z-10 w-full py-5 bg-white text-slate-900 rounded-3xl font-black text-lg transition-all hover:scale-[1.02] active:scale-95 shadow-xl font-display hover:bg-slate-100"
-          aria-label="Access orbital diagnostics"
-          >
-            Access Diagnostics
-          </button>
-        </div>
-
-        <div className="glass-card p-10 md:p-14 rounded-[3rem] md:rounded-[4.5rem] bg-indigo-900 text-white border-none flex flex-col justify-between shadow-2xl relative overflow-hidden group hover:shadow-purple-500/20 transition-all duration-300 hover:scale-[1.005]">
-          <div className="absolute inset-0 bg-gradient-to-br from-purple-600/20 to-transparent opacity-50"></div>
-          <div className="relative z-10 space-y-6">
-            <div className="w-16 h-16 bg-white/10 rounded-3xl flex items-center justify-center backdrop-blur-xl border border-white/20">
-              <Brain size={32} className="text-purple-400" />
-            </div>
-            <h4 className="text-3xl md:text-4xl font-black tracking-tight leading-tight">Neural <br/>Integration</h4>
-            <p className="text-white/40 dark:text-white/80 font-medium text-lg leading-relaxed italic">
-              "Subtle cognitive entrainment active. Preparing for deep space focus protocols."
-            </p>
-            <div className="grid grid-cols-2 gap-4 pt-4">
-              <div>
-                <p className="label-caps text-white/40 dark:text-white/80">Coherence</p>
-                <p className="text-2xl font-black text-white display-number">98%</p>
-              </div>
-              <div>
-                <p className="label-caps text-white/40 dark:text-white/80">Entrainment</p>
-                <p className="text-2xl font-black text-white display-number">Alpha</p>
-              </div>
-            </div>
-          </div>
-          <button className="relative z-10 w-full py-5 bg-white text-slate-900 rounded-3xl font-black text-lg transition-all hover:scale-[1.02] active:scale-95 shadow-xl font-display hover:bg-slate-100"
-          aria-label="Adjust neural entrainment settings"
-          >
-            Adjust Settings
-          </button>
-        </div>
-      </div>
-
-
       {/* Planet Selection Grid */}
       <section className="space-y-6">
           <div className="px-4 flex items-center justify-between">
@@ -1044,6 +986,37 @@ export const PlanetaryMission: React.FC<{ setView: (v: AppView) => void; setIsAn
             ))}
           </div>
         </section>
+
+      {/* Removed "Orbital Stability" Card and "Neural Integration Card" already removed in previous turn */}
+      {/* <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12">
+        <div className="glass-card p-10 md:p-14 rounded-[3rem] md:rounded-[4.5rem] bg-slate-900 text-white border-none flex flex-col justify-between shadow-2xl relative overflow-hidden group hover:shadow-indigo-500/20 transition-all duration-300 hover:scale-[1.005]">
+          <div className="absolute inset-0 bg-gradient-to-br from-blue-600/20 to-transparent opacity-50"></div>
+          <div className="relative z-10 space-y-6">
+            <div className="w-16 h-16 bg-white/10 rounded-3xl flex items-center justify-center backdrop-blur-xl border border-white/20">
+              <Activity size={32} className="text-blue-400" />
+            </div>
+            <h4 className="text-3xl md:text-4xl font-black tracking-tight leading-tight">Orbital <br/>Stability</h4>
+            <p className="text-white/40 dark:text-white/80 font-medium text-lg leading-relaxed italic">
+              "Current orbital parameters indicate minor flux deviations. Maintaining course."
+            </p>
+            <div className="grid grid-cols-2 gap-4 pt-4">
+              <div>
+                <p className="label-caps text-white/40 dark:text-white/80">Anomaly Index</p>
+                <p className="text-2xl font-black text-white display-number">0.03</p>
+              </div>
+              <div>
+                <p className="label-caps text-white/40 dark:text-white/80">Gravity Well</p>
+                <p className="text-2xl font-black text-white display-number">7.82N</p>
+              </div>
+            </div>
+          </div>
+          <button className="relative z-10 w-full py-5 bg-white text-slate-900 rounded-3xl font-black text-lg transition-all hover:scale-[1.02] active:scale-95 shadow-xl font-display hover:bg-slate-100"
+          aria-label="Access orbital diagnostics"
+          >
+            Access Diagnostics
+          </button>
+        </div>
+      </div> */}
     </div>
   );
 };

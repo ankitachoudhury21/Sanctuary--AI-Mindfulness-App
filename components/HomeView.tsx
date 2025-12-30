@@ -184,7 +184,7 @@ const HomeView: React.FC<Props> = React.memo(({ user, sleepData, activity, setAc
                     <p className="label-caps text-slate-400 dark:text-slate-300 font-bold text-[10px] mt-1">Recovery Score</p>
                   </div>
                 </div>
-                {/* FIX: Added w-full to the div wrapping ResponsiveContainer for explicit width */}
+                {/* FIX: Added w-full min-w-0 min-h-0 to the div wrapping ResponsiveContainer for explicit width/height */}
                 <div className="w-full h-48 md:h-64 -mx-4 min-w-0 min-h-0">
                   <ResponsiveContainer width="100%" height="100%">
                     <AreaChart data={sleepData}>

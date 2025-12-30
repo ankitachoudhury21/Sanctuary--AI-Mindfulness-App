@@ -129,7 +129,7 @@ const SleepTracker: React.FC<Props> = React.memo(({ data, aiInsights, setView })
              >Monthly</button>
           </div>
         </div>
-        {/* FIX: Added w-full to the div wrapping ResponsiveContainer for explicit width */}
+        {/* FIX: Added w-full min-w-0 min-h-0 to the div wrapping ResponsiveContainer for explicit width/height */}
         <div className="w-full h-[400px] -mx-4 min-w-0 min-h-0">
           <ResponsiveContainer width="100%" height="100%">
             <ComposedChart data={data}>
