@@ -32,7 +32,7 @@ const PLANETS: Planet[] = [
     name: 'The Sun', 
     desc: 'Solar Core: G-Type Star', 
     color: 'from-orange-600 to-yellow-500', 
-    videoUrl: 'https://cdn.pixabay.com/vimeo/312061265/sun-1358.mp4?width=1280', 
+    videoUrl: '', 
     imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/b/b4/The_Sun_by_the_Atmospheric_Imaging_Assembly_of_NASA%27s_Solar_Dynamics_Observatory_-_20100819.jpg/1280px-The_Sun_by_the_Atmospheric_Imaging_Assembly_of_NASA%27s_Solar_Dynamics_Observatory_-_20100819.jpg',
     synthesis: 'SUN', 
     mission: 'Surrender to the radiant warmth of existence.', 
@@ -45,7 +45,7 @@ const PLANETS: Planet[] = [
     desc: 'Craters: Metallic Core', 
     color: 'from-slate-500 to-slate-700', 
     videoUrl: '', 
-    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/4/4a/Mercury_in_true_color.jpg',
+    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/4/4a/Mercury_in_true_color.jpg/1280px-Mercury_in_true_color.jpg',
     synthesis: 'MERCURY', 
     mission: 'Endure the extremes of the inner circle.', 
     audioTrackName: 'Core Vibrations',
@@ -56,8 +56,8 @@ const PLANETS: Planet[] = [
     name: 'Venus', 
     desc: 'Dense: Sulfuric Greenhouse', 
     color: 'from-orange-300 to-amber-600', 
-    videoUrl: 'https://cdn.pixabay.com/vimeo/186596918/venus-5743.mp4?width=1280', 
-    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/0/08/Venus_from_Mariner_10.jpg',
+    videoUrl: '', 
+    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/0/08/Venus_from_Mariner_10.jpg/1280px-Venus_from_Mariner_10.jpg',
     synthesis: 'VENUS', 
     mission: 'Navigate the pressure of the eternal storm.', 
     audioTrackName: "Acid Cloud Echo",
@@ -68,8 +68,8 @@ const PLANETS: Planet[] = [
     name: 'Earth', 
     desc: 'Organic: Pale Blue Dot', 
     color: 'from-blue-600 to-emerald-400', 
-    videoUrl: 'https://cdn.pixabay.com/vimeo/158300267/earth-2384.mp4?width=1280', 
-    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/9/97/The_Earth_seen_from_Apollo_17.jpg',
+    videoUrl: '', 
+    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/9/97/The_Earth_seen_from_Apollo_17.jpg/1280px-The_Earth_seen_from_Apollo_17.jpg',
     synthesis: 'EARTH', 
     mission: 'Rediscover the heartbeat of home.', 
     audioTrackName: "Gaia's Resonant Heartbeat",
@@ -80,8 +80,8 @@ const PLANETS: Planet[] = [
     name: 'The Moon', 
     desc: 'Satellite: Lunar Stillness', 
     color: 'from-slate-300 to-slate-500', 
-    videoUrl: 'https://cdn.pixabay.com/vimeo/186596954/moon-5744.mp4?width=1280', 
-    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/e/e1/FullMoon2010.jpg',
+    videoUrl: '', 
+    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/e/e1/FullMoon2010.jpg/1280px-FullMoon2010.jpg',
     synthesis: 'MOON', 
     mission: 'Embrace the silence of the cosmic mirror.', 
     audioTrackName: 'Regolith Echo',
@@ -92,8 +92,8 @@ const PLANETS: Planet[] = [
     name: 'Mars', 
     desc: 'Rust: The Crimson Frontier', 
     color: 'from-red-700 to-orange-900', 
-    videoUrl: 'https://cdn.pixabay.com/vimeo/312061108/mars-1357.mp4?width=1280', 
-    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/0/02/OSIRIS_Mars_true_color.jpg',
+    videoUrl: '', 
+    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/0/02/OSIRIS_Mars_true_color.jpg/1280px-OSIRIS_Mars_true_color.jpg',
     synthesis: 'MARS', 
     mission: 'Chart the path across the crimson dust.', 
     audioTrackName: 'Sol 1 Winds',
@@ -104,8 +104,8 @@ const PLANETS: Planet[] = [
     name: 'Jupiter', 
     desc: 'Banded: Gas Colossus', 
     color: 'from-amber-700 to-orange-950', 
-    videoUrl: 'https://cdn.pixabay.com/vimeo/186596931/jupiter-5742.mp4?width=1280', 
-    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/2/2b/Jupiter_and_its_shrunken_Great_Red_Spot.jpg',
+    videoUrl: '', 
+    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/e/e2/Jupiter.jpg/1280px-Jupiter.jpg',
     synthesis: 'JUPITER', 
     mission: 'Witness the majesty of the Great Red Spot.', 
     audioTrackName: 'Great Red Resonance',
@@ -117,7 +117,7 @@ const PLANETS: Planet[] = [
     desc: 'Ringed: Lord of the Ice', 
     color: 'from-yellow-400 to-amber-700', 
     videoUrl: '', 
-    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/c/c7/Saturn_during_Equinox.jpg',
+    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c7/Saturn_during_Equinox.jpg/1280px-Saturn_during_Equinox.jpg',
     synthesis: 'SATURN', 
     mission: 'Listen to the shimmering songs of the rings.', 
     audioTrackName: 'Orbital Crystalline Chant',
@@ -129,7 +129,7 @@ const PLANETS: Planet[] = [
     desc: 'Ice Giant: Aquamarine Veil', 
     color: 'from-cyan-400 to-blue-600', 
     videoUrl: '', 
-    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/3/3d/Uranus2.jpg',
+    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/3/3d/Uranus2.jpg/1280px-Uranus2.jpg',
     synthesis: 'URANUS', 
     mission: 'Plunge into the crystalline turquoise depths.', 
     audioTrackName: 'Azure Ice Echo',
@@ -141,7 +141,7 @@ const PLANETS: Planet[] = [
     desc: 'Deep Blue: Wind Master', 
     color: 'from-blue-700 to-indigo-900', 
     videoUrl: '', 
-    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/5/56/Neptune_Full.jpg',
+    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/5/56/Neptune_Full.jpg/1280px-Neptune_Full.jpg',
     synthesis: 'NEPTUNE', 
     mission: 'Surrender to the ultra-sonic azure winds.', 
     audioTrackName: 'Great Dark Spot Hums',
@@ -153,7 +153,7 @@ const PLANETS: Planet[] = [
     desc: 'Dwarf: Glacial Heart', 
     color: 'from-slate-600 to-amber-900', 
     videoUrl: '', 
-    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/e/ec/Pluto_from_NASA%27s_New_Horizons_spacecraft_in_color_-_enhanced.jpg/1280px-Pluto_from_NASA%27s_New_Horizons_spacecraft_in_color_-_enhanced.jpg',
+    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/e/ef/Pluto_in_True_Color_-_High-Res.jpg/1280px-Pluto_in_True_Color_-_High-Res.jpg',
     synthesis: 'PLUTO', 
     mission: 'Reflect at the final frontier of home.', 
     audioTrackName: 'Kuiper Belt Void',
@@ -707,7 +707,7 @@ export const PlanetaryMission: React.FC<{ setView: (v: AppView) => void; setIsAn
     if (isLoading) return;
     setIsLoading(true);
     setIsScanning(true);
-    setImageLoaded(false); // Reset image load state for new planet
+    setImageLoaded(false); 
     setVideoError(false); 
     setTimeout(() => setIsScanning(false), 2000);
     if (activePlanet.id === p.id && isPlaying && !isMuted) {
@@ -783,7 +783,6 @@ export const PlanetaryMission: React.FC<{ setView: (v: AppView) => void; setIsAn
         <div className={`absolute inset-0 bg-gradient-to-br ${activePlanet.color} opacity-60 mix-blend-multiply transition-all duration-1000`}></div>
         <div className="absolute inset-0 bg-black/50 backdrop-brightness-75"></div>
         
-        {/* Placeholder Gradient Layer */}
         <div className={`absolute inset-0 bg-gradient-to-br ${activePlanet.color} opacity-20 z-0`}></div>
 
         {activePlanet.videoUrl && activePlanet.videoUrl !== '' && !videoError ? (
