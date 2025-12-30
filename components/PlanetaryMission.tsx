@@ -153,7 +153,7 @@ const PLANETS: Planet[] = [
     desc: 'Dwarf: Glacial Heart', 
     color: 'from-slate-600 to-amber-900', 
     videoUrl: '', 
-    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/e/ef/Pluto_by_New_Horizons.jpg/1920px-Pluto_by_New_Horizons.jpg',
+    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/e/ec/Pluto_from_NASA%27s_New_Horizons_spacecraft_in_color_-_enhanced.jpg/1920px-Pluto_from_NASA%27s_New_Horizons_spacecraft_in_color_-_enhanced.jpg',
     synthesis: 'PLUTO', 
     mission: 'Reflect at the final frontier of home.', 
     audioTrackName: 'Kuiper Belt Void',
