@@ -13,7 +13,7 @@ interface Props {
   setView: (view: AppView) => void;
 }
 
-const CustomTooltip = ({ active, payload, label }: any) => {
+const CustomTooltip = React.memo(({ active, payload, label }: any) => {
   if (active && payload && payload.length) {
     const data = payload[0].payload; // Access the original data point
     return (
@@ -26,9 +26,9 @@ const CustomTooltip = ({ active, payload, label }: any) => {
     );
   }
   return null;
-};
+});
 
-const HomeView: React.FC<Props> = ({ user, sleepData, activity, setActivity, aiInsights, setView }) => {
+const HomeView: React.FC<Props> = React.memo(({ user, sleepData, activity, setActivity, aiInsights, setView }) => {
   const addWater = () => {
     setActivity(prev => ({ ...prev, waterIntake: prev.waterIntake + 1 }));
   };
@@ -296,6 +296,6 @@ const HomeView: React.FC<Props> = ({ user, sleepData, activity, setActivity, aiI
         </section>
       </div>
   );
-};
+});
 
 export default HomeView;

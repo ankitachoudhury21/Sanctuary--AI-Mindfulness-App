@@ -1,13 +1,11 @@
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { AppView, UserProfile, SleepData, ActivityData, JournalEntry } from './types';
 import WelcomeJourney from './components/WelcomeJourney';
 // FIX: Changed AuthFlow from default import to named import
 import { AuthFlow } from './components/AuthFlow';
 import Dashboard from './components/Dashboard';
 import Navigation from './components/Navigation';
-// Removed: import OnboardingTutorial from './components/OnboardingTutorial'; 
-// Removed: import BackgroundAmbience from './components/BackgroundAmbience';
 import { analyzeSleepAndHealth } from './services/geminiService';
 import { Sparkles, Play } from 'lucide-react';
 
@@ -17,17 +15,12 @@ const STORAGE_KEYS = {
   SLEEP: 'sanctuary_sleep_data',
   ACTIVITY: 'sanctuary_activity_data',
   DRAFT: 'sanctuary_journal_draft',
-  // Removed: AMBIENT_MUTED: 'sanctuary_ambient_muted',
   DARK_MODE: 'sanctuary_dark_mode'
 };
 
 const App: React.FC = () => {
   const [hasStarted, setHasStarted] = useState(false);
   const [view, setView] = useState<AppView>(AppView.WELCOME);
-  // Removed: const [isAmbientMuted, setIsAmbientMuted] = useState(() => {
-  // Removed:   const saved = localStorage.getItem(STORAGE_KEYS.AMBIENT_MUTED);
-  // Removed:   return saved === 'true';
-  // Removed: });
   const [isDarkMode, setIsDarkMode] = useState(() => {
     const saved = localStorage.getItem(STORAGE_KEYS.DARK_MODE);
     return saved === 'true';
@@ -40,7 +33,6 @@ const App: React.FC = () => {
       return saved ? JSON.parse(saved) : null;
     } catch { return null; }
   });
-  // Removed: const [showTutorial, setShowTutorial] = useState(false);
   const [journalEntries, setJournalEntries] = useState<JournalEntry[]>(() => {
     try {
       const saved = localStorage.getItem(STORAGE_KEYS.JOURNAL);
@@ -69,10 +61,6 @@ const App: React.FC = () => {
   const refreshTimerRef = useRef<number | null>(null);
   const lastAnalyzedJournalCount = useRef<number>(0);
 
-  // Removed: useEffect(() => {
-  // Removed:   localStorage.setItem(STORAGE_KEYS.AMBIENT_MUTED, isAmbientMuted.toString());
-  // Removed: }, [isAmbientMuted]);
-
   useEffect(() => {
     localStorage.setItem(STORAGE_KEYS.DARK_MODE, isDarkMode.toString());
     if (isDarkMode) {
@@ -88,17 +76,29 @@ const App: React.FC = () => {
     }
   }, [user]);
 
+  const refreshAIInsights = useCallback(async () => {
+    try {
+      lastAnalyzedJournalCount.current = journalEntries.length;
+      const snippets = journalEntries.slice(0, 5).map(e => e.transcript || "");
+      const result = await analyzeSleepAndHealth(sleepData, snippets, user);
+      setAiInsights(result);
+    } catch (e) {
+      console.error("AI Insights sync failed", e);
+    }
+  }, [journalEntries, sleepData, user]); // Depend on relevant data
+
   useEffect(() => {
     localStorage.setItem(STORAGE_KEYS.JOURNAL, JSON.stringify(journalEntries));
     
     if (refreshTimerRef.current) window.clearTimeout(refreshTimerRef.current);
     
+    // Only refresh insights if journal entries count has actually changed
     if (journalEntries.length !== lastAnalyzedJournalCount.current) {
       refreshTimerRef.current = window.setTimeout(() => {
         if (journalEntries.length > 0 || user) refreshAIInsights();
       }, 15000); 
     }
-  }, [journalEntries, user]);
+  }, [journalEntries, user, refreshAIInsights]); // Add refreshAIInsights to dependencies
 
   useEffect(() => {
     localStorage.setItem(STORAGE_KEYS.SLEEP, JSON.stringify(sleepData));
@@ -112,59 +112,40 @@ const App: React.FC = () => {
     if (hasStarted && user && view === AppView.WELCOME) {
       setView(AppView.DASHBOARD);
     }
-  }, [hasStarted, user]);
+  }, [hasStarted, user, view]);
 
-  const handleStartExperience = () => {
+  const handleStartExperience = useCallback(() => {
     setHasStarted(true);
     if (user && view === AppView.WELCOME) {
       setView(AppView.DASHBOARD);
     }
-  };
+  }, [user, view]);
 
-  const handleStart = (profile: UserProfile) => {
+  const handleStart = useCallback((profile: UserProfile) => {
     setUser(profile);
     setView(AppView.LOGIN);
-  };
+  }, []);
 
-  const handleAuthComplete = () => {
+  const handleAuthComplete = useCallback(() => {
     setView(AppView.DASHBOARD);
-    // Removed: setShowTutorial(true);
     refreshAIInsights();
-  };
+  }, [refreshAIInsights]);
 
-  // Removed: const handleTutorialComplete = () => {
-  // Removed:   setShowTutorial(false);
-  // Removed: };
-
-  const refreshAIInsights = async () => {
-    try {
-      lastAnalyzedJournalCount.current = journalEntries.length;
-      const snippets = journalEntries.slice(0, 5).map(e => e.transcript || "");
-      const result = await analyzeSleepAndHealth(sleepData, snippets, user);
-      setAiInsights(result);
-    } catch (e) {
-      console.error("AI Insights sync failed", e);
-    }
-  };
-
-  const logout = () => {
+  const logout = useCallback(() => {
     localStorage.removeItem(STORAGE_KEYS.USER);
     localStorage.removeItem(STORAGE_KEYS.DRAFT);
     
     setUser(null);
     setView(AppView.WELCOME);
-    // Removed: setShowTutorial(false);
     setHasStarted(false);
-  };
+  }, []);
 
-  const toggleDarkMode = () => {
+  const toggleDarkMode = useCallback(() => {
     setIsDarkMode(prevMode => !prevMode);
-  };
+  }, []);
 
   return (
     <div className="min-h-screen transition-all duration-1000 relative overflow-x-hidden">
-      {/* Removed: <BackgroundAmbience hasStarted={hasStarted} isActive={!isAmbientMuted && !isAnyTrackPlaying} /> */}
-      
       <div className="fixed inset-0 z-0 overflow-hidden pointer-events-none">
         <img 
           src="https://images.unsplash.com/photo-1490522046460-e4d658c407c0?auto=format&fit=crop&q=80&w=2560" 
@@ -210,8 +191,6 @@ const App: React.FC = () => {
               activeView={view} 
               setView={setView} 
               onLogout={logout}
-              // Removed: isAmbientMuted={isAmbientMuted}
-              // Removed: toggleAmbient={() => setIsAmbientMuted(!isAmbientMuted)}
               isDarkMode={isDarkMode}
               toggleDarkMode={toggleDarkMode}
             />
@@ -232,7 +211,6 @@ const App: React.FC = () => {
                 setIsAnyTrackPlaying={setIsAnyTrackPlaying}
               />
             </main>
-            {/* Removed: {showTutorial && user && <OnboardingTutorial userName={user.name} onComplete={handleTutorialComplete} onViewChange={setView} />} */}
           </div>
         )}
       </div>

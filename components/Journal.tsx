@@ -7,7 +7,6 @@ import {
   Download, Eraser, AlertCircle
 } from 'lucide-react';
 import { analyzeGratitudeJournal } from '../services/geminiService';
-// Removed: import LiveVoiceSession from './LiveVoiceSession';
 
 interface Props {
   entries: JournalEntry[];
@@ -18,12 +17,11 @@ interface Props {
 
 const DRAFT_STORAGE_KEY = 'sanctuary_journal_draft';
 
-const Journal: React.FC<Props> = ({ entries, setEntries, setView, user }) => {
+const Journal: React.FC<Props> = React.memo(({ entries, setEntries, setView, user }) => {
   const [isRecording, setIsRecording] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [textEntry, setTextEntry] = useState(() => localStorage.getItem(DRAFT_STORAGE_KEY) || '');
   const [aiFeedback, setAiFeedback] = useState<string | null>(null);
-  // Removed: const [showLiveSession, setShowLiveSession] = useState(false);
   const [lastSaved, setLastSaved] = useState<string | null>(null);
   const [showClearConfirm, setShowClearConfirm] = useState(false);
   const recognitionRef = useRef<any>(null);
@@ -48,12 +46,21 @@ const Journal: React.FC<Props> = ({ entries, setEntries, setView, user }) => {
           }
           if (finalTranscript) {
             setTextEntry(prev => {
+              // Ensure space only if needed and not at the beginning
               const separator = prev.length > 0 && !prev.endsWith(' ') ? ' ' : '';
               return prev + separator + finalTranscript;
             });
           }
         };
-        recognizer.onend = () => setIsRecording(false);
+        recognizer.onend = () => {
+          setIsRecording(false);
+          // Only show feedback for recorded content, not for empty stops
+          if (textEntry.trim()) {
+            setAiFeedback("Your spoken thoughts are ready. Click 'Save Reflection' to get Sanctuary's response.");
+          } else {
+            setAiFeedback(null);
+          }
+        };
         recognizer.onerror = (event: any) => {
           console.warn("Speech recognition error:", event.error);
           setIsRecording(false);
@@ -65,25 +72,20 @@ const Journal: React.FC<Props> = ({ entries, setEntries, setView, user }) => {
       }
     }
     return () => {
-      if (recognitionRef.current) {
+      if (recognitionRef.current && isRecording) { // Only stop if it's currently recording
         try { recognitionRef.current.stop(); } catch (e) {}
       }
     };
-  }, []);
+  }, [isRecording, textEntry]); // Add isRecording and textEntry for correct behavior
 
-  const handleVoiceToggle = () => {
+  const handleVoiceToggle = useCallback(() => {
     if (!recognitionRef.current) {
       setAiFeedback("Speech recognition is not supported in this browser.");
       return;
     }
     if (isRecording) {
       recognitionRef.current.stop();
-      setIsRecording(false);
-      if (textEntry.trim()) {
-        setAiFeedback("Your spoken thoughts are ready. Click 'Save Reflection' to get Sanctuary's response.");
-      } else {
-        setAiFeedback(null); // Clear feedback if nothing was recorded
-      }
+      // onend handler will now set feedback
     } else {
       try {
         setTextEntry(''); // Clear previous text if starting a new voice note
@@ -96,12 +98,12 @@ const Journal: React.FC<Props> = ({ entries, setEntries, setView, user }) => {
         setAiFeedback("Could not start microphone. Please check permissions.");
       }
     }
-  };
+  }, [isRecording, setTextEntry]);
 
-  const handleTextSubmit = async () => {
+  const handleTextSubmit = useCallback(async () => {
     if (!textEntry.trim() || isProcessing) return;
     setIsProcessing(true);
-    setAiFeedback("Analyzing your reflection..."); // Show processing message
+    setAiFeedback("Analyzing your reflection..."); 
     
     let aiResponseForEntry: string = "I've saved your reflection in your sanctuary. It's a beautiful step toward peace.";
     let displayFeedback: string = "I've saved your reflection in your sanctuary. It's a beautiful step toward peace.";
@@ -112,8 +114,7 @@ const Journal: React.FC<Props> = ({ entries, setEntries, setView, user }) => {
         aiResponseForEntry = response.message;
         displayFeedback = response.message;
       } else {
-        // AI analysis failed, use the error message as display feedback but save a default positive message
-        displayFeedback = response.message; // Display the error message to the user
+        displayFeedback = response.message; 
         aiResponseForEntry = "Sanctuary could not generate a personalized reflection at this time, but your entry is saved.";
       }
     } catch (e) {
@@ -124,20 +125,20 @@ const Journal: React.FC<Props> = ({ entries, setEntries, setView, user }) => {
       const newEntry: JournalEntry = {
         id: Date.now().toString(),
         date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
-        type: isRecording ? 'voice' : 'text', // Assuming textEntry is the source. Note: isRecording is false at this point for quick note after it's stopped.
+        type: 'text', // Always 'text' type if submitted this way, regardless of whether voice was used to populate textEntry
         transcript: textEntry,
-        aiResponse: aiResponseForEntry // Save the appropriate AI response
+        aiResponse: aiResponseForEntry 
       };
       
       setEntries(prev => [newEntry, ...prev]);
-      setAiFeedback(displayFeedback); // Display dynamic feedback
+      setAiFeedback(displayFeedback); 
       setTextEntry('');
       localStorage.removeItem(DRAFT_STORAGE_KEY);
       setIsProcessing(false);
     }
-  };
+  }, [textEntry, isProcessing, setEntries]);
 
-  const exportJournal = () => {
+  const exportJournal = useCallback(() => {
     if (entries.length === 0) return;
     const content = entries.map(e => `[${e.date}] (${e.type})\nReflection: ${e.transcript}\nSanctuary: ${e.aiResponse}\n\n-------------------\n\n`).join('');
     const blob = new Blob([content], { type: 'text/plain' });
@@ -147,13 +148,13 @@ const Journal: React.FC<Props> = ({ entries, setEntries, setView, user }) => {
     link.download = `Sanctuary_Journal_${new Date().toISOString().split('T')[0]}.txt`;
     link.click();
     URL.revokeObjectURL(url);
-  };
+  }, [entries]);
 
-  const clearAllEntries = () => {
+  const clearAllEntries = useCallback(() => {
     setEntries([]);
     setShowClearConfirm(false);
     setAiFeedback("Your history has been cleared. A fresh start.");
-  };
+  }, [setEntries]);
 
   return (
     <div className="space-y-8 md:space-y-16 animate-in slide-in-from-right-8 duration-700 max-w-6xl mx-auto pb-20 px-2 sm:px-0">
@@ -192,7 +193,6 @@ const Journal: React.FC<Props> = ({ entries, setEntries, setView, user }) => {
         </div>
         <div className="flex flex-col lg:flex-row items-center justify-between gap-6 md:gap-10">
           <div className="flex gap-4 w-full lg:w-auto items-center">
-             {/* Removed Live Session Button */}
             <button 
               onClick={handleVoiceToggle} 
               disabled={isProcessing} 
@@ -299,9 +299,8 @@ const Journal: React.FC<Props> = ({ entries, setEntries, setView, user }) => {
           ))}
         </div>
       </div>
-      {/* Removed LiveVoiceSession Conditional Render */}
     </div>
   );
-};
+});
 
 export default Journal;

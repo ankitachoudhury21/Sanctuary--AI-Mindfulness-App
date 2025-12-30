@@ -7,13 +7,11 @@ interface Props {
   activeView: AppView;
   setView: (view: AppView) => void;
   onLogout: () => void;
-  // Removed: isAmbientMuted: boolean;
-  // Removed: toggleAmbient: () => void;
   isDarkMode: boolean;
   toggleDarkMode: () => void;
 }
 
-const DesktopNavItem: React.FC<{ item: any; activeView: AppView; setView: (view: AppView) => void }> = ({ item, activeView, setView }) => {
+const DesktopNavItem: React.FC<{ item: any; activeView: AppView; setView: (view: AppView) => void }> = React.memo(({ item, activeView, setView }) => {
   const isActive = activeView === item.view;
   const Icon = item.icon;
   return (
@@ -35,9 +33,9 @@ const DesktopNavItem: React.FC<{ item: any; activeView: AppView; setView: (view:
       </span>
     </button>
   );
-};
+});
 
-const MobileNavItem: React.FC<{ item: any; activeView: AppView; setView: (view: AppView) => void }> = ({ item, activeView, setView }) => {
+const MobileNavItem: React.FC<{ item: any; activeView: AppView; setView: (view: AppView) => void }> = React.memo(({ item, activeView, setView }) => {
   const isActive = activeView === item.view;
   const Icon = item.icon;
   return (
@@ -59,9 +57,9 @@ const MobileNavItem: React.FC<{ item: any; activeView: AppView; setView: (view: 
       </span>
     </button>
   );
-};
+});
 
-const Navigation: React.FC<Props> = ({ activeView, setView, onLogout, isDarkMode, toggleDarkMode }) => {
+const Navigation: React.FC<Props> = React.memo(({ activeView, setView, onLogout, isDarkMode, toggleDarkMode }) => {
   const navItems = [
     { icon: Home, label: 'Home', view: AppView.DASHBOARD, color: 'bg-emerald-500' },
     { icon: Brain, label: 'Daily Meditation', view: AppView.MUSIC, color: 'bg-indigo-500' },
@@ -99,7 +97,6 @@ const Navigation: React.FC<Props> = ({ activeView, setView, onLogout, isDarkMode
           >
             {isDarkMode ? <Sun size={18} /> : <CloudMoon size={18} />}
           </button>
-          {/* Removed ambient toggle button for mobile */}
           <button 
             onClick={onLogout}
             className="w-10 h-10 flex items-center justify-center text-slate-400 hover:text-red-500 active:scale-90 transition-all rounded-full bg-slate-50 dark:bg-slate-700 border border-slate-100 dark:border-slate-600"
@@ -154,7 +151,6 @@ const Navigation: React.FC<Props> = ({ activeView, setView, onLogout, isDarkMode
               <span className="text-[9px] opacity-60 font-bold uppercase">{isDarkMode ? 'Dark Mode' : 'Light Mode'}</span>
             </div>
           </button>
-          {/* Removed ambient toggle button for desktop */}
           
           <button 
             onClick={onLogout}
@@ -176,6 +172,6 @@ const Navigation: React.FC<Props> = ({ activeView, setView, onLogout, isDarkMode
       </nav>
     </>
   );
-};
+});
 
 export default Navigation;

@@ -1,5 +1,4 @@
 
-
 import React from 'react';
 import { AppView, UserProfile, SleepData, ActivityData, JournalEntry } from '../types';
 
@@ -7,7 +6,8 @@ import { AppView, UserProfile, SleepData, ActivityData, JournalEntry } from '../
 import MusicPlayer from './MusicPlayer'; 
 import HomeView from './HomeView';
 import UserFlow from './UserFlow';
-import PlanetaryMission from './PlanetaryMission';
+// FIX: Changed PlanetaryMission from default import to named import based on error.
+import { PlanetaryMission } from './PlanetaryMission';
 import Journal from './Journal';
 import SleepTracker from './SleepTracker';
 

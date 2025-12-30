@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { UserProfile } from '../types';
 import { ArrowRight, Sparkles, Moon, Wind, Target, Heart, Plus } from 'lucide-react';
@@ -32,7 +33,7 @@ const QUESTIONNAIRE = [
   }
 ];
 
-const WelcomeJourney: React.FC<Props> = ({ onComplete }) => {
+const WelcomeJourney: React.FC<Props> = React.memo(({ onComplete }) => {
   const [step, setStep] = useState(1);
   const [qIndex, setQIndex] = useState(0); 
   const [selectedOption, setSelectedOption] = useState<string | null>(null);
@@ -337,6 +338,6 @@ const WelcomeJourney: React.FC<Props> = ({ onComplete }) => {
       </div>
     </div>
   );
-};
+});
 
 export default WelcomeJourney;

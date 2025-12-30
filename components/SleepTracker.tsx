@@ -11,7 +11,7 @@ interface Props {
   setView: (view: AppView) => void;
 }
 
-const CustomSleepTooltip = ({ active, payload, label }: any) => {
+const CustomSleepTooltip = React.memo(({ active, payload, label }: any) => {
   if (active && payload && payload.length) {
     const data = payload[0].payload;
     return (
@@ -24,9 +24,9 @@ const CustomSleepTooltip = ({ active, payload, label }: any) => {
     );
   }
   return null;
-};
+});
 
-const SleepTracker: React.FC<Props> = ({ data, aiInsights, setView }) => {
+const SleepTracker: React.FC<Props> = React.memo(({ data, aiInsights, setView }) => {
   const avgHours = (data.reduce((acc, curr) => acc + curr.hours, 0) / data.length).toFixed(1);
 
   return (
@@ -193,6 +193,6 @@ const SleepTracker: React.FC<Props> = ({ data, aiInsights, setView }) => {
       </div>
     </div>
   );
-};
+});
 
 export default SleepTracker;

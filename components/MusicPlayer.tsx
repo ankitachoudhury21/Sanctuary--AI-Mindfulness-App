@@ -160,8 +160,8 @@ const MusicPlayer: React.FC<Props> = ({ setView, setIsAnyTrackPlaying }) => {
       return Math.max(min, Math.min(max, value));
     };
 
-    const safeFreq = (value: number) => safeValue(value, 0.001, ctx.sampleRate / 2 - 1, 0.001);
-    const safeGain = (value: number) => safeValue(value, 0.0001, 100, 0.0001); // Max gain 100
+    const safeFreq = (value: number) => safeValue(value, 0.001, ctx.sampleRate / 2 - 1, 220); // Changed default to 220Hz
+    const safeGain = (value: number) => safeValue(value, 0.0001, 100, 0.05); // Changed default to 0.05
     const safeQ = (value: number) => safeValue(value, 0.0001, 1000, 0.0001); // Max Q 1000
     const safePan = (value: number) => safeValue(value, -1, 1, 0); // Pan -1 to 1
     const safeDetune = (value: number) => safeValue(value, -12000, 12000, 0); // Detune +/- 12000 cents

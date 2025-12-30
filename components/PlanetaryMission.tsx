@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { AppView } from '../types';
 import { 
@@ -170,9 +171,8 @@ const PLANET_SYNTHESIZERS: Record<string, SynthesizerFunc> = {
       }
       return Math.max(min, Math.min(max, value));
     };
-    const safeFreq = (value: number) => safeValue(value, 0.001, ctx.sampleRate / 2 - 1, 0.001);
-    const safeGain = (value: number) => safeValue(value, 0.0001, 100, 0.0001);
-    const safeQ = (value: number) => safeValue(value, 0.0001, 1000, 0.0001);
+    const safeFreq = (value: number) => safeValue(value, 0.001, ctx.sampleRate / 2 - 1, 220); 
+    const safeGain = (value: number) => safeValue(value, 0.0001, 100, 0.05); 
 
     const mainGain = ctx.createGain();
     mainGain.gain.setValueAtTime(safeGain(0.25), ctx.currentTime);
@@ -229,8 +229,8 @@ const PLANET_SYNTHESIZERS: Record<string, SynthesizerFunc> = {
       }
       return Math.max(min, Math.min(max, value));
     };
-    const safeFreq = (value: number) => safeValue(value, 0.001, ctx.sampleRate / 2 - 1, 0.001);
-    const safeGain = (value: number) => safeValue(value, 0.0001, 100, 0.0001);
+    const safeFreq = (value: number) => safeValue(value, 0.001, ctx.sampleRate / 2 - 1, 220); 
+    const safeGain = (value: number) => safeValue(value, 0.0001, 100, 0.05); 
 
     const mainGain = ctx.createGain();
     mainGain.gain.setValueAtTime(safeGain(0.18), ctx.currentTime);
@@ -281,8 +281,8 @@ const PLANET_SYNTHESIZERS: Record<string, SynthesizerFunc> = {
       }
       return Math.max(min, Math.min(max, value));
     };
-    const safeFreq = (value: number) => safeValue(value, 0.001, ctx.sampleRate / 2 - 1, 0.001);
-    const safeGain = (value: number) => safeValue(value, 0.0001, 100, 0.0001);
+    const safeFreq = (value: number) => safeValue(value, 0.001, ctx.sampleRate / 2 - 1, 220); 
+    const safeGain = (value: number) => safeValue(value, 0.0001, 100, 0.05); 
 
     const buffer = ctx.createBuffer(1, ctx.sampleRate * 2, ctx.sampleRate);
     const data = buffer.getChannelData(0);
@@ -305,8 +305,8 @@ const PLANET_SYNTHESIZERS: Record<string, SynthesizerFunc> = {
       }
       return Math.max(min, Math.min(max, value));
     };
-    const safeFreq = (value: number) => safeValue(value, 0.001, ctx.sampleRate / 2 - 1, 0.001);
-    const safeGain = (value: number) => safeValue(value, 0.0001, 100, 0.0001);
+    const safeFreq = (value: number) => safeValue(value, 0.001, ctx.sampleRate / 2 - 1, 220); 
+    const safeGain = (value: number) => safeValue(value, 0.0001, 100, 0.05); 
     const safeQ = (value: number) => safeValue(value, 0.0001, 1000, 0.0001);
 
     const masterGain = ctx.createGain();
@@ -372,8 +372,8 @@ const PLANET_SYNTHESIZERS: Record<string, SynthesizerFunc> = {
       }
       return Math.max(min, Math.min(max, value));
     };
-    const safeFreq = (value: number) => safeValue(value, 0.001, ctx.sampleRate / 2 - 1, 0.001);
-    const safeGain = (value: number) => safeValue(value, 0.0001, 100, 0.0001);
+    const safeFreq = (value: number) => safeValue(value, 0.001, ctx.sampleRate / 2 - 1, 220); 
+    const safeGain = (value: number) => safeValue(value, 0.0001, 100, 0.05); 
 
     const osc = ctx.createOscillator();
     osc.frequency.setValueAtTime(safeFreq(220), ctx.currentTime);
@@ -390,8 +390,8 @@ const PLANET_SYNTHESIZERS: Record<string, SynthesizerFunc> = {
       }
       return Math.max(min, Math.min(max, value));
     };
-    const safeFreq = (value: number) => safeValue(value, 0.001, ctx.sampleRate / 2 - 1, 0.001);
-    const safeGain = (value: number) => safeValue(value, 0.0001, 100, 0.0001);
+    const safeFreq = (value: number) => safeValue(value, 0.001, ctx.sampleRate / 2 - 1, 220); 
+    const safeGain = (value: number) => safeValue(value, 0.0001, 100, 0.05); 
     const safeQ = (value: number) => safeValue(value, 0.0001, 1000, 0.0001);
 
     const buffer = ctx.createBuffer(1, ctx.sampleRate * 2, ctx.sampleRate);
@@ -415,8 +415,8 @@ const PLANET_SYNTHESIZERS: Record<string, SynthesizerFunc> = {
       }
       return Math.max(min, Math.min(max, value));
     };
-    const safeFreq = (value: number) => safeValue(value, 0.001, ctx.sampleRate / 2 - 1, 0.001);
-    const safeGain = (value: number) => safeValue(value, 0.0001, 100, 0.0001);
+    const safeFreq = (value: number) => safeValue(value, 0.001, ctx.sampleRate / 2 - 1, 220); 
+    const safeGain = (value: number) => safeValue(value, 0.0001, 100, 0.05); 
     const safeQ = (value: number) => safeValue(value, 0.0001, 1000, 0.0001);
 
     const mainGain = ctx.createGain();
@@ -473,8 +473,8 @@ const PLANET_SYNTHESIZERS: Record<string, SynthesizerFunc> = {
       }
       return Math.max(min, Math.min(max, value));
     };
-    const safeFreq = (value: number) => safeValue(value, 0.001, ctx.sampleRate / 2 - 1, 0.001);
-    const safeGain = (value: number) => safeValue(value, 0.0001, 100, 0.0001);
+    const safeFreq = (value: number) => safeValue(value, 0.001, ctx.sampleRate / 2 - 1, 220); 
+    const safeGain = (value: number) => safeValue(value, 0.0001, 100, 0.05); 
 
     const g = ctx.createGain();
     g.gain.setValueAtTime(safeGain(0.15), ctx.currentTime);
@@ -492,8 +492,8 @@ const PLANET_SYNTHESIZERS: Record<string, SynthesizerFunc> = {
       }
       return Math.max(min, Math.min(max, value));
     };
-    const safeFreq = (value: number) => safeValue(value, 0.001, ctx.sampleRate / 2 - 1, 0.001);
-    const safeGain = (value: number) => safeValue(value, 0.0001, 100, 0.0001);
+    const safeFreq = (value: number) => safeValue(value, 0.001, ctx.sampleRate / 2 - 1, 220); 
+    const safeGain = (value: number) => safeValue(value, 0.0001, 100, 0.05); 
 
     const mainGain = ctx.createGain();
     mainGain.gain.setValueAtTime(safeGain(0.15), ctx.currentTime);
@@ -538,8 +538,8 @@ const PLANET_SYNTHESIZERS: Record<string, SynthesizerFunc> = {
       }
       return Math.max(min, Math.min(max, value));
     };
-    const safeFreq = (value: number) => safeValue(value, 0.001, ctx.sampleRate / 2 - 1, 0.001);
-    const safeGain = (value: number) => safeValue(value, 0.0001, 100, 0.0001);
+    const safeFreq = (value: number) => safeValue(value, 0.001, ctx.sampleRate / 2 - 1, 220); 
+    const safeGain = (value: number) => safeValue(value, 0.0001, 100, 0.05); 
     const safeQ = (value: number) => safeValue(value, 0.0001, 1000, 0.0001);
 
     const mainGain = ctx.createGain();
@@ -593,8 +593,8 @@ const PLANET_SYNTHESIZERS: Record<string, SynthesizerFunc> = {
       }
       return Math.max(min, Math.min(max, value));
     };
-    const safeFreq = (value: number) => safeValue(value, 0.001, ctx.sampleRate / 2 - 1, 0.001);
-    const safeGain = (value: number) => safeValue(value, 0.0001, 100, 0.0001);
+    const safeFreq = (value: number) => safeValue(value, 0.001, ctx.sampleRate / 2 - 1, 220); 
+    const safeGain = (value: number) => safeValue(value, 0.0001, 100, 0.05); 
     const safeQ = (value: number) => safeValue(value, 0.0001, 1000, 0.0001);
 
     const mainGain = ctx.createGain();
@@ -645,7 +645,7 @@ const PLANET_SYNTHESIZERS: Record<string, SynthesizerFunc> = {
   }
 };
 
-const PlanetaryMission: React.FC<{ setView: (v: AppView) => void; setIsAnyTrackPlaying: (playing: boolean) => void }> = ({ setView, setIsAnyTrackPlaying }) => {
+export const PlanetaryMission: React.FC<{ setView: (v: AppView) => void; setIsAnyTrackPlaying: (playing: boolean) => void }> = ({ setView, setIsAnyTrackPlaying }) => {
   // LANDING TARGET UPDATED: Default is now The Sun (PLANETS[0]) instead of Earth (PLANETS[3])
   const [activePlanet, setActivePlanet] = useState<Planet>(PLANETS[0]); 
   const [isPlaying, setIsPlaying] = useState(false);
@@ -709,11 +709,11 @@ const PlanetaryMission: React.FC<{ setView: (v: AppView) => void; setIsAnyTrackP
         return Math.max(min, Math.min(max, value));
       };
 
-      const safeFreq = (value: number) => safeValue(value, 0.001, ctx.sampleRate / 2 - 1, 0.001);
-      const safeGain = (value: number) => safeValue(value, 0.0001, 100, 0.0001); // Max gain 100
-      const safeQ = (value: number) => safeValue(value, 0.0001, 1000, 0.0001); // Max Q 1000
-      const safePan = (value: number) => safeValue(value, -1, 1, 0); // Pan -1 to 1
-      const safeDetune = (value: number) => safeValue(value, -12000, 12000, 0); // Detune +/- 12000 cents
+      const safeFreq = (value: number) => safeValue(value, 0.001, ctx.sampleRate / 2 - 1, 220); 
+      const safeGain = (value: number) => safeValue(value, 0.0001, 100, 0.05); 
+      const safeQ = (value: number) => safeValue(value, 0.0001, 1000, 0.0001); 
+      const safePan = (value: number) => safeValue(value, -1, 1, 0); 
+      const safeDetune = (value: number) => safeValue(value, -12000, 12000, 0); 
 
       nodesRef.current.forEach(node => {
         try { 
@@ -847,12 +847,13 @@ const PlanetaryMission: React.FC<{ setView: (v: AppView) => void; setIsAnyTrackP
   };
 
   return (
-    <div className="space-y-8 md:space-y-12 animate-in slide-in-from-bottom-8 duration-1000 pb-40 px-2 md:px-0 max-w-7xl mx-auto">
+    <div className="space-y-10 md:space-y-16 animate-in slide-in-from-bottom-8 duration-1000 pb-40 px-2 md:px-0 max-w-7xl mx-auto">
       <div className="flex justify-between items-center px-4">
         <div className="space-y-1">
           <button 
             onClick={() => { stopSynthesis(); setView(AppView.DASHBOARD); }}
             className="flex items-center gap-2 text-teal-800 label-caps text-[10px] md:text-xs hover:gap-3 transition-all mb-2"
+            aria-label="Exit Observation Deck"
           >
             <ChevronLeft size={16} /> Exit Observation Deck
           </button>
@@ -868,6 +869,7 @@ const PlanetaryMission: React.FC<{ setView: (v: AppView) => void; setIsAnyTrackP
               onClick={toggleMute}
               className={`transition-all hover:scale-110 active:scale-95 outline-none ${isMuted ? 'text-slate-400' : 'text-teal-700'}`}
               title={isMuted ? "Unmute" : "Mute & Stop Audio"}
+              aria-label={isMuted ? "Unmute audio" : "Mute audio and stop synthesis"}
             >
               {isMuted ? <VolumeX size={18} /> : <Volume2 size={18} />}
             </button>
@@ -882,6 +884,7 @@ const PlanetaryMission: React.FC<{ setView: (v: AppView) => void; setIsAnyTrackP
                   gainNodeRef.current.gain.setValueAtTime(val, audioContextRef.current.currentTime);
                 }
               }}
+              aria-label="Adjust volume"
             />
           </div>
         </div>
@@ -971,6 +974,7 @@ const PlanetaryMission: React.FC<{ setView: (v: AppView) => void; setIsAnyTrackP
               onClick={() => handlePlanetSelect(activePlanet)}
               disabled={isLoading}
               className="w-28 h-28 md:w-40 md:h-40 bg-white text-slate-950 rounded-full flex items-center justify-center shadow-[0_0_100px_rgba(255,255,255,0.6)] hover:scale-110 active:scale-90 transition-all z-40 group pointer-events-auto"
+              aria-label={isPlaying && !isMuted ? `Pause audio for ${activePlanet.name}` : `Play audio for ${activePlanet.name}`}
             >
               {isLoading ? (
                 <Loader2 size={50} className="animate-spin text-teal-600" />
@@ -1031,6 +1035,7 @@ const PlanetaryMission: React.FC<{ setView: (v: AppView) => void; setIsAnyTrackP
                 key={p.id}
                 onClick={() => handlePlanetSelect(p)}
                 className={`group relative flex flex-col items-center justify-center p-8 rounded-[3.5rem] transition-all duration-700 overflow-hidden outline-none ${isActive ? 'bg-slate-950 text-white shadow-[0_30px_60px_-15px_rgba(0,0,0,0.5)] scale-105 ring-4 ring-teal-500/50 translate-y-[-8px]' : 'bg-white hover:bg-slate-50 border border-slate-200 hover:shadow-2xl hover:translate-y-[-4px]'}`}
+                aria-label={`Select ${p.name} for exploration`}
               >
                 {/* Scientifically Accurate Planet Thumbnail */}
                 <div className={`w-28 h-28 rounded-full mb-6 relative overflow-hidden transition-all duration-700 ring-2 ring-transparent ${isActive ? 'ring-teal-400 ring-offset-4 ring-offset-slate-950 scale-110 shadow-[0_0_40px_rgba(45,212,191,0.4)]' : 'group-hover:scale-105'}`}>
@@ -1048,7 +1053,9 @@ const PlanetaryMission: React.FC<{ setView: (v: AppView) => void; setIsAnyTrackP
                 </div>
 
                 <div className="text-center space-y-2">
-                  <h4 className="font-black text-xl tracking-tight leading-none uppercase group-hover:text-teal-600 transition-colors">{p.name}</h4>
+                  <h4 className="font-black text-xl tracking-tight leading-none uppercase group-hover:text-teal-600 transition-colors">
+                    {p.name}
+                  </h4>
                   <p className={`text-[10px] uppercase tracking-[0.3em] font-black ${isActive ? 'text-teal-400' : 'text-slate-400'}`}>{p.desc.split(':')[0]}</p>
                 </div>
 
@@ -1076,5 +1083,3 @@ const PlanetaryMission: React.FC<{ setView: (v: AppView) => void; setIsAnyTrackP
     </div>
   );
 };
-
-export default PlanetaryMission;
