@@ -646,7 +646,6 @@ const PLANET_SYNTHESIZERS: Record<string, SynthesizerFunc> = {
 };
 
 export const PlanetaryMission: React.FC<{ setView: (v: AppView) => void; setIsAnyTrackPlaying: (playing: boolean) => void }> = ({ setView, setIsAnyTrackPlaying }) => {
-  // LANDING TARGET UPDATED: Default is now The Sun (PLANETS[0]) instead of Earth (PLANETS[3])
   const [activePlanet, setActivePlanet] = useState<Planet>(PLANETS[0]); 
   const [isPlaying, setIsPlaying] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -688,7 +687,6 @@ export const PlanetaryMission: React.FC<{ setView: (v: AppView) => void; setIsAn
     nodesRef.current = [];
     setIsPlaying(false);
     setIsAnyTrackPlaying(false);
-    // Do NOT set setIsLoading(false) here, it's controlled by startSynthesis or handlePlanetSelect directly
   }, [setIsAnyTrackPlaying]);
 
   const startSynthesis = useCallback(async (type: string) => {
@@ -701,7 +699,6 @@ export const PlanetaryMission: React.FC<{ setView: (v: AppView) => void; setIsAn
       const ctx = audioContextRef.current!;
       const dest = gainNodeRef.current!;
 
-      // Robust helper for clamping values to valid AudioParam ranges
       const safeValue = (value: number, min: number, max: number, defaultValue: number) => {
         if (isNaN(value) || !isFinite(value)) {
           return defaultValue;
@@ -731,7 +728,6 @@ export const PlanetaryMission: React.FC<{ setView: (v: AppView) => void; setIsAn
     } catch (e) { console.error("Synthesis failed", e); } finally { setIsLoading(false); }
   }, [initAudio, isMuted, setIsAnyTrackPlaying]);
 
-  // Refined useEffect for video playback
   useEffect(() => {
     const video = videoRef.current;
     if (!video) return;
@@ -739,10 +735,8 @@ export const PlanetaryMission: React.FC<{ setView: (v: AppView) => void; setIsAn
     const shouldPlayVideo = isPlaying && !isMuted && activePlanet.videoUrl && !videoError;
 
     if (shouldPlayVideo) {
-      // Only attempt to play if not already playing or paused
       if (video.paused || video.ended) {
         video.play().catch(err => {
-          // Ignore AbortError if it's due to programmatic stop/restart
           if (err.name !== 'AbortError') {
             console.warn("Video playback failed:", err);
             setVideoError(true);
@@ -750,7 +744,6 @@ export const PlanetaryMission: React.FC<{ setView: (v: AppView) => void; setIsAn
         });
       }
     } else {
-      // Explicitly pause if not meant to be playing
       if (!video.paused) {
         video.pause();
       }
@@ -765,9 +758,8 @@ export const PlanetaryMission: React.FC<{ setView: (v: AppView) => void; setIsAn
     const video = videoRef.current;
     if (video) {
         if (nextMute) {
-            video.pause(); // Pause video when muting
+            video.pause();
         } else {
-            // Only try to play video if audio is also playing and video URL exists
             if (isPlaying && activePlanet.videoUrl && !videoError) {
                 video.play().catch(err => {
                     if (err.name !== 'AbortError') console.warn("Video play on unmute failed:", err);
@@ -778,10 +770,10 @@ export const PlanetaryMission: React.FC<{ setView: (v: AppView) => void; setIsAn
     }
     
     if (nextMute) {
-      stopSynthesis(); // This will set isPlaying to false
-    } else if (isPlaying) { // If audio was playing before mute, restart synthesis
-      setIsLoading(true); // Set loading state for audio restart
-      setTimeout(() => startSynthesis(activePlanet.synthesis), 50); // Small delay to prevent race conditions
+      stopSynthesis();
+    } else if (isPlaying) {
+      setIsLoading(true);
+      setTimeout(() => startSynthesis(activePlanet.synthesis), 50);
     }
   }, [isMuted, isPlaying, stopSynthesis, startSynthesis, activePlanet, videoError]);
 
@@ -793,48 +785,42 @@ export const PlanetaryMission: React.FC<{ setView: (v: AppView) => void; setIsAn
 
     setTimeout(() => setIsScanning(false), 2000);
 
-    // If the same planet is active and playing, toggle off
     if (activePlanet.id === p.id && isPlaying && !isMuted) {
         if (videoRef.current && !videoRef.current.paused) {
-            videoRef.current.pause(); // Immediately pause video
+            videoRef.current.pause();
         }
-        stopSynthesis(); // This will set isPlaying to false
-        setIsLoading(false); // End loading state
+        stopSynthesis();
+        setIsLoading(false);
         return;
     }
 
-    // New planet or starting a stopped planet
     if (videoRef.current && !videoRef.current.paused) {
-        videoRef.current.pause(); // Immediately pause old video if playing
+        videoRef.current.pause();
     }
-    stopSynthesis(); // Stop any previous synthesis and set isPlaying to false
+    stopSynthesis();
     
-    setActivePlanet(p); // Update active planet immediately
+    setActivePlanet(p);
 
     if (!isMuted) {
-        // Start new synthesis. This will set isPlaying to true on completion
-        // Use a small delay to allow DOM/audio context to reset if needed
         setTimeout(() => startSynthesis(p.synthesis), 50); 
     } else {
-        // If muted, just update the planet and ensure synthesis is stopped
-        stopSynthesis(); // Ensure it's off
-        setIsLoading(false); // End loading state
+        stopSynthesis();
+        setIsLoading(false);
     }
-    // The useEffect will handle playing the video once isPlaying is true (from startSynthesis)
-    // and activePlanet.videoUrl is updated.
   };
 
   useEffect(() => {
-    let timer: any;
-    if (isPlaying && !isMuted) timer = setInterval(() => setSessionTime(prev => prev + 1), 1000);
-    return () => clearInterval(timer);
+    let timer: number | undefined;
+    if (isPlaying && !isMuted) timer = window.setInterval(() => setSessionTime(prev => prev + 1), 1000);
+    return () => {
+      if (timer) window.clearInterval(timer);
+    };
   }, [isPlaying, isMuted]);
 
   useEffect(() => {
     return () => {
       stopSynthesis();
       setIsAnyTrackPlaying(false);
-      // Also ensure video is paused on component unmount
       if (videoRef.current) {
         videoRef.current.pause();
       }

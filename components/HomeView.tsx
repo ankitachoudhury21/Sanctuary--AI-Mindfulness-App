@@ -86,7 +86,7 @@ const HomeView: React.FC<Props> = React.memo(({ user, sleepData, activity, setAc
 
   return (
     // The outer div already acts as a single root element, making React.Fragment redundant.
-    <div className="space-y-8 md:space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-1000 pb-20 px-1 sm:px-0">
+    <div className="space-y-8 md:space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-1000 pb-20 px-4 md:px-6">
         {/* Hero Section */}
         <section className="relative min-h-[350px] md:h-[500px] rounded-[2.5rem] md:rounded-[4.5rem] overflow-hidden group shadow-2xl border border-white/20 dark:border-white/5">
           <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1441974231531-c6227db76b6e?auto=format&fit=crop&q=80&w=2560')] bg-cover bg-center transition-transform duration-[15000ms] group-hover:scale-110"></div>

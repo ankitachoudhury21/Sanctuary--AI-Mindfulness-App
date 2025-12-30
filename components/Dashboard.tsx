@@ -6,7 +6,8 @@ import { AppView, UserProfile, SleepData, ActivityData, JournalEntry } from '../
 import MusicPlayer from './MusicPlayer'; 
 import HomeView from './HomeView';
 import UserFlow from './UserFlow';
-// FIX: Changed PlanetaryMission from default import to named import based on error.
+// FIX: Changed PlanetaryMission from named import to default import based on new export in PlanetaryMission.tsx
+// FIX: Changed PlanetaryMission from default import to named import based on its export.
 import { PlanetaryMission } from './PlanetaryMission';
 import Journal from './Journal';
 import SleepTracker from './SleepTracker';

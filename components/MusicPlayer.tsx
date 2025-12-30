@@ -69,7 +69,7 @@ const MusicPlayer: React.FC<Props> = ({ setView, setIsAnyTrackPlaying }) => {
   const animationRef = useRef<number | null>(null);
   const audioContextRef = useRef<AudioContext | null>(null);
   const masterGainRef = useRef<GainNode | null>(null);
-  const reverbNodeRef = useRef<ConvolverNode | null>(null); // Initialized with null
+  const reverbNodeRef = useRef<ConvolverNode | null>(null);
 
   const filteredTracks = useMemo(() => {
     if (activeCat === 'all') return TRACKS;
@@ -89,7 +89,6 @@ const MusicPlayer: React.FC<Props> = ({ setView, setIsAnyTrackPlaying }) => {
         masterGainRef.current.gain.setValueAtTime(isMuted ? 0 : volume, ctx.currentTime);
         masterGainRef.current.connect(ctx.destination);
       }
-      // Reverb Setup - only if not already initialized
       if (!reverbNodeRef.current) {
         const reverb = ctx.createConvolver();
         const length = ctx.sampleRate * 4.0;
@@ -108,46 +107,44 @@ const MusicPlayer: React.FC<Props> = ({ setView, setIsAnyTrackPlaying }) => {
       if (!analyzerRef.current) {
         const analyzer = ctx.createAnalyser();
         analyzer.fftSize = 512;
-        // Smoother visualization for sleep
         analyzer.smoothingTimeConstant = currentTrack.cat === 'sleep' ? 0.95 : 0.85;
         analyzer.connect(masterGainRef.current);
         analyzerRef.current = analyzer;
       }
       return true;
-    } catch (err) { return false; }
+    } catch (err) { 
+      console.error("AudioEngine initialization failed:", err);
+      return false; 
+    }
   }, [volume, isMuted, currentTrack.cat]);
   
-  // Use activeVoicesRef to manage all dynamically created audio voices for each track type
   const activeVoicesRef = useRef<AudioVoice[]>([]);
 
-  const stopAllVoices = useCallback((fade = false) => { // default to immediate stop
+  // Internal function to stop all active audio nodes without changing global isPlaying state
+  const stopCurrentVoicesInternal = useCallback(() => {
     const ctx = audioContextRef.current;
     if (!ctx) return;
     
     activeVoicesRef.current.forEach(voice => {
       const now = ctx.currentTime;
       voice.gainNode.gain.cancelScheduledValues(now); // Clear any pending ramps
-      if (fade) {
-        voice.gainNode.gain.linearRampToValueAtTime(0, now + CROSSFADE_TIME);
-        setTimeout(() => {
-          voice.nodes.forEach(n => { try { if(n.stop) n.stop(); n.disconnect(); } catch(e){} });
-          voice.gainNode.disconnect();
-        }, CROSSFADE_TIME * 1000 + 100);
-      } else { // Immediate stop
-        voice.gainNode.gain.setValueAtTime(0, now); // Ensure gain is 0 immediately
-        voice.nodes.forEach(n => { try { if(n.stop) n.stop(); n.disconnect(); } catch(e){} });
-        voice.gainNode.disconnect();
-      }
+      voice.gainNode.gain.setValueAtTime(0, now); // Ensure immediate silence
+      voice.nodes.forEach(n => { 
+        try { 
+          if(n.stop) n.stop(now); // Use now for precise stopping
+          n.disconnect(); 
+        } catch(e){} 
+      });
+      voice.gainNode.disconnect();
     });
     activeVoicesRef.current = [];
-    setIsPlaying(false);
-    setIsAnyTrackPlaying(false);
-  }, [setIsAnyTrackPlaying]);
+  }, []);
 
   const startGenerator = useCallback((type: string, trackId: string) => {
     const ctx = audioContextRef.current;
+    // Guard against null context, analyzer or muted state
     if (!ctx || !analyzerRef.current || isMuted) {
-      setIsLoading(false);
+      setIsLoading(false); // Ensure loading is off if we can't start
       return;
     }
     const now = ctx.currentTime;
@@ -185,7 +182,6 @@ const MusicPlayer: React.FC<Props> = ({ setView, setIsAnyTrackPlaying }) => {
 
       const tonic = (isDarbari || isBageshri) ? safeFreq(110) : (isYaman ? safeFreq(146.83) : safeFreq(130.81));
       
-      // Drone strings: Bilawal has a brighter Sa-Pa-Sa' tuning with high Chikari plucks
       const strings = isBilawal 
         ? [safeFreq(tonic * 0.75), tonic, safeFreq(tonic * 1.5), safeFreq(tonic * 2.0), safeFreq(tonic * 4.0)] 
         : [safeFreq((isBageshri ? tonic * 1.334 : tonic * 1.5)), tonic, tonic, safeFreq(tonic * 0.5), safeFreq(tonic * 0.25)];
@@ -197,7 +193,6 @@ const MusicPlayer: React.FC<Props> = ({ setView, setIsAnyTrackPlaying }) => {
         
         const javari = ctx.createBiquadFilter();
         javari.type = 'bandpass';
-        // Brighter 'buzzing' bridge harmonics for Bilawal
         javari.frequency.setValueAtTime(safeFreq(isBilawal ? 1800 + (idx * 350) : 1200 + (idx * 200)), now);
         javari.Q.setValueAtTime(safeQ(isBilawal ? 15 : 8), now);
         
@@ -211,13 +206,11 @@ const MusicPlayer: React.FC<Props> = ({ setView, setIsAnyTrackPlaying }) => {
         const pan = ctx.createStereoPanner();
         pan.pan.setValueAtTime(safePan((idx - 2) * 0.4), now);
         
-        // Pluck cycle: Bilawal follows a tighter, more rhythmic 'Chikari' pulse
         const pluckInterval = isBilawal ? 3.8 : 4.5; 
         const pluck = () => {
           const t = ctx.currentTime;
           sg.gain.cancelScheduledValues(t);
           sg.gain.setValueAtTime(0, t);
-          // Sharper attack for Bilawal plucks
           sg.gain.linearRampToValueAtTime(safeGain(isBilawal ? 0.12 : 0.07), t + (isBilawal ? 0.04 : 0.1));
           sg.gain.exponentialRampToValueAtTime(0.0001, t + pluckInterval - 0.1);
         };
@@ -231,17 +224,15 @@ const MusicPlayer: React.FC<Props> = ({ setView, setIsAnyTrackPlaying }) => {
         extraNodes.push(osc, lp, javari, sg, pan, { stop: () => clearInterval(intervalId) });
       });
 
-      // Scale definitions
-      const scaleB = [0, 2, 4, 5, 7, 9, 11, 12]; // Pure Shuddha Swaras (Major Scale)
+      const scaleB = [0, 2, 4, 5, 7, 9, 11, 12];
       const scaleY = [0, 2, 4, 6, 7, 9, 11, 12];
       const scaleBag = [0, 3, 5, 7, 10, 12];
       const activeScale = isYaman ? scaleY : isBageshri ? scaleBag : scaleB;
       
       const playMelodyNote = () => {
         const t = ctx.currentTime;
-        // Bilawal favors ascending movements (Arohana) for an uplifting morning feel
         const intervalIndex = isBilawal 
-          ? Math.floor(Math.random() * 4) + 2 // Focus on upper tetrachord
+          ? Math.floor(Math.random() * 4) + 2 
           : Math.floor(Math.random() * activeScale.length);
         
         const interval = activeScale[intervalIndex % activeScale.length];
@@ -249,7 +240,6 @@ const MusicPlayer: React.FC<Props> = ({ setView, setIsAnyTrackPlaying }) => {
         const freq = safeFreq(tonic * Math.pow(2, (interval + octave * 12) / 12));
         
         const mOsc = ctx.createOscillator();
-        // Lead texture: Sitar-like filtered triangle for Bilawal
         mOsc.type = isBilawal ? 'triangle' : (isBageshri ? 'sine' : 'triangle'); 
         mOsc.frequency.setValueAtTime(freq, t);
         
@@ -260,13 +250,11 @@ const MusicPlayer: React.FC<Props> = ({ setView, setIsAnyTrackPlaying }) => {
         const mGain = ctx.createGain();
         mGain.gain.setValueAtTime(0, t);
         
-        // Fast, energetic articulation for Bilawal morning focus
         const attack = isBilawal ? 0.08 : (isBageshri ? 0.6 : 0.2);
         const decay = isBilawal ? 3.2 : (isBageshri ? 5.0 : 4.0);
         mGain.gain.linearRampToValueAtTime(safeGain(isBilawal ? 0.18 : 0.13), t + attack);
         mGain.gain.exponentialRampToValueAtTime(0.0001, t + decay);
 
-        // Slide logic: Bilawal often has 'straight' notes but with crystalline vibrato
         if (Math.random() > 0.6 && isBilawal) {
           const nextInt = activeScale[(intervalIndex + 1) % activeScale.length];
           const nextFreq = safeFreq(tonic * Math.pow(2, (nextInt + octave * 12) / 12));
@@ -299,7 +287,7 @@ const MusicPlayer: React.FC<Props> = ({ setView, setIsAnyTrackPlaying }) => {
       
       const playSingingBowl = (fundamental: number, force: number) => {
         const t = ctx.currentTime;
-        const ratios = [1, 2.81, 5.23, 7.9, 10.6]; // Inharmonic ratios for bronze bowls
+        const ratios = [1, 2.81, 5.23, 7.9, 10.6];
         ratios.forEach((ratio, i) => {
           const osc = ctx.createOscillator();
           osc.type = 'sine';
@@ -321,7 +309,6 @@ const MusicPlayer: React.FC<Props> = ({ setView, setIsAnyTrackPlaying }) => {
       playSingingBowl(safeFreq(110), safeGain(0.8));
       extraNodes.push({ stop: () => clearInterval(bowlInterval) });
 
-      // Rim-rubbing texture
       const noise = ctx.createBufferSource();
       const nBuf = ctx.createBuffer(1, ctx.sampleRate * 2, ctx.sampleRate);
       const nData = nBuf.getChannelData(0);
@@ -352,14 +339,13 @@ const MusicPlayer: React.FC<Props> = ({ setView, setIsAnyTrackPlaying }) => {
       const playShakuhachi = () => {
         const t = ctx.currentTime;
         const scale = [0, 3, 5, 7, 10, 12];
-        const root = 220; // A3
+        const root = 220; 
         const freq = safeFreq(root * Math.pow(2, scale[Math.floor(Math.random() * scale.length)] / 12));
         
         const osc = ctx.createOscillator();
         osc.type = 'sine';
         osc.frequency.setValueAtTime(freq, t);
         
-        // Breathy "Chiff" Noise
         const noise = ctx.createBufferSource();
         const nBuf = ctx.createBuffer(1, ctx.sampleRate, ctx.sampleRate);
         const nData = nBuf.getChannelData(0);
@@ -397,7 +383,6 @@ const MusicPlayer: React.FC<Props> = ({ setView, setIsAnyTrackPlaying }) => {
       playShakuhachi();
       extraNodes.push({ stop: () => clearInterval(fluteId) });
 
-      // Biophonic Layer (Birds & Wind)
       const playBird = () => {
         const bt = ctx.currentTime;
         const birdOsc = ctx.createOscillator();
@@ -501,35 +486,31 @@ const MusicPlayer: React.FC<Props> = ({ setView, setIsAnyTrackPlaying }) => {
       const w_mainGain = ctx.createGain();
       w_mainGain.connect(voiceGain);
       
-      // Brownian Noise (Deep, bass-heavy noise)
       const bufferSize = ctx.sampleRate * 5;
       const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
       const data = buffer.getChannelData(0);
       let lastOut = 0;
       for (let i = 0; i < bufferSize; i++) {
         const white = Math.random() * 2 - 1;
-        lastOut = (lastOut + (safeGain(0.02) * white)) / 1.02; // Simple brownian filter
+        lastOut = (lastOut + (safeGain(0.02) * white)) / 1.02;
         data[i] = lastOut * 4.0;
       }
       
       const bSource = ctx.createBufferSource();
       bSource.buffer = buffer; bSource.loop = true;
       
-      // Strict Low-pass filter (no high notes)
       const lp = ctx.createBiquadFilter();
       lp.type = 'lowpass';
       lp.frequency.setValueAtTime(safeFreq(150), now);
       lp.Q.setValueAtTime(safeQ(1), now);
       
-      // Rhythmic gain LFO for breathing effect
       const bLfo = ctx.createOscillator();
-      bLfo.frequency.setValueAtTime(safeFreq(0.08), now); // 12.5s cycle
+      bLfo.frequency.setValueAtTime(safeFreq(0.08), now);
       const bLfoG = ctx.createGain();
       bLfoG.gain.setValueAtTime(safeGain(0.3), now);
       bLfo.connect(bLfoG).connect(w_mainGain.gain);
       w_mainGain.gain.setValueAtTime(safeGain(0.4), now);
       
-      // Deep sub-bass pulse
       const sub = ctx.createOscillator();
       sub.type = 'sine';
       sub.frequency.setValueAtTime(safeFreq(40), now);
@@ -547,7 +528,6 @@ const MusicPlayer: React.FC<Props> = ({ setView, setIsAnyTrackPlaying }) => {
       const r_mainGain = ctx.createGain();
       r_mainGain.connect(voiceGain);
       
-      // Muffled Rain Engine (Brownian noise + aggressive low-pass)
       const bufferSize = ctx.sampleRate * 4;
       const buffer = ctx.createBuffer(1, ctx.sampleRate, ctx.sampleRate);
       const data = buffer.getChannelData(0);
@@ -561,9 +541,8 @@ const MusicPlayer: React.FC<Props> = ({ setView, setIsAnyTrackPlaying }) => {
       rSrc.buffer = buffer; rSrc.loop = true;
       const rLp = ctx.createBiquadFilter();
       rLp.type = 'lowpass'; 
-      rLp.frequency.setValueAtTime(safeFreq(220), now); // Low only
+      rLp.frequency.setValueAtTime(safeFreq(220), now); 
       
-      // Volume LFO for "intensity shifts" in rain
       const rainLfo = ctx.createOscillator();
       rainLfo.frequency.setValueAtTime(safeFreq(0.04), now);
       const rainLfoG = ctx.createGain();
@@ -575,7 +554,6 @@ const MusicPlayer: React.FC<Props> = ({ setView, setIsAnyTrackPlaying }) => {
       rSrc.start(); rainLfo.start();
       extraNodes.push(rSrc, rLp, rainLfo, rainLfoG);
       
-      // Distant Forest "Thumps" (Grounding Low Notes)
       const playDistantDrop = () => {
         const t = ctx.currentTime;
         const osc = ctx.createOscillator();
@@ -665,17 +643,15 @@ const MusicPlayer: React.FC<Props> = ({ setView, setIsAnyTrackPlaying }) => {
       extraNodes.push({ stop: () => clearInterval(seqId) });
       mainNode = p_mainGain;
     } 
-    // NEW CLASSICAL INSTRUMENTS START HERE
     else if (type === 'GEN_SITAR_DAWN') {
       const s_mainGain = ctx.createGain();
       s_mainGain.gain.setValueAtTime(safeGain(0.3), now);
       s_mainGain.connect(voiceGain);
       if (reverbNodeRef.current) s_mainGain.connect(reverbNodeRef.current);
 
-      const tonic = safeFreq(130.81); // C3
-      const scale = [0, 2, 4, 5, 7, 9, 11, 12]; // Major scale for uplifting feel
+      const tonic = safeFreq(130.81); 
+      const scale = [0, 2, 4, 5, 7, 9, 11, 12];
 
-      // Tanpura-like drone
       [tonic, safeFreq(tonic * 1.5), safeFreq(tonic * 2.0)].forEach((freqVal, idx) => {
         const osc = ctx.createOscillator();
         osc.type = 'sine';
@@ -704,8 +680,8 @@ const MusicPlayer: React.FC<Props> = ({ setView, setIsAnyTrackPlaying }) => {
 
         const javariFilter = ctx.createBiquadFilter();
         javariFilter.type = 'bandpass';
-        javariFilter.frequency.setValueAtTime(safeFreq(freq * (2 + Math.random())), t); // Dynamic buzz point
-        javariFilter.Q.setValueAtTime(safeQ(15 + Math.random() * 10), t); // Sharp resonance for buzz
+        javariFilter.frequency.setValueAtTime(safeFreq(freq * (2 + Math.random())), t); 
+        javariFilter.Q.setValueAtTime(safeQ(15 + Math.random() * 10), t);
 
         const lpFilter = ctx.createBiquadFilter();
         lpFilter.type = 'lowpass';
@@ -713,10 +689,10 @@ const MusicPlayer: React.FC<Props> = ({ setView, setIsAnyTrackPlaying }) => {
 
         const g = ctx.createGain();
         g.gain.setValueAtTime(0, t);
-        g.gain.linearRampToValueAtTime(safeGain(0.2), t + 0.05); // Fast attack
-        g.gain.exponentialRampToValueAtTime(0.0001, t + 4.0 + Math.random() * 2); // Long decay
+        g.gain.linearRampToValueAtTime(safeGain(0.2), t + 0.05); 
+        g.gain.exponentialRampToValueAtTime(0.0001, t + 4.0 + Math.random() * 2);
 
-        const vib = ctx.createOscillator(); // Vibrato
+        const vib = ctx.createOscillator();
         vib.frequency.setValueAtTime(safeFreq(4 + Math.random() * 2), t);
         const vibG = ctx.createGain();
         vibG.gain.setValueAtTime(safeGain(freq * 0.01 + Math.random() * 0.005), t);
@@ -724,10 +700,10 @@ const MusicPlayer: React.FC<Props> = ({ setView, setIsAnyTrackPlaying }) => {
         vib.start(t);
 
         osc.connect(javariFilter).connect(g);
-        osc.connect(lpFilter).connect(g); // Mix filtered and buzzy sounds
+        osc.connect(lpFilter).connect(g);
         g.connect(s_mainGain);
         osc.start(t);
-        osc.stop(t + 6.5); // Ensure all nodes stop
+        osc.stop(t + 6.5);
         vib.stop(t + 6.5);
 
         extraNodes.push(osc, javariFilter, lpFilter, g, vib, vibG);
@@ -747,41 +723,39 @@ const MusicPlayer: React.FC<Props> = ({ setView, setIsAnyTrackPlaying }) => {
         const t = ctx.currentTime;
         const baseFreq = safeFreq(60 + freqOffset);
 
-        // Two slightly detuned sines for richer bass
         const osc1 = ctx.createOscillator();
         osc1.type = 'sine';
         osc1.frequency.setValueAtTime(baseFreq, t);
 
         const osc2 = ctx.createOscillator();
         osc2.type = 'sine';
-        osc2.frequency.setValueAtTime(safeFreq(baseFreq * 1.005), t); // Slight detune
+        osc2.frequency.setValueAtTime(safeFreq(baseFreq * 1.005), t);
 
         const gain = ctx.createGain();
         gain.gain.setValueAtTime(0, t);
-        gain.gain.linearRampToValueAtTime(safeGain(0.8 * volume), t + 0.02); // Fast attack
-        gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.8); // Slightly longer decay
+        gain.gain.linearRampToValueAtTime(safeGain(0.8 * volume), t + 0.02); 
+        gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.8);
 
         const pitchEnv = ctx.createOscillator();
         pitchEnv.type = 'sine';
-        pitchEnv.frequency.setValueAtTime(safeFreq(4), t); // LFO for pitch sweep
+        pitchEnv.frequency.setValueAtTime(safeFreq(4), t); 
         const pitchGain = ctx.createGain();
-        pitchGain.gain.setValueAtTime(safeGain(80), t); // Increased pitch sweep depth
+        pitchGain.gain.setValueAtTime(safeGain(80), t); 
         pitchEnv.connect(pitchGain).connect(osc1.frequency);
-        pitchEnv.connect(pitchGain).connect(osc2.frequency); // Apply to both
+        pitchEnv.connect(pitchGain).connect(osc2.frequency);
 
-        // Low-pass filter with envelope
         const filter = ctx.createBiquadFilter();
         filter.type = 'lowpass';
-        filter.frequency.setValueAtTime(safeFreq(2000), t); // Start open
-        filter.frequency.exponentialRampToValueAtTime(safeFreq(100), t + 0.8); // Decay filter frequency
-        filter.Q.setValueAtTime(safeQ(2), t); // Slight resonance
+        filter.frequency.setValueAtTime(safeFreq(2000), t);
+        filter.frequency.exponentialRampToValueAtTime(safeFreq(100), t + 0.8);
+        filter.Q.setValueAtTime(safeQ(2), t);
 
         osc1.connect(filter);
         osc2.connect(filter);
         filter.connect(gain).connect(t_mainGain);
 
         osc1.start(t); osc2.start(t); pitchEnv.start(t);
-        osc1.stop(t + 1.2); osc2.stop(t + 1.2); pitchEnv.stop(t + 1.2); // Stop all related nodes
+        osc1.stop(t + 1.2); osc2.stop(t + 1.2); pitchEnv.stop(t + 1.2);
         extraNodes.push(osc1, osc2, gain, pitchEnv, pitchGain, filter);
       };
 
@@ -791,16 +765,14 @@ const MusicPlayer: React.FC<Props> = ({ setView, setIsAnyTrackPlaying }) => {
 
         const gain = ctx.createGain();
         gain.gain.setValueAtTime(0, t);
-        gain.gain.linearRampToValueAtTime(safeGain(0.7 * volume), t + 0.01); // Very fast attack
+        gain.gain.linearRampToValueAtTime(safeGain(0.7 * volume), t + 0.01);
         let decayTime = type === 'sharp' ? 0.2 : (type === 'open' ? 0.6 : 0.4);
         gain.gain.exponentialRampToValueAtTime(0.0001, t + decayTime);
 
-        // Core tone
         const osc = ctx.createOscillator();
         osc.type = 'triangle';
         osc.frequency.setValueAtTime(baseFreq, t);
 
-        // Noise transient
         const noiseBuffer = ctx.createBuffer(1, ctx.sampleRate * 0.1, ctx.sampleRate);
         const nData = noiseBuffer.getChannelData(0);
         for(let i=0; i<noiseBuffer.length; i++) nData[i] = Math.random() * 2 - 1;
@@ -812,25 +784,23 @@ const MusicPlayer: React.FC<Props> = ({ setView, setIsAnyTrackPlaying }) => {
         noiseFilter.frequency.setValueAtTime(safeFreq(5000), t);
         noiseFilter.Q.setValueAtTime(safeQ(type === 'sharp' ? 15 : 5), t);
         
-        // Noise envelope for sharp transient
         const noiseGain = ctx.createGain();
         noiseGain.gain.setValueAtTime(0, t);
         noiseGain.gain.linearRampToValueAtTime(safeGain(0.3 * volume), t + 0.005);
         noiseGain.gain.exponentialRampToValueAtTime(0.0001, t + 0.1);
-        noise.connect(noiseFilter).connect(noiseGain).connect(gain); // Connect noise to filter, then gain
-        noise.start(t); noise.stop(t + decayTime + 0.1); // Noise transient is short
+        noise.connect(noiseFilter).connect(noiseGain).connect(gain);
+        noise.start(t); noise.stop(t + decayTime + 0.1);
 
         osc.connect(gain);
         gain.connect(t_mainGain);
 
         osc.start(t);
-        osc.stop(t + decayTime + 0.2); // Stop core tone slightly after noise
+        osc.stop(t + decayTime + 0.2);
 
         extraNodes.push(osc, gain, noise, noiseFilter, noiseGain);
       };
 
-      // Define a rhythmic sequence for Tabla
-      const talaDadmra = [ // 7-beat rhythm
+      const talaDadmra = [
         { beat: 0, instrument: 'dayan', type: 'sharp', vol: 1.0 },
         { beat: 1, instrument: 'bayan', vol: 0.7 },
         { beat: 2, instrument: 'dayan', type: 'open', vol: 0.8 },
@@ -840,24 +810,23 @@ const MusicPlayer: React.FC<Props> = ({ setView, setIsAnyTrackPlaying }) => {
       ];
       
       const bpm = 80;
-      const beatDuration = 60 / bpm; // Duration of one beat in seconds
+      const beatDuration = 60 / bpm;
 
       const playTablaPattern = () => {
         const t = ctx.currentTime;
         talaDadmra.forEach(note => {
           const scheduleTime = t + (note.beat * beatDuration);
           if (note.instrument === 'dayan') {
-            playDayan(note.vol, note.type as 'resonant' | 'sharp' | 'open'); // Explicit type assertion
-          } else { // bayan
+            playDayan(note.vol, note.type as 'resonant' | 'sharp' | 'open');
+          } else {
             playBayan(note.vol);
           }
         });
       };
       
-      // Start the tabla sequence repeatedly
       const loopInterval = (talaDadmra[talaDadmra.length - 1].beat + 1) * beatDuration * 1000;
       const tablaSequenceInterval = setInterval(playTablaPattern, loopInterval);
-      playTablaPattern(); // Play first pattern immediately
+      playTablaPattern();
       extraNodes.push({ stop: () => clearInterval(tablaSequenceInterval) });
       mainNode = t_mainGain;
     }
@@ -868,15 +837,15 @@ const MusicPlayer: React.FC<Props> = ({ setView, setIsAnyTrackPlaying }) => {
       if (reverbNodeRef.current) g_mainGain.connect(reverbNodeRef.current);
 
       const playGuitarNote = (freq: number, startTime: number, duration: number, vel: number) => {
-        const harmonicRatios = [1, 2, 2.99, 4.01, 5.02, 6]; // Inharmonicity for plucked strings
+        const harmonicRatios = [1, 2, 2.99, 4.01, 5.02, 6];
         harmonicRatios.forEach((ratio, idx) => {
           const osc = ctx.createOscillator();
-          osc.type = 'triangle'; // Mellower than square
+          osc.type = 'triangle';
           osc.frequency.setValueAtTime(safeFreq(freq * ratio), startTime);
           const g = ctx.createGain();
           g.gain.setValueAtTime(0, startTime);
-          g.gain.linearRampToValueAtTime(safeGain((0.2 / (idx + 1)) * vel), startTime + 0.01); // Fast attack
-          g.gain.exponentialRampToValueAtTime(0.0001, startTime + duration * (1.2 - idx * 0.05)); // Longer decay for lower harmonics
+          g.gain.linearRampToValueAtTime(safeGain((0.2 / (idx + 1)) * vel), startTime + 0.01);
+          g.gain.exponentialRampToValueAtTime(0.0001, startTime + duration * (1.2 - idx * 0.05));
           osc.connect(g).connect(g_mainGain);
           osc.start(startTime);
           osc.stop(startTime + duration + 1);
@@ -884,12 +853,12 @@ const MusicPlayer: React.FC<Props> = ({ setView, setIsAnyTrackPlaying }) => {
         });
       };
 
-      const scale = [0, 2, 4, 7, 9, 12]; // Major pentatonic-like scale
+      const scale = [0, 2, 4, 7, 9, 12];
       const chordNotes = [
-        [safeFreq(130.81), safeFreq(196.00), safeFreq(261.63)], // C major triad
-        [safeFreq(146.83), safeFreq(220.00), safeFreq(293.66)], // D minor triad (relative)
-        [safeFreq(164.81), safeFreq(246.94), safeFreq(329.63)], // E minor triad
-        [safeFreq(110.00), safeFreq(164.81), safeFreq(220.00)], // A minor triad
+        [safeFreq(130.81), safeFreq(196.00), safeFreq(261.63)],
+        [safeFreq(146.83), safeFreq(220.00), safeFreq(293.66)],
+        [safeFreq(164.81), safeFreq(246.94), safeFreq(329.63)],
+        [safeFreq(110.00), safeFreq(164.81), safeFreq(220.00)],
       ];
       let currentChordIdx = 0;
 
@@ -897,16 +866,15 @@ const MusicPlayer: React.FC<Props> = ({ setView, setIsAnyTrackPlaying }) => {
         const t = ctx.currentTime;
         const currentChord = chordNotes[currentChordIdx];
         currentChord.forEach((noteFreq, idx) => {
-          playGuitarNote(noteFreq, t + idx * 0.2, 4.0, 0.7); // Strummed arpeggio
+          playGuitarNote(noteFreq, t + idx * 0.2, 4.0, 0.7);
         });
         currentChordIdx = (currentChordIdx + 1) % chordNotes.length;
       };
 
-      const guitarInterval = setInterval(playGuitarArpeggio, 8000); // Change chord every 8 seconds
+      const guitarInterval = setInterval(playGuitarArpeggio, 8000);
       playGuitarArpeggio();
       extraNodes.push({ stop: () => clearInterval(guitarInterval) });
 
-      // Forest ambiance (light wind, distant leaves)
       const noiseBuffer = ctx.createBuffer(1, ctx.sampleRate * 5, ctx.sampleRate);
       const noiseData = noiseBuffer.getChannelData(0);
       let lastNoiseOut = 0;
@@ -934,34 +902,33 @@ const MusicPlayer: React.FC<Props> = ({ setView, setIsAnyTrackPlaying }) => {
       h_mainGain.connect(voiceGain);
       if (reverbNodeRef.current) h_mainGain.connect(reverbNodeRef.current);
 
-      const droneFreqs = [safeFreq(110), safeFreq(164.81), safeFreq(220)]; // A2, E3, A3
+      const droneFreqs = [safeFreq(110), safeFreq(164.81), safeFreq(220)];
       droneFreqs.forEach((freqVal, idx) => {
         const osc = ctx.createOscillator();
-        osc.type = 'sawtooth'; // Richer harmonics than sine
+        osc.type = 'sawtooth';
         osc.frequency.setValueAtTime(freqVal, now);
 
         const filter = ctx.createBiquadFilter();
         filter.type = 'lowpass';
-        filter.frequency.setValueAtTime(safeFreq(800 + idx * 200), now); // Slightly different filter for each drone
+        filter.frequency.setValueAtTime(safeFreq(800 + idx * 200), now);
         filter.Q.setValueAtTime(safeQ(2), now);
 
         const gain = ctx.createGain();
         const lfo = ctx.createOscillator();
-        lfo.frequency.setValueAtTime(safeFreq(0.02 + idx * 0.005), now); // Slow, slightly detuned LFOs for "wobble"
+        lfo.frequency.setValueAtTime(safeFreq(0.02 + idx * 0.005), now);
         const lfoG = ctx.createGain();
-        lfoG.gain.setValueAtTime(safeGain(0.1 + idx * 0.05), now); // Varying depth
+        lfoG.gain.setValueAtTime(safeGain(0.1 + idx * 0.05), now);
         lfo.connect(lfoG).connect(gain.gain);
-        gain.gain.setValueAtTime(safeGain(0.2 / (idx + 1)), now); // Base gain
+        gain.gain.setValueAtTime(safeGain(0.2 / (idx + 1)), now);
         
         osc.connect(filter).connect(gain).connect(h_mainGain);
         osc.start(); lfo.start();
         extraNodes.push(osc, filter, gain, lfo, lfoG);
       });
 
-      // Subtle, high-frequency "reeds" texture
       const highFreqOsc = ctx.createOscillator();
       highFreqOsc.type = 'sawtooth';
-      highFreqOsc.frequency.setValueAtTime(safeFreq(440), now); // A4
+      highFreqOsc.frequency.setValueAtTime(safeFreq(440), now);
       const highFilter = ctx.createBiquadFilter();
       highFilter.type = 'highpass';
       highFilter.frequency.setValueAtTime(safeFreq(1000), now);
@@ -973,112 +940,145 @@ const MusicPlayer: React.FC<Props> = ({ setView, setIsAnyTrackPlaying }) => {
 
       mainNode = h_mainGain;
     }
-    // NEW CLASSICAL INSTRUMENTS END HERE
     
-    // Add all nodes for this voice to the activeVoicesRef for cleanup
     activeVoicesRef.current.push({ id: trackId, gainNode: voiceGain, nodes: extraNodes.concat(mainNode) });
 
-  }, [volume, isMuted, setIsAnyTrackPlaying, reverbNodeRef]);
+  }, [volume, isMuted, setIsAnyTrackPlaying, reverbNodeRef, stopCurrentVoicesInternal]); // Added stopCurrentVoicesInternal to deps
 
 
   const togglePlayPause = useCallback(async () => {
     if (isLoading) return;
 
     if (isPlaying) {
-      stopAllVoices(true); // Fade out, sets isPlaying(false)
+      stopCurrentVoicesInternal(); 
+      setIsPlaying(false);
+      setIsAnyTrackPlaying(false);
+      setSessionTime(0); // Reset timer on pause
     } else {
       setIsLoading(true);
-      await initAudioEngine();
-      startGenerator(currentTrack.url, currentTrack.id);
-      setIsPlaying(true); // Sets isPlaying(true)
-      setIsAnyTrackPlaying(true);
+      const audioInitialized = await initAudioEngine();
+      if (audioInitialized) {
+        stopCurrentVoicesInternal(); 
+        startGenerator(currentTrack.url, currentTrack.id);
+        setIsPlaying(true);
+        setIsAnyTrackPlaying(true);
+      } else {
+        console.error("Failed to initialize audio engine on play. Check browser permissions.");
+        setIsPlaying(false);
+        setIsAnyTrackPlaying(false);
+        setSessionTime(0); // Reset timer if audio fails to start
+      }
       setIsLoading(false);
     }
-  }, [isPlaying, isLoading, stopAllVoices, initAudioEngine, startGenerator, currentTrack, setIsAnyTrackPlaying]);
+  }, [isPlaying, isLoading, stopCurrentVoicesInternal, initAudioEngine, startGenerator, currentTrack.url, currentTrack.id, setIsAnyTrackPlaying]); // Added currentTrack.url/id to deps
 
   const playNextTrack = useCallback(() => {
     const currentIndex = filteredTracks.findIndex(t => t.id === currentTrack.id);
     const nextIndex = (currentIndex + 1) % filteredTracks.length;
     setCurrentTrack(filteredTracks[nextIndex]);
-    if (!isPlaying) { // If not playing, ensure it starts
+    if (!isPlaying) { 
       setIsPlaying(true);
     }
-    // The useEffect will handle stopping the old and starting the new via currentTrack.id change
-  }, [currentTrack, filteredTracks, isPlaying]);
+    if (isMuted) { // If muted, un-mute and play new track
+      setIsMuted(false);
+    }
+  }, [currentTrack, filteredTracks, isPlaying, isMuted]);
 
   const playPreviousTrack = useCallback(() => {
     const currentIndex = filteredTracks.findIndex(t => t.id === currentTrack.id);
     const prevIndex = (currentIndex - 1 + filteredTracks.length) % filteredTracks.length;
     setCurrentTrack(filteredTracks[prevIndex]);
-    if (!isPlaying) { // If not playing, ensure it starts
+    if (!isPlaying) { 
       setIsPlaying(true);
     }
-    // The useEffect will handle stopping the old and starting the new via currentTrack.id change
-  }, [currentTrack, filteredTracks, isPlaying]);
+    if (isMuted) { // If muted, un-mute and play new track
+      setIsMuted(false);
+    }
+  }, [currentTrack, filteredTracks, isPlaying, isMuted]);
 
 
   useEffect(() => {
-    let timer: any;
+    let timer: number | undefined;
     if (isPlaying && !isMuted) {
-      timer = setInterval(() => setSessionTime(prev => prev + 1), 1000);
+      timer = window.setInterval(() => setSessionTime(prev => prev + 1), 1000);
     }
-    return () => clearInterval(timer);
+    return () => {
+      if (timer) window.clearInterval(timer);
+    };
   }, [isPlaying, isMuted]);
 
   // Main effect to manage audio synthesis based on playing state and track selection
   useEffect(() => {
-    // Only proceed if not in a loading state initiated by startGenerator itself
-    if (!isLoading) {
+    let isMounted = true;
+    let debounceTimeout: number | undefined;
+
+    const handleAudioPlaybackChange = async () => {
+      if (!isMounted) return;
+
+      stopCurrentVoicesInternal(); // Always clean up current audio nodes
+
       if (isPlaying && !isMuted) {
-        // If meant to be playing, stop any existing and start the current track
-        stopAllVoices(); 
-        setIsLoading(true); // Set loading while we initialize/start generator
-        initAudioEngine().then(success => {
-          if (success) {
-            startGenerator(currentTrack.url, currentTrack.id);
-          } else {
-            console.error("Failed to initialize audio engine.");
+        if (!isMounted) return;
+        setIsLoading(true);
+        const audioInitialized = await initAudioEngine();
+        if (!isMounted) return;
+
+        if (audioInitialized) {
+          startGenerator(currentTrack.url, currentTrack.id);
+          // isPlaying and isAnyTrackPlaying are managed by togglePlayPause.
+          // No need to set them here, as this useEffect is reactive to them.
+        } else {
+          console.error("Failed to initialize audio engine after track/mute change. Check browser permissions.");
+          if (isMounted) {
             setIsPlaying(false);
             setIsAnyTrackPlaying(false);
+            setSessionTime(0);
           }
-          setIsLoading(false); // Clear loading state once done
-        });
+        }
+        if (isMounted) setIsLoading(false);
       } else {
-        // If not playing or is muted, ensure all audio is stopped
-        stopAllVoices();
+        // If not playing or muted, ensure states are correctly reflecting 'not playing'.
+        // stopCurrentVoicesInternal already handled audio cleanup.
+        if (isMounted) {
+           setIsPlaying(false); 
+           setIsAnyTrackPlaying(false);
+           setSessionTime(0);
+        }
       }
-    }
-  }, [currentTrack.id, isPlaying, isMuted, initAudioEngine, startGenerator, stopAllVoices, setIsAnyTrackPlaying, isLoading]);
+    };
+
+    debounceTimeout = window.setTimeout(handleAudioPlaybackChange, 50); 
+
+    return () => {
+      isMounted = false;
+      if (debounceTimeout) window.clearTimeout(debounceTimeout);
+      stopCurrentVoicesInternal(); 
+    };
+  }, [currentTrack.id, isPlaying, isMuted, initAudioEngine, startGenerator, stopCurrentVoicesInternal, setIsAnyTrackPlaying]);
 
 
-  // Global mute/unmute
   const toggleMute = useCallback(() => {
     const nextMuted = !isMuted;
     setIsMuted(nextMuted);
 
-    // Apply master gain change immediately
     const ctx = audioContextRef.current;
     if (ctx && masterGainRef.current) {
       masterGainRef.current.gain.cancelScheduledValues(ctx.currentTime);
       masterGainRef.current.gain.setValueAtTime(masterGainRef.current.gain.value, ctx.currentTime); 
       masterGainRef.current.gain.linearRampToValueAtTime(nextMuted ? 0 : volume, ctx.currentTime + 0.1);
     }
-    
-    // The main useEffect will react to isMuted change and handle stop/start synthesis
-    // No need to explicitly call stopSynthesis or startGenerator here.
   }, [isMuted, volume]);
   
-  // Cleanup on component unmount
   useEffect(() => {
     return () => {
-      stopAllVoices();
+      stopCurrentVoicesInternal();
       if (audioContextRef.current && audioContextRef.current.state !== 'closed') {
         audioContextRef.current.close().catch(e => console.error("Error closing AudioContext on unmount", e));
         audioContextRef.current = null;
       }
-      setIsAnyTrackPlaying(false); // Ensure global state is reset
+      setIsAnyTrackPlaying(false);
     };
-  }, [stopAllVoices, setIsAnyTrackPlaying]);
+  }, [stopCurrentVoicesInternal, setIsAnyTrackPlaying]);
 
   const formatTime = (s: number) => {
     const m = Math.floor(s / 60);
@@ -1099,19 +1099,19 @@ const MusicPlayer: React.FC<Props> = ({ setView, setIsAnyTrackPlaying }) => {
 
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    const barWidth = (canvas.width / bufferLength) * 2.5; // Adjusted bar width for better spacing
+    const barWidth = (canvas.width / bufferLength) * 2.5;
     let x = 0;
 
     for (let i = 0; i < bufferLength; i++) {
-      const barHeight = dataArray[i] / 2; // Adjusted height scaling
+      const barHeight = dataArray[i] / 2;
       const gradient = ctx.createLinearGradient(0, canvas.height, 0, canvas.height - barHeight);
-      gradient.addColorStop(0, '#2dd4bf'); // Teal
-      gradient.addColorStop(1, '#155e75'); // Darker teal
+      gradient.addColorStop(0, '#2dd4bf');
+      gradient.addColorStop(1, '#155e75');
 
       ctx.fillStyle = gradient;
       ctx.fillRect(x, canvas.height - barHeight, barWidth, barHeight);
 
-      x += barWidth + 1; // Spacing between bars
+      x += barWidth + 1;
     }
 
     animationRef.current = requestAnimationFrame(drawVisualization);
@@ -1125,7 +1125,7 @@ const MusicPlayer: React.FC<Props> = ({ setView, setIsAnyTrackPlaying }) => {
         cancelAnimationFrame(animationRef.current);
       }
       const ctx = canvasRef.current?.getContext('2d');
-      if (ctx) ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height); // Clear canvas when stopped
+      if (ctx) ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
     }
     return () => {
       if (animationRef.current) {
@@ -1140,7 +1140,7 @@ const MusicPlayer: React.FC<Props> = ({ setView, setIsAnyTrackPlaying }) => {
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
         <div className="space-y-1">
           <button 
-            onClick={() => { stopAllVoices(true); setView(AppView.DASHBOARD); }} // Ensure fade out when exiting
+            onClick={() => { stopCurrentVoicesInternal(); setIsPlaying(false); setIsAnyTrackPlaying(false); setView(AppView.DASHBOARD); }}
             className="flex items-center gap-2 text-indigo-800 label-caps text-[10px] md:text-xs hover:gap-3 transition-all mb-2"
             aria-label="Back to Sanctuary Dashboard"
           >
@@ -1251,25 +1251,14 @@ const MusicPlayer: React.FC<Props> = ({ setView, setIsAnyTrackPlaying }) => {
             key={track.id}
             onClick={() => {
               if (currentTrack.id === track.id) {
-                // If the currently playing track is clicked, toggle play/pause
                 togglePlayPause();
               } else {
-                // If a new track is clicked, set it as current and ensure playing state
                 setCurrentTrack(track);
-                // Ensure it starts playing if it wasn't already (unless muted)
-                if (!isPlaying && !isMuted) { 
+                if (!isPlaying) { 
                   setIsPlaying(true);
-                } else if (isPlaying && isMuted) {
-                  // If playing but muted, selecting a new track should unmute and play
+                }
+                if (isMuted) {
                   setIsMuted(false);
-                  setIsPlaying(true);
-                } else if (!isPlaying && isMuted) {
-                   // If not playing and muted, selecting a new track should unmute and play
-                  setIsMuted(false);
-                  setIsPlaying(true);
-                } else if (isPlaying && !isMuted) {
-                  // If already playing and unmuted, just switch track, useEffect handles restart
-                  // No need to change isPlaying here.
                 }
               }
             }}
