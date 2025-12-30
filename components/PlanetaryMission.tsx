@@ -3,7 +3,7 @@ import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { AppView } from '../types';
 import { 
   ChevronLeft, Play, Pause, Rocket, Loader2, Volume2, VolumeX, 
-  Timer, Sparkles, Activity, Shield, Zap, Music, Radio, Map, Eye, Brain
+  Zap, Music, Radio, Eye
 } from 'lucide-react';
 
 interface Planet {
@@ -33,10 +33,10 @@ const PLANETS: Planet[] = [
     desc: 'Solar Core: G-Type Star', 
     color: 'from-orange-600 to-yellow-500', 
     videoUrl: 'https://cdn.pixabay.com/vimeo/312061265/sun-1358.mp4?width=1280', 
-    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/b/b4/The_Sun_by_the_Atmospheric_Imaging_Assembly_of_NASA%27s_Solar_Dynamics_Observatory_-_20100819.jpg/1920px-The_Sun_by_the_Atmospheric_Imaging_Assembly_of_NASA%27s_Solar_Dynamics_Observatory_-_20100819.jpg',
+    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/b/b4/The_Sun_by_the_Atmospheric_Imaging_Assembly_of_NASA%27s_Solar_Dynamics_Observatory_-_20100819.jpg/1280px-The_Sun_by_the_Atmospheric_Imaging_Assembly_of_NASA%27s_Solar_Dynamics_Observatory_-_20100819.jpg',
     synthesis: 'SUN', 
-    mission: 'Harness the raw energy of existence.', 
-    audioTrackName: 'Solar Flare Resonance',
+    mission: 'Surrender to the radiant warmth of existence.', 
+    audioTrackName: 'Radiant Solar Breath',
     metrics: { temp: '5,500°C', distance: '0.0 AU', hazard: 'EXTREME', diameter: '1.39M km', gravity: '274 m/s²' } 
   },
   { 
@@ -153,7 +153,7 @@ const PLANETS: Planet[] = [
     desc: 'Dwarf: Glacial Heart', 
     color: 'from-slate-600 to-amber-900', 
     videoUrl: '', 
-    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/e/ec/Pluto_from_NASA%27s_New_Horizons_spacecraft_in_color_-_enhanced.jpg/1920px-Pluto_from_NASA%27s_New_Horizons_spacecraft_in_color_-_enhanced.jpg',
+    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/e/ec/Pluto_from_NASA%27s_New_Horizons_spacecraft_in_color_-_enhanced.jpg/1280px-Pluto_from_NASA%27s_New_Horizons_spacecraft_in_color_-_enhanced.jpg',
     synthesis: 'PLUTO', 
     mission: 'Reflect at the final frontier of home.', 
     audioTrackName: 'Kuiper Belt Void',
@@ -161,77 +161,86 @@ const PLANETS: Planet[] = [
   },
 ];
 
+const safeValue = (value: number, min: number, max: number, defaultValue: number) => {
+  if (isNaN(value) || !isFinite(value)) return defaultValue;
+  return Math.max(min, Math.min(max, value));
+};
+
 type SynthesizerFunc = (ctx: AudioContext, dest: AudioNode) => any[];
 
 const PLANET_SYNTHESIZERS: Record<string, SynthesizerFunc> = {
   SUN: (ctx, dest) => {
-    const safeValue = (value: number, min: number, max: number, defaultValue: number) => {
-      if (isNaN(value) || !isFinite(value)) {
-        return defaultValue;
-      }
-      return Math.max(min, Math.min(max, value));
-    };
-    const safeFreq = (value: number) => safeValue(value, 0.001, ctx.sampleRate / 2 - 1, 220); 
-    const safeGain = (value: number) => safeValue(value, 0.0001, 100, 0.05); 
-
+    const safeFreq = (value: number) => safeValue(value, 0.001, ctx.sampleRate / 2 - 1, 220);
+    const safeGain = (value: number) => safeValue(value, 0.0001, 1, 0.05);
     const mainGain = ctx.createGain();
     mainGain.gain.setValueAtTime(safeGain(0.25), ctx.currentTime);
     mainGain.connect(dest);
     const nodes: any[] = [mainGain];
     const coreOsc = ctx.createOscillator();
-    coreOsc.type = 'sawtooth';
-    coreOsc.frequency.setValueAtTime(safeFreq(32.7), ctx.currentTime);
+    coreOsc.type = 'sine';
+    coreOsc.frequency.setValueAtTime(safeFreq(126.22), ctx.currentTime);
     const coreLowpass = ctx.createBiquadFilter();
     coreLowpass.type = 'lowpass';
-    coreLowpass.frequency.setValueAtTime(safeFreq(80), ctx.currentTime);
+    coreLowpass.frequency.setValueAtTime(safeFreq(200), ctx.currentTime);
     const coreG = ctx.createGain();
-    coreG.gain.setValueAtTime(safeGain(0.3), ctx.currentTime);
+    coreG.gain.setValueAtTime(safeGain(0.4), ctx.currentTime);
     coreOsc.connect(coreLowpass).connect(coreG).connect(mainGain);
     coreOsc.start();
     nodes.push(coreOsc, coreLowpass, coreG);
+    const harmOsc = ctx.createOscillator();
+    harmOsc.type = 'triangle';
+    harmOsc.frequency.setValueAtTime(safeFreq(126.22 * 1.5), ctx.currentTime);
+    const harmG = ctx.createGain();
+    harmG.gain.setValueAtTime(safeGain(0.15), ctx.currentTime);
+    const harmLfo = ctx.createOscillator();
+    harmLfo.frequency.setValueAtTime(0.1, ctx.currentTime);
+    const harmLfoG = ctx.createGain();
+    harmLfoG.gain.setValueAtTime(0.05, ctx.currentTime);
+    harmLfo.connect(harmLfoG).connect(harmG.gain);
+    harmOsc.connect(harmG).connect(mainGain);
+    harmOsc.start(); harmLfo.start();
+    nodes.push(harmOsc, harmG, harmLfo, harmLfoG);
     const noiseBuffer = ctx.createBuffer(1, ctx.sampleRate * 4, ctx.sampleRate);
     const noiseData = noiseBuffer.getChannelData(0);
-    for (let i = 0; i < noiseBuffer.length; i++) noiseData[i] = Math.random() * 2 - 1;
+    let lastOut = 0;
+    for (let i = 0; i < noiseBuffer.length; i++) {
+        const white = Math.random() * 2 - 1;
+        lastOut = (lastOut + (0.02 * white)) / 1.02;
+        noiseData[i] = lastOut * 3.5;
+    }
     const noiseSrc = ctx.createBufferSource();
     noiseSrc.buffer = noiseBuffer; noiseSrc.loop = true;
-    const turbulenceFilter = ctx.createBiquadFilter();
-    turbulenceFilter.type = 'bandpass';
-    turbulenceFilter.frequency.setValueAtTime(safeFreq(400), ctx.currentTime);
-    const turbulenceLfo = ctx.createOscillator();
-    turbulenceLfo.frequency.setValueAtTime(safeFreq(0.4), ctx.currentTime);
-    const turbulenceLfoG = ctx.createGain();
-    turbulenceLfoG.gain.setValueAtTime(safeGain(300), ctx.currentTime);
-    turbulenceLfo.connect(turbulenceLfoG).connect(turbulenceFilter.frequency);
-    const turbGain = ctx.createGain();
-    turbGain.gain.setValueAtTime(safeGain(0.12), ctx.currentTime);
-    noiseSrc.connect(turbulenceFilter).connect(turbGain).connect(mainGain);
-    noiseSrc.start(); turbulenceLfo.start();
-    nodes.push(noiseSrc, turbulenceFilter, turbulenceLfo, turbulenceLfoG, turbGain);
+    const breathFilter = ctx.createBiquadFilter();
+    breathFilter.type = 'lowpass';
+    breathFilter.frequency.setValueAtTime(safeFreq(300), ctx.currentTime);
+    const breathLfo = ctx.createOscillator();
+    breathLfo.frequency.setValueAtTime(safeFreq(0.05), ctx.currentTime);
+    const breathLfoG = ctx.createGain();
+    breathLfoG.gain.setValueAtTime(safeGain(100), ctx.currentTime);
+    breathLfo.connect(breathLfoG).connect(breathFilter.frequency);
+    const breathGain = ctx.createGain();
+    breathGain.gain.setValueAtTime(safeGain(0.1), ctx.currentTime);
+    noiseSrc.connect(breathFilter).connect(breathGain).connect(mainGain);
+    noiseSrc.start(); breathLfo.start();
+    nodes.push(noiseSrc, breathFilter, breathLfo, breathLfoG, breathGain);
     const flareInterval = setInterval(() => {
       const now = ctx.currentTime;
       const fOsc = ctx.createOscillator();
       fOsc.type = 'sine';
-      fOsc.frequency.setValueAtTime(safeFreq(800 + Math.random() * 2000), now);
+      fOsc.frequency.setValueAtTime(safeFreq(504.88 + Math.random() * 100), now);
       const fEnv = ctx.createGain();
       fEnv.gain.setValueAtTime(0, now);
-      fEnv.gain.linearRampToValueAtTime(safeGain(0.05), now + 0.5);
-      fEnv.gain.exponentialRampToValueAtTime(0.0001, now + 5);
+      fEnv.gain.linearRampToValueAtTime(safeGain(0.04), now + 3);
+      fEnv.gain.exponentialRampToValueAtTime(0.0001, now + 10);
       fOsc.connect(fEnv).connect(mainGain);
-      fOsc.start(now); fOsc.stop(now + 6);
-    }, 4500);
+      fOsc.start(now); fOsc.stop(now + 11);
+    }, 12000);
     nodes.push({ stop: () => clearInterval(flareInterval) });
     return nodes;
   },
   MERCURY: (ctx, dest) => {
-    const safeValue = (value: number, min: number, max: number, defaultValue: number) => {
-      if (isNaN(value) || !isFinite(value)) {
-        return defaultValue;
-      }
-      return Math.max(min, Math.min(max, value));
-    };
     const safeFreq = (value: number) => safeValue(value, 0.001, ctx.sampleRate / 2 - 1, 220); 
-    const safeGain = (value: number) => safeValue(value, 0.0001, 100, 0.05); 
-
+    const safeGain = (value: number) => safeValue(value, 0.0001, 1, 0.05); 
     const mainGain = ctx.createGain();
     mainGain.gain.setValueAtTime(safeGain(0.18), ctx.currentTime);
     mainGain.connect(dest);
@@ -275,15 +284,8 @@ const PLANET_SYNTHESIZERS: Record<string, SynthesizerFunc> = {
     return nodes;
   },
   VENUS: (ctx, dest) => {
-    const safeValue = (value: number, min: number, max: number, defaultValue: number) => {
-      if (isNaN(value) || !isFinite(value)) {
-        return defaultValue;
-      }
-      return Math.max(min, Math.min(max, value));
-    };
     const safeFreq = (value: number) => safeValue(value, 0.001, ctx.sampleRate / 2 - 1, 220); 
-    const safeGain = (value: number) => safeValue(value, 0.0001, 100, 0.05); 
-
+    const safeGain = (value: number) => safeValue(value, 0.0001, 1, 0.05); 
     const buffer = ctx.createBuffer(1, ctx.sampleRate * 2, ctx.sampleRate);
     const data = buffer.getChannelData(0);
     for (let i = 0; i < buffer.length; i++) data[i] = Math.random() * 2 - 1;
@@ -299,16 +301,8 @@ const PLANET_SYNTHESIZERS: Record<string, SynthesizerFunc> = {
     return [src, hp, g];
   },
   EARTH: (ctx, dest) => {
-    const safeValue = (value: number, min: number, max: number, defaultValue: number) => {
-      if (isNaN(value) || !isFinite(value)) {
-        return defaultValue;
-      }
-      return Math.max(min, Math.min(max, value));
-    };
     const safeFreq = (value: number) => safeValue(value, 0.001, ctx.sampleRate / 2 - 1, 220); 
-    const safeGain = (value: number) => safeValue(value, 0.0001, 100, 0.05); 
-    const safeQ = (value: number) => safeValue(value, 0.0001, 1000, 0.0001);
-
+    const safeGain = (value: number) => safeValue(value, 0.0001, 1, 0.05); 
     const masterGain = ctx.createGain();
     masterGain.gain.setValueAtTime(safeGain(0.18), ctx.currentTime);
     masterGain.connect(dest);
@@ -331,7 +325,7 @@ const PLANET_SYNTHESIZERS: Record<string, SynthesizerFunc> = {
     let lastOut = 0;
     for (let i = 0; i < buffer.length; i++) {
         const white = Math.random() * 2 - 1;
-        lastOut = (lastOut + (safeGain(0.02) * white)) / 1.02;
+        lastOut = (lastOut + (0.02 * white)) / 1.02;
         data[i] = lastOut * 3.5;
     }
     const noise = ctx.createBufferSource();
@@ -349,9 +343,9 @@ const PLANET_SYNTHESIZERS: Record<string, SynthesizerFunc> = {
     noise.connect(windFilter).connect(windG).connect(masterGain);
     noise.start(); windLfo.start();
     nodes.push(noise, windFilter, windLfo, windLfoG, windG);
-    [safeFreq(432), safeFreq(528)].forEach((f, i) => {
+    [432, 528].forEach((f, i) => {
         const shimmer = ctx.createOscillator();
-        shimmer.frequency.setValueAtTime(f, ctx.currentTime);
+        shimmer.frequency.setValueAtTime(safeFreq(f), ctx.currentTime);
         const sG = ctx.createGain();
         sG.gain.setValueAtTime(0, ctx.currentTime);
         const sLfo = ctx.createOscillator();
@@ -366,15 +360,8 @@ const PLANET_SYNTHESIZERS: Record<string, SynthesizerFunc> = {
     return nodes;
   },
   MOON: (ctx, dest) => {
-    const safeValue = (value: number, min: number, max: number, defaultValue: number) => {
-      if (isNaN(value) || !isFinite(value)) {
-        return defaultValue;
-      }
-      return Math.max(min, Math.min(max, value));
-    };
     const safeFreq = (value: number) => safeValue(value, 0.001, ctx.sampleRate / 2 - 1, 220); 
-    const safeGain = (value: number) => safeValue(value, 0.0001, 100, 0.05); 
-
+    const safeGain = (value: number) => safeValue(value, 0.0001, 1, 0.05); 
     const osc = ctx.createOscillator();
     osc.frequency.setValueAtTime(safeFreq(220), ctx.currentTime);
     const g = ctx.createGain();
@@ -384,16 +371,8 @@ const PLANET_SYNTHESIZERS: Record<string, SynthesizerFunc> = {
     return [osc, g];
   },
   MARS: (ctx, dest) => {
-    const safeValue = (value: number, min: number, max: number, defaultValue: number) => {
-      if (isNaN(value) || !isFinite(value)) {
-        return defaultValue;
-      }
-      return Math.max(min, Math.min(max, value));
-    };
     const safeFreq = (value: number) => safeValue(value, 0.001, ctx.sampleRate / 2 - 1, 220); 
-    const safeGain = (value: number) => safeValue(value, 0.0001, 100, 0.05); 
-    const safeQ = (value: number) => safeValue(value, 0.0001, 1000, 0.0001);
-
+    const safeGain = (value: number) => safeValue(value, 0.0001, 1, 0.05); 
     const buffer = ctx.createBuffer(1, ctx.sampleRate * 2, ctx.sampleRate);
     const data = buffer.getChannelData(0);
     for (let i = 0; i < buffer.length; i++) data[i] = Math.random() * 2 - 1;
@@ -409,16 +388,9 @@ const PLANET_SYNTHESIZERS: Record<string, SynthesizerFunc> = {
     return [src, filter, g];
   },
   JUPITER: (ctx, dest) => {
-    const safeValue = (value: number, min: number, max: number, defaultValue: number) => {
-      if (isNaN(value) || !isFinite(value)) {
-        return defaultValue;
-      }
-      return Math.max(min, Math.min(max, value));
-    };
     const safeFreq = (value: number) => safeValue(value, 0.001, ctx.sampleRate / 2 - 1, 220); 
-    const safeGain = (value: number) => safeValue(value, 0.0001, 100, 0.05); 
+    const safeGain = (value: number) => safeValue(value, 0.0001, 1, 0.05); 
     const safeQ = (value: number) => safeValue(value, 0.0001, 1000, 0.0001);
-
     const mainGain = ctx.createGain();
     mainGain.gain.setValueAtTime(safeGain(0.2), ctx.currentTime);
     mainGain.connect(dest);
@@ -467,15 +439,8 @@ const PLANET_SYNTHESIZERS: Record<string, SynthesizerFunc> = {
     return nodes;
   },
   SATURN: (ctx, dest) => {
-    const safeValue = (value: number, min: number, max: number, defaultValue: number) => {
-      if (isNaN(value) || !isFinite(value)) {
-        return defaultValue;
-      }
-      return Math.max(min, Math.min(max, value));
-    };
     const safeFreq = (value: number) => safeValue(value, 0.001, ctx.sampleRate / 2 - 1, 220); 
-    const safeGain = (value: number) => safeValue(value, 0.0001, 100, 0.05); 
-
+    const safeGain = (value: number) => safeValue(value, 0.0001, 1, 0.05); 
     const g = ctx.createGain();
     g.gain.setValueAtTime(safeGain(0.15), ctx.currentTime);
     g.connect(dest);
@@ -486,15 +451,8 @@ const PLANET_SYNTHESIZERS: Record<string, SynthesizerFunc> = {
     return [g, osc];
   },
   URANUS: (ctx, dest) => {
-    const safeValue = (value: number, min: number, max: number, defaultValue: number) => {
-      if (isNaN(value) || !isFinite(value)) {
-        return defaultValue;
-      }
-      return Math.max(min, Math.min(max, value));
-    };
     const safeFreq = (value: number) => safeValue(value, 0.001, ctx.sampleRate / 2 - 1, 220); 
-    const safeGain = (value: number) => safeValue(value, 0.0001, 100, 0.05); 
-
+    const safeGain = (value: number) => safeValue(value, 0.0001, 1, 0.05); 
     const mainGain = ctx.createGain();
     mainGain.gain.setValueAtTime(safeGain(0.15), ctx.currentTime);
     mainGain.connect(dest);
@@ -532,16 +490,9 @@ const PLANET_SYNTHESIZERS: Record<string, SynthesizerFunc> = {
     return nodes;
   },
   NEPTUNE: (ctx, dest) => {
-    const safeValue = (value: number, min: number, max: number, defaultValue: number) => {
-      if (isNaN(value) || !isFinite(value)) {
-        return defaultValue;
-      }
-      return Math.max(min, Math.min(max, value));
-    };
     const safeFreq = (value: number) => safeValue(value, 0.001, ctx.sampleRate / 2 - 1, 220); 
-    const safeGain = (value: number) => safeValue(value, 0.0001, 100, 0.05); 
+    const safeGain = (value: number) => safeValue(value, 0.0001, 1, 0.05); 
     const safeQ = (value: number) => safeValue(value, 0.0001, 1000, 0.0001);
-
     const mainGain = ctx.createGain();
     mainGain.gain.setValueAtTime(safeGain(0.18), ctx.currentTime);
     mainGain.connect(dest);
@@ -587,17 +538,9 @@ const PLANET_SYNTHESIZERS: Record<string, SynthesizerFunc> = {
     return nodes;
   },
   PLUTO: (ctx, dest) => {
-    // FIX: Corrected the `safeValue` function signature to include `max` parameter
-    const safeValue = (value: number, min: number, max: number, defaultValue: number) => {
-      if (isNaN(value) || !isFinite(value)) {
-        return defaultValue;
-      }
-      return Math.max(min, Math.min(max, value));
-    };
     const safeFreq = (value: number) => safeValue(value, 0.001, ctx.sampleRate / 2 - 1, 220); 
-    const safeGain = (value: number) => safeValue(value, 0.0001, 100, 0.05); 
+    const safeGain = (value: number) => safeValue(value, 0.0001, 1, 0.05); 
     const safeQ = (value: number) => safeValue(value, 0.0001, 1000, 0.0001);
-
     const mainGain = ctx.createGain();
     mainGain.gain.setValueAtTime(safeGain(0.12), ctx.currentTime);
     mainGain.connect(dest);
@@ -650,6 +593,7 @@ export const PlanetaryMission: React.FC<{ setView: (v: AppView) => void; setIsAn
   const [activePlanet, setActivePlanet] = useState<Planet>(PLANETS[0]); 
   const [isPlaying, setIsPlaying] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [imageLoaded, setImageLoaded] = useState(false);
   const [sessionTime, setSessionTime] = useState(0);
   const [volume, setVolume] = useState(0.5);
   const [isMuted, setIsMuted] = useState(false);
@@ -657,7 +601,6 @@ export const PlanetaryMission: React.FC<{ setView: (v: AppView) => void; setIsAn
   const [isScanning, setIsScanning] = useState(false);
 
   const audioContextRef = useRef<AudioContext | null>(null);
-  const gainNodeRef = useRef<GainNode | null>(null);
   const masterGainRef = useRef<GainNode | null>(null);
   const nodesRef = useRef<any[]>([]);
   const videoRef = useRef<HTMLVideoElement | null>(null);
@@ -668,12 +611,12 @@ export const PlanetaryMission: React.FC<{ setView: (v: AppView) => void; setIsAn
       audioContextRef.current = new AudioContextClass();
       masterGainRef.current = audioContextRef.current.createGain();
       masterGainRef.current.connect(audioContextRef.current.destination);
-      gainNodeRef.current = audioContextRef.current.createGain();
-      gainNodeRef.current.gain.setValueAtTime(isMuted ? 0 : volume, audioContextRef.current.currentTime);
-      gainNodeRef.current.connect(masterGainRef.current);
     }
     if (audioContextRef.current.state === 'suspended') {
       try { await audioContextRef.current.resume(); } catch (e) { console.warn("AudioContext resume failed", e); }
+    }
+    if (masterGainRef.current && audioContextRef.current) {
+      masterGainRef.current.gain.setValueAtTime(isMuted ? 0 : volume, audioContextRef.current.currentTime);
     }
     return true;
   }, [volume, isMuted]);
@@ -698,20 +641,7 @@ export const PlanetaryMission: React.FC<{ setView: (v: AppView) => void; setIsAn
     try {
       await initAudio();
       const ctx = audioContextRef.current!;
-      const dest = gainNodeRef.current!;
-
-      const safeValue = (value: number, min: number, max: number, defaultValue: number) => {
-        if (isNaN(value) || !isFinite(value)) {
-          return defaultValue;
-        }
-        return Math.max(min, Math.min(max, value));
-      };
-
-      const safeFreq = (value: number) => safeValue(value, 0.001, ctx.sampleRate / 2 - 1, 220); 
-      const safeGain = (value: number) => safeValue(value, 0.0001, 100, 0.05); 
-      const safeQ = (value: number) => safeValue(value, 0.0001, 1000, 0.0001); 
-      const safePan = (value: number) => safeValue(value, -1, 1, 0); 
-      const safeDetune = (value: number) => safeValue(value, -12000, 12000, 0); 
+      const dest = masterGainRef.current!;
 
       nodesRef.current.forEach(node => {
         try { 
@@ -732,10 +662,7 @@ export const PlanetaryMission: React.FC<{ setView: (v: AppView) => void; setIsAn
   useEffect(() => {
     const video = videoRef.current;
     if (!video) return;
-
-    // Only attempt to play video if activePlanet.videoUrl is a non-empty string, not muted, and no previous error
     const shouldPlayVideo = isPlaying && !isMuted && activePlanet.videoUrl && activePlanet.videoUrl !== '' && !videoError;
-
     if (shouldPlayVideo) {
       if (video.paused || video.ended) {
         video.play().catch(err => {
@@ -752,17 +679,14 @@ export const PlanetaryMission: React.FC<{ setView: (v: AppView) => void; setIsAn
     }
   }, [isPlaying, isMuted, activePlanet.videoUrl, videoError]);
 
-
   const toggleMute = useCallback(() => {
     const nextMute = !isMuted;
     setIsMuted(nextMute);
-
     const video = videoRef.current;
     if (video) {
         if (nextMute) {
             video.pause();
         } else {
-            // Only attempt to play video if activePlanet.videoUrl is a non-empty string
             if (isPlaying && activePlanet.videoUrl && activePlanet.videoUrl !== '' && !videoError) {
                 video.play().catch(err => {
                     if (err.name !== 'AbortError') console.warn("Video play on unmute failed:", err);
@@ -771,7 +695,6 @@ export const PlanetaryMission: React.FC<{ setView: (v: AppView) => void; setIsAn
             }
         }
     }
-    
     if (nextMute) {
       stopSynthesis();
     } else if (isPlaying) {
@@ -784,10 +707,9 @@ export const PlanetaryMission: React.FC<{ setView: (v: AppView) => void; setIsAn
     if (isLoading) return;
     setIsLoading(true);
     setIsScanning(true);
+    setImageLoaded(false); // Reset image load state for new planet
     setVideoError(false); 
-
     setTimeout(() => setIsScanning(false), 2000);
-
     if (activePlanet.id === p.id && isPlaying && !isMuted) {
         if (videoRef.current && !videoRef.current.paused) {
             videoRef.current.pause();
@@ -796,14 +718,11 @@ export const PlanetaryMission: React.FC<{ setView: (v: AppView) => void; setIsAn
         setIsLoading(false);
         return;
     }
-
     if (videoRef.current && !videoRef.current.paused) {
         videoRef.current.pause();
     }
     stopSynthesis();
-    
     setActivePlanet(p);
-
     if (!isMuted) {
         setTimeout(() => startSynthesis(p.synthesis), 50); 
     } else {
@@ -854,18 +773,19 @@ export const PlanetaryMission: React.FC<{ setView: (v: AppView) => void; setIsAn
             Embark on an auditory odyssey through our solar system.
           </p>
         </div>
-
         <div className="flex items-center gap-4 bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl p-3 rounded-[2.5rem] border border-white dark:border-slate-700 shadow-sm ring-1 ring-teal-500/5 transition-colors duration-300">
            <Radio className="text-teal-600 dark:text-teal-400 ml-2" />
            <p className="text-slate-900 dark:text-white font-black uppercase tracking-widest text-[10px] pr-4">Spectral Link Active</p>
         </div>
       </div>
 
-      {/* Main Celestial Body View */}
       <div className="glass-card p-8 md:p-14 rounded-[3rem] md:rounded-[5rem] relative overflow-hidden flex flex-col justify-between min-h-[500px] shadow-2xl border-none ring-1 ring-teal-500/10 dark:ring-teal-700/10 hover:shadow-teal-500/20 transition-all duration-300">
         <div className={`absolute inset-0 bg-gradient-to-br ${activePlanet.color} opacity-60 mix-blend-multiply transition-all duration-1000`}></div>
         <div className="absolute inset-0 bg-black/50 backdrop-brightness-75"></div>
         
+        {/* Placeholder Gradient Layer */}
+        <div className={`absolute inset-0 bg-gradient-to-br ${activePlanet.color} opacity-20 z-0`}></div>
+
         {activePlanet.videoUrl && activePlanet.videoUrl !== '' && !videoError ? (
             <video 
                 ref={videoRef}
@@ -874,17 +794,19 @@ export const PlanetaryMission: React.FC<{ setView: (v: AppView) => void; setIsAn
                 muted 
                 autoPlay 
                 playsInline 
-                className="absolute inset-0 w-full h-full object-cover z-0 opacity-50"
+                className={`absolute inset-0 w-full h-full object-cover z-0 transition-opacity duration-1000 ${imageLoaded ? 'opacity-50' : 'opacity-0'}`}
+                onCanPlay={() => setImageLoaded(true)}
                 onError={() => setVideoError(true)}
             ></video>
         ) : (
             <img 
                 src={activePlanet.imageUrl} 
                 alt={activePlanet.name} 
-                className="absolute inset-0 w-full h-full object-cover z-0 opacity-50"
+                className={`absolute inset-0 w-full h-full object-cover z-0 transition-opacity duration-1000 ${imageLoaded ? 'opacity-50' : 'opacity-0'}`}
                 decoding="async" 
                 fetchpriority="high"
                 loading="lazy"
+                onLoad={() => setImageLoaded(true)}
             />
         )}
         
@@ -943,15 +865,12 @@ export const PlanetaryMission: React.FC<{ setView: (v: AppView) => void; setIsAn
           <p className="text-[10px] font-black uppercase tracking-widest">Mission Elapsed</p>
           <p className="text-xl md:text-3xl font-black font-display tracking-tight">{formatTime(sessionTime)}</p>
         </div>
-
-        {/* Audio Track Name Display */}
         <div className="absolute top-10 left-1/2 -translate-x-1/2 z-10 flex items-center gap-3 px-6 py-2.5 bg-white/10 backdrop-blur-3xl rounded-full border border-white/25 shadow-2xl">
           <Music size={16} className="text-teal-300" />
           <p className="text-[10px] md:text-sm font-black uppercase tracking-[0.5em] text-white">{activePlanet.audioTrackName}</p>
         </div>
       </div>
 
-      {/* Planet Selection Grid */}
       <section className="space-y-6">
           <div className="px-4 flex items-center justify-between">
             <h3 className="text-2xl md:text-4xl font-black text-slate-950 dark:text-white tracking-tight transition-colors duration-300">Celestial Navigation</h3>
@@ -989,37 +908,6 @@ export const PlanetaryMission: React.FC<{ setView: (v: AppView) => void; setIsAn
             ))}
           </div>
         </section>
-
-      {/* Removed "Orbital Stability" Card and "Neural Integration Card" already removed in previous turn */}
-      {/* <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12">
-        <div className="glass-card p-10 md:p-14 rounded-[3rem] md:rounded-[4.5rem] bg-slate-900 text-white border-none flex flex-col justify-between shadow-2xl relative overflow-hidden group hover:shadow-indigo-500/20 transition-all duration-300 hover:scale-[1.005]">
-          <div className="absolute inset-0 bg-gradient-to-br from-blue-600/20 to-transparent opacity-50"></div>
-          <div className="relative z-10 space-y-6">
-            <div className="w-16 h-16 bg-white/10 rounded-3xl flex items-center justify-center backdrop-blur-xl border border-white/20">
-              <Activity size={32} className="text-blue-400" />
-            </div>
-            <h4 className="text-3xl md:text-4xl font-black tracking-tight leading-tight">Orbital <br/>Stability</h4>
-            <p className="text-white/40 dark:text-white/80 font-medium text-lg leading-relaxed italic">
-              "Current orbital parameters indicate minor flux deviations. Maintaining course."
-            </p>
-            <div className="grid grid-cols-2 gap-4 pt-4">
-              <div>
-                <p className="label-caps text-white/40 dark:text-white/80">Anomaly Index</p>
-                <p className="text-2xl font-black text-white display-number">0.03</p>
-              </div>
-              <div>
-                <p className="label-caps text-white/40 dark:text-white/80">Gravity Well</p>
-                <p className="text-2xl font-black text-white display-number">7.82N</p>
-              </div>
-            </div>
-          </div>
-          <button className="relative z-10 w-full py-5 bg-white text-slate-900 rounded-3xl font-black text-lg transition-all hover:scale-[1.02] active:scale-95 shadow-xl font-display hover:bg-slate-100"
-          aria-label="Access orbital diagnostics"
-          >
-            Access Diagnostics
-          </button>
-        </div>
-      </div> */}
     </div>
   );
 };
