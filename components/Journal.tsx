@@ -152,7 +152,7 @@ const Journal: React.FC<Props> = React.memo(({ entries, setEntries, setView, use
       <div className="flex flex-col items-center gap-6">
         <button 
           onClick={() => setView(AppView.DASHBOARD)} 
-          className="flex items-center gap-2 px-5 py-2.5 bg-white/80 dark:bg-slate-800/80 backdrop-blur-md rounded-full border border-teal-200/50 dark:border-slate-700/50 text-teal-900 dark:text-teal-200 outline-none shadow-sm group hover:scale-105 active:scale-95 transition-all"
+          className="flex items-center gap-2 px-5 py-2.5 bg-white/80 dark:bg-slate-800/80 backdrop-blur-md rounded-full border border-teal-200/50 dark:border-slate-700/50 text-slate-950 dark:text-white outline-none shadow-sm group hover:scale-105 active:scale-95 transition-all"
         >
           <ChevronLeft size={16} className="group-hover:-translate-x-1 transition-transform" /> 
           <span className="label-caps font-black">Back to Sanctuary</span>
@@ -160,10 +160,10 @@ const Journal: React.FC<Props> = React.memo(({ entries, setEntries, setView, use
         
         <div className="text-center space-y-4 max-w-2xl mx-auto">
           <div className="flex items-center justify-center gap-4">
-            <h2 className="text-4xl sm:text-6xl md:text-7xl font-black text-slate-950 dark:text-white tracking-tighter leading-tight">Journal</h2>
+            <h2 className="text-4xl sm:text-6xl md:text-7xl font-black text-slate-950 dark:text-white tracking-tighter leading-tight transition-colors duration-300">Journal</h2>
             <div className="px-3 py-1 bg-teal-500/10 text-teal-700 dark:text-teal-400 label-caps rounded-full border border-teal-500/20 text-[10px]">Companion Active</div>
           </div>
-          <p className="text-lg md:text-2xl text-slate-600 dark:text-slate-300 font-bold italic leading-relaxed">
+          <p className="text-lg md:text-2xl text-slate-900/80 dark:text-slate-300 font-bold italic leading-relaxed transition-colors duration-300">
             Release the day. Every word is a step toward clarity.
           </p>
         </div>
@@ -173,7 +173,7 @@ const Journal: React.FC<Props> = React.memo(({ entries, setEntries, setView, use
         <div className="relative">
           <Quote className="absolute -top-10 -left-10 text-teal-500/5 dark:text-teal-400/10 w-40 h-40 pointer-events-none" />
           <textarea 
-            className="w-full h-48 md:h-80 p-6 md:p-10 rounded-[2rem] md:rounded-[3.5rem] bg-white/40 dark:bg-slate-900/60 text-xl md:text-3xl font-medium italic text-slate-950 dark:text-white outline-none ring-2 ring-transparent focus:ring-teal-500/10 placeholder:text-slate-400 dark:placeholder:text-slate-500 resize-none transition-all leading-relaxed shadow-inner" 
+            className="w-full h-48 md:h-80 p-6 md:p-10 rounded-[2rem] md:rounded-[3.5rem] bg-white/40 dark:bg-slate-900/60 text-xl md:text-3xl font-medium italic text-slate-950 dark:text-white outline-none ring-2 ring-transparent focus:ring-teal-500/10 placeholder:text-slate-300 dark:placeholder:text-slate-600 resize-none transition-all leading-relaxed shadow-inner" 
             placeholder="Today, I am grateful for..." 
             value={textEntry} 
             onChange={(e) => setTextEntry(e.target.value)}
@@ -190,7 +190,7 @@ const Journal: React.FC<Props> = React.memo(({ entries, setEntries, setView, use
           {isRecording && (
             <div className="absolute bottom-8 right-10 flex items-center gap-3 bg-red-500/10 text-red-700 dark:text-red-400 px-6 py-3 rounded-full border border-red-500/20 animate-pulse">
               <div className="w-2.5 h-2.5 bg-red-600 rounded-full animate-ping"></div>
-              <span className="label-caps font-black">Sanctuary is Listening</span>
+              <span className="label-caps font-black text-red-700 dark:text-red-400">Sanctuary is Listening</span>
             </div>
           )}
         </div>
@@ -199,7 +199,7 @@ const Journal: React.FC<Props> = React.memo(({ entries, setEntries, setView, use
           <button 
             onClick={handleVoiceToggle} 
             disabled={isProcessing} 
-            className={`w-full lg:w-auto h-20 md:h-24 px-10 rounded-2xl md:rounded-[2.5rem] flex items-center gap-6 transition-all relative group overflow-hidden ${isRecording ? 'bg-red-600 text-white shadow-2xl' : 'bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-slate-200'}`}
+            className={`w-full lg:w-auto h-20 md:h-24 px-10 rounded-2xl md:rounded-[2.5rem] flex items-center gap-6 transition-all relative group overflow-hidden ${isRecording ? 'bg-red-600 text-white shadow-2xl' : 'bg-slate-100 dark:bg-slate-800 text-slate-950 dark:text-white'}`}
           >
             {isRecording && <div className="absolute inset-0 bg-white/10 animate-pulse"></div>}
             <div className={`p-4 rounded-2xl ${isRecording ? 'bg-white/20' : 'bg-teal-600 text-white shadow-lg shadow-teal-500/20'}`}>
@@ -227,7 +227,7 @@ const Journal: React.FC<Props> = React.memo(({ entries, setEntries, setView, use
               <div className="w-16 h-16 bg-white dark:bg-slate-800 rounded-3xl flex items-center justify-center shadow-xl flex-shrink-0 text-teal-700">
                 <Heart size={28} fill="currentColor" />
               </div>
-              <p className="text-xl md:text-3xl font-bold italic leading-relaxed text-teal-950 dark:text-teal-50 text-balance">
+              <p className="text-xl md:text-3xl font-bold italic leading-relaxed text-slate-950 dark:text-teal-50 text-balance">
                 "{aiFeedback}"
               </p>
             </div>
@@ -238,13 +238,13 @@ const Journal: React.FC<Props> = React.memo(({ entries, setEntries, setView, use
       <div className="space-y-8">
         <div className="flex flex-col md:flex-row md:items-end justify-between border-b border-slate-200 dark:border-slate-800 pb-8 gap-6">
           <div className="space-y-2">
-            <h3 className="text-3xl md:text-5xl font-black text-slate-950 dark:text-white tracking-tighter flex items-center gap-4">
+            <h3 className="text-3xl md:text-5xl font-black text-slate-950 dark:text-white tracking-tight flex items-center gap-4 transition-colors duration-300">
               <Calendar className="text-teal-700" /> Reflection History
             </h3>
-            <p className="text-slate-600 dark:text-slate-400 font-bold">{entries.length} moments of peace recorded.</p>
+            <p className="text-slate-600 dark:text-slate-400 font-bold transition-colors duration-300">{entries.length} moments of peace recorded.</p>
           </div>
           <div className="flex items-center gap-3">
-             <button onClick={exportJournal} disabled={entries.length === 0} className="px-6 py-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 font-black label-caps rounded-2xl hover:bg-slate-50 transition-all disabled:opacity-30 shadow-sm">
+             <button onClick={exportJournal} disabled={entries.length === 0} className="px-6 py-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-950 dark:text-slate-200 font-black label-caps rounded-2xl hover:bg-slate-50 transition-all disabled:opacity-30 shadow-sm">
                <Download size={14} /> Export
              </button>
              <button onClick={() => setShowClearConfirm(true)} disabled={entries.length === 0} className="px-6 py-3 bg-white dark:bg-slate-800 border border-rose-200 dark:border-rose-900/50 text-rose-700 dark:text-rose-300 font-black label-caps rounded-2xl hover:bg-rose-50 transition-all disabled:opacity-30 shadow-sm">
@@ -263,7 +263,7 @@ const Journal: React.FC<Props> = React.memo(({ entries, setEntries, setView, use
                 </div>
              </div>
              <div className="flex gap-3 w-full md:w-auto">
-                <button onClick={() => setShowClearConfirm(false)} className="flex-1 px-8 py-3 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 font-black label-caps rounded-xl border border-slate-300 dark:border-slate-700">Cancel</button>
+                <button onClick={() => setShowClearConfirm(false)} className="flex-1 px-8 py-3 bg-white dark:bg-slate-800 text-slate-950 dark:text-slate-200 font-black label-caps rounded-xl border border-slate-300 dark:border-slate-700">Cancel</button>
                 <button onClick={() => { setEntries([]); setShowClearConfirm(false); setAiFeedback("Fresh start. The slate is clean."); }} className="flex-1 px-8 py-3 bg-rose-700 text-white font-black label-caps rounded-xl shadow-lg">Delete</button>
              </div>
           </div>
@@ -284,13 +284,13 @@ const Journal: React.FC<Props> = React.memo(({ entries, setEntries, setView, use
               </div>
               
               <div className="flex justify-between items-center">
-                <span className="px-4 py-1.5 bg-slate-100 dark:bg-slate-800 text-[10px] font-black text-slate-600 dark:text-slate-300 rounded-full uppercase tracking-widest">{entry.date}</span>
+                <span className="px-4 py-1.5 bg-slate-100 dark:bg-slate-800 text-[10px] font-black text-slate-950 dark:text-slate-300 rounded-full uppercase tracking-widest">{entry.date}</span>
                 <div className="flex items-center gap-2 text-[10px] font-black uppercase text-teal-700 dark:text-teal-400 tracking-widest">
                   <Sparkles size={12} /> Insight Saved
                 </div>
               </div>
               
-              <p className="text-2xl md:text-3xl font-medium text-slate-950 dark:text-white italic leading-relaxed tracking-tight">
+              <p className="text-2xl md:text-3xl font-medium text-slate-950 dark:text-white italic leading-relaxed tracking-tight transition-colors duration-300">
                 "{entry.transcript}"
               </p>
               
@@ -299,7 +299,7 @@ const Journal: React.FC<Props> = React.memo(({ entries, setEntries, setView, use
                   <div className="flex items-center gap-2 text-teal-700 dark:text-teal-400 font-black label-caps">
                     <Heart size={14} fill="currentColor" /> Sanctuary Reflection
                   </div>
-                  <p className="text-lg md:text-2xl text-slate-700 dark:text-slate-100 font-bold italic leading-relaxed">
+                  <p className="text-lg md:text-2xl text-slate-900/80 dark:text-slate-100 font-bold italic leading-relaxed transition-colors duration-300">
                     "{entry.aiResponse}"
                   </p>
                 </div>
