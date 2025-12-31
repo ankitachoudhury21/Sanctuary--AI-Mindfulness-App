@@ -12,7 +12,7 @@ const wait = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 /**
  * Generic retry wrapper with exponential backoff for Gemini API calls
  */
-async function withRetry<T>(fn: () => Promise<T>, retries = 3, delay = 2000): Promise<T> {
+async function withRetry<T>(fn: () => Promise<T>, retries = 3, delay = 3000): Promise<T> {
   try {
     return await fn();
   } catch (error: any) {
@@ -20,9 +20,10 @@ async function withRetry<T>(fn: () => Promise<T>, retries = 3, delay = 2000): Pr
     const isServerError = error?.status >= 500;
     
     if ((isRateLimit || isServerError) && retries > 0) {
-      console.warn(`Gemini API error (Status: ${error?.status || 'Unknown'}). Retrying in ${delay}ms... (${retries} attempts left)`);
+      console.warn(`Gemini API rate limit or server error. Retrying in ${delay}ms... (${retries} attempts left)`);
       await wait(delay);
-      return withRetry(fn, retries - 1, delay * 2.5);
+      // Exponential backoff with a bit of jitter
+      return withRetry(fn, retries - 1, delay * 2 + Math.random() * 1000);
     }
     throw error;
   }
@@ -48,10 +49,7 @@ export const analyzeGratitudeJournal = async (transcript: string): Promise<{ suc
     return { success: true, message: response.text || "I'm glad you shared that with me. It sounds like a meaningful reflection." };
   } catch (error: any) {
     console.error("Gratitude analysis failed permanently:", error);
-    if (error?.message?.includes("NOT_FOUND")) {
-        return { success: false, message: "System Error: The AI service model was not found. Please contact support or try again later." };
-    }
-    return { success: false, message: "Sanctuary's AI companion is currently unavailable. Your reflection is safe, and I am still listening in spirit." };
+    return { success: false, message: "Sanctuary's AI companion is currently resting. Your reflection is safely stored." };
   }
 };
 
@@ -62,8 +60,9 @@ export const analyzeSleepAndHealth = async (sleepHistory: SleepData[], journalHi
   const userContext = user ? `User Profile: Stress Level ${user.stressLevel}/10, Goals: ${user.goals?.join(', ')}` : "User Profile: Not available";
 
   try {
+    // Switched to gemini-3-flash-preview to avoid 429 quota exhaustion of Pro models
     const response = await withRetry<GenerateContentResponse>(() => ai.models.generateContent({
-      model: "gemini-3-pro-preview",
+      model: "gemini-3-flash-preview",
       contents: `You are a holistic wellness consultant for corporate tech professionals. 
       Analyze the following biometric and qualitative data to provide a health insight report.
       
@@ -79,7 +78,6 @@ export const analyzeSleepAndHealth = async (sleepHistory: SleepData[], journalHi
       
       Return ONLY valid JSON.`,
       config: {
-        thinkingConfig: { thinkingBudget: 4000 },
         responseMimeType: "application/json",
         responseSchema: {
           type: Type.OBJECT,
@@ -104,7 +102,7 @@ export const analyzeSleepAndHealth = async (sleepHistory: SleepData[], journalHi
   } catch (error: any) {
     console.error("Health Analysis failed permanently:", error);
     
-    // Heuristic fallback for offline/quota issues
+    // Heuristic fallback for quota issues
     const avgSleep = sleepHistory.length > 0 
       ? sleepHistory.reduce((acc, s) => acc + s.hours, 0) / sleepHistory.length 
       : 7;
@@ -113,8 +111,8 @@ export const analyzeSleepAndHealth = async (sleepHistory: SleepData[], journalHi
     return {
       score: baseScore,
       label: baseScore > 80 ? "Restorative" : baseScore > 60 ? "Balanced" : "Fatigued",
-      predictions: ["Establishing baseline patterns", "Data accumulation in progress", "Personalized insights pending"],
-      advice: "Focus on maintaining a consistent 15-minute screen-free window before sleep tonight.",
+      predictions: ["Focusing on consistency", "Pattern analysis in progress", "Personalized insights pending"],
+      advice: "Try a 5-minute breathing exercise before your next meeting to lower cortisol.",
       affirmation: "I am the steady silence beneath the noise of logic."
     };
   }

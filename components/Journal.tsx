@@ -173,7 +173,7 @@ const Journal: React.FC<Props> = React.memo(({ entries, setEntries, setView, use
         <div className="relative">
           <Quote className="absolute -top-10 -left-10 text-teal-500/5 dark:text-teal-400/10 w-40 h-40 pointer-events-none" />
           <textarea 
-            className="w-full h-48 md:h-80 p-6 md:p-10 rounded-[2rem] md:rounded-[3.5rem] bg-white/40 dark:bg-slate-900/60 text-xl md:text-3xl font-medium italic text-slate-950 dark:text-white outline-none ring-2 ring-transparent focus:ring-teal-500/10 placeholder:text-slate-300 dark:placeholder:text-slate-600 resize-none transition-all leading-relaxed shadow-inner" 
+            className="w-full h-48 md:h-80 p-6 md:p-10 rounded-[2rem] md:rounded-[3.5rem] bg-white/40 dark:bg-slate-900/60 text-xl md:text-3xl font-medium italic text-slate-950 dark:text-white outline-none ring-2 ring-transparent focus:ring-teal-500/10 placeholder:text-slate-400 dark:placeholder:text-slate-600 resize-none transition-all leading-relaxed shadow-inner" 
             placeholder="Today, I am grateful for..." 
             value={textEntry} 
             onChange={(e) => setTextEntry(e.target.value)}
