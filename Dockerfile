@@ -23,7 +23,7 @@ RUN echo "VITE_GEMINI_API_KEY=$GEMINI_API_KEY" > .env.local
 RUN npm run build
 
 # --- Stage 2: Serve with Nginx ---
-FROM nginx: alpine
+FROM nginx:alpine
 
 # Copy the build output from the previous stage to Nginx's folder
 COPY --from=builder /app/dist /usr/share/nginx/html
