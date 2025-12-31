@@ -33,19 +33,25 @@ export const analyzeGratitudeJournal = async (transcript: string): Promise<{ suc
   const ai = getAI();
   try {
     const response = await withRetry<GenerateContentResponse>(() => ai.models.generateContent({
-      model: "gemini-3-flash-preview",
-      contents: `You are an empathetic, kind, and supportive friend. My user just recorded a gratitude journal entry: "${transcript}". 
-      Respond as a friend would—validating their feelings, celebrating their small wins, and offering a gentle, calming closing statement. Keep it brief (2-3 sentences).`,
+      model: 'gemini-3-flash-preview',
+      contents: `You are an empathetic, wise, and grounded mindfulness companion. 
+      My user is a tech professional working in a high-stress corporate environment. 
+      They just recorded a gratitude reflection: "${transcript}". 
+      
+      Respond as a calm mentor would—validating their professional resilience, helping them find peace outside of their "logic-brain", and offering a poetic, grounding closing statement. 
+      Avoid corporate jargon. Keep it warm, brief (2-3 sentences), and deeply human.`,
       config: {
-        temperature: 0.7,
-        topP: 0.9,
+        temperature: 0.8,
+        topP: 0.95,
       },
     }));
     return { success: true, message: response.text || "I'm glad you shared that with me. It sounds like a meaningful reflection." };
-  } catch (error) {
+  } catch (error: any) {
     console.error("Gratitude analysis failed permanently:", error);
-    // Return a specific error message for the component to display
-    return { success: false, message: "Sanctuary's AI companion is currently unavailable. Please try again later, your reflection is still safe." };
+    if (error?.message?.includes("NOT_FOUND")) {
+        return { success: false, message: "System Error: The AI service model was not found. Please contact support or try again later." };
+    }
+    return { success: false, message: "Sanctuary's AI companion is currently unavailable. Your reflection is safe, and I am still listening in spirit." };
   }
 };
 
