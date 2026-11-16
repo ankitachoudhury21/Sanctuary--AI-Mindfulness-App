@@ -1,8 +1,6 @@
-
-
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { AppView } from '../types';
-import { Cloud, Sunrise, Sun, Sunset, Moon, Coffee, Briefcase, Zap, ChevronLeft, Compass, CheckCircle2, CircleDashed, Clock } from 'lucide-react';
+import { Sunrise, Sun, Sunset, Moon, Coffee, Briefcase, Zap, ChevronLeft, CheckCircle2, Play, Pause, RotateCcw, Droplets } from 'lucide-react';
 
 interface Props {
   setView: (view: AppView) => void;
@@ -10,124 +8,188 @@ interface Props {
 
 const UserFlow: React.FC<Props> = ({ setView }) => {
   const currentHour = new Date().getHours();
-  
+  const [resetSeconds, setResetSeconds] = useState(180);
+  const [isResetActive, setIsResetActive] = useState(false);
+
+  useEffect(() => {
+    if (!isResetActive) return;
+    const timer = window.setInterval(() => {
+      setResetSeconds(prev => {
+        if (prev <= 1) {
+          setIsResetActive(false);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+    return () => window.clearInterval(timer);
+  }, [isResetActive]);
+
+  const formatTimer = (s: number) => {
+    const mins = Math.floor(s / 60);
+    const secs = s % 60;
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
+  };
+
+  const breathPhase = resetSeconds % 12 >= 8 ? 'Inhale slowly (4s)' : resetSeconds % 12 >= 4 ? 'Hold gently (4s)' : 'Exhale release (4s)';
+
   const steps = [
-    { icon: Sunrise, time: '07:00 AM', hour: 7, action: 'Gentle Wake-up Call', desc: 'AI analyzed sleep quality and adjusted your wake alarm.' },
-    { icon: Coffee, time: '08:30 AM', hour: 8.5, action: 'Mindful Morning', desc: 'Hydration check and quick breathing exercise completed.' },
-    { icon: Briefcase, time: '11:00 AM', hour: 11, action: 'Workday Focus', desc: 'Corporate stress relief active. Soft forest ambient sounds playing.' },
-    { icon: Zap, time: '02:00 PM', hour: 14, action: 'Power Reset', desc: 'Scheduled 5-minute desk meditation session.' },
-    { icon: Sunset, time: '06:00 PM', hour: 18, action: 'Evening Wind-down', desc: 'Gratitude journal entry reminder (Audio Recording).' },
-    { icon: Moon, time: '10:00 PM', hour: 22, action: 'Deep Rest', desc: '432Hz binaural beats for sleep starting soon.' },
+    { icon: Sunrise, time: '07:00', period: 'AM', hour: 7, action: 'Gentle Wake-up Cue', desc: 'Circadian wake window aligned with natural light onset.' },
+    { icon: Coffee, time: '08:30', period: 'AM', hour: 8.5, action: 'Morning Hydration & Breath', desc: 'First hydration target paired with 3 minutes of quiet stillness.' },
+    { icon: Briefcase, time: '11:00', period: 'AM', hour: 11, action: 'Deep Focus Block', desc: 'Peak cognitive window supported by ambient forest acoustics.' },
+    { icon: Zap, time: '02:00', period: 'PM', hour: 14, action: 'Midday Nervous System Reset', desc: 'Scheduled 3-minute posture release and box breathing break.' },
+    { icon: Sunset, time: '06:00', period: 'PM', hour: 18, action: 'Evening Transition', desc: 'Close active work threads with a brief gratitude reflection.' },
+    { icon: Moon, time: '10:00', period: 'PM', hour: 22, action: 'Rest Preparation', desc: 'Dim visual stimuli and begin 432 Hz sleep drift soundscape.' },
   ];
 
   return (
-    <div className="space-y-12 md:space-y-16 animate-in fade-in slide-in-from-bottom-6 duration-1000 px-2 md:px-4 pb-24">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+    <div className="space-y-8 md:space-y-10 animate-in fade-in duration-500 pb-6">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 border-b border-slate-900/10 dark:border-white/[0.08] pb-6">
         <div className="space-y-2">
-          <button 
+          <button
             onClick={() => setView(AppView.DASHBOARD)}
-            className="flex items-center gap-2 text-amber-700 dark:text-amber-300 font-black uppercase tracking-[0.25em] text-[10px] md:text-xs hover:gap-4 transition-all outline-none mb-2"
-            aria-label="Back to Sanctuary Dashboard"
+            className="inline-flex items-center gap-1.5 text-xs font-medium text-[#0F5E59] dark:text-teal-400 hover:underline min-h-[36px]"
+            aria-label="Back to Dashboard"
           >
-            <ChevronLeft size={16} /> Back to Sanctuary
+            <ChevronLeft size={15} />
+            <span>Dashboard</span>
           </button>
-          <div className="flex flex-col md:flex-row md:items-center gap-4">
-            <h2 className="text-4xl md:text-7xl font-black text-slate-900 dark:text-white tracking-tighter leading-none transition-colors duration-300">Your Journey</h2>
-            <span className="px-3 py-1 bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-300 text-xs font-black tracking-widest rounded-full border border-amber-200 dark:border-amber-700 uppercase w-fit">BETA</span>
-          </div>
-          <p className="text-slate-500 dark:text-slate-300 font-bold text-lg md:text-2xl transition-colors duration-300">Visualizing your path to lasting peace.</p>
+          <h1 className="font-editorial text-3xl sm:text-4xl lg:text-5xl font-normal text-slate-900 dark:text-white tracking-tight">
+            Daily Flow
+          </h1>
+          <p className="text-sm sm:text-base text-slate-600 dark:text-slate-300">
+            A steady circadian cadence from morning clarity to evening rest.
+          </p>
         </div>
 
-        <div className="flex items-center gap-4 bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl p-3 rounded-[2.5rem] border border-white dark:border-slate-700 shadow-sm ring-1 ring-amber-500/5 transition-colors duration-300">
-           <Compass className="text-amber-600 dark:text-amber-400 ml-2" />
-           <p className="text-slate-900 dark:text-white font-black uppercase tracking-widest text-[10px] pr-4">Timeline Active</p>
+        <div className="text-xs text-slate-500 dark:text-slate-400 display-number">
+          Local Time · {new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
-        <div className="lg:col-span-2 glass-card p-10 md:p-14 rounded-[3rem] md:rounded-[5rem] shadow-2xl border-none ring-1 ring-amber-500/10 dark:ring-amber-700/10 hover:shadow-amber-500/20 transition-all duration-300 hover:scale-[1.005]">
-          <div className="flex items-center justify-between mb-16">
-            <h3 className="text-3xl md:text-5xl font-black text-slate-900 dark:text-white tracking-tight transition-colors duration-300">Daily Rhythm</h3>
-            <div className="flex items-center gap-2 text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/30 px-5 py-2 rounded-full">
-              <Clock size={16} />
-              <span className="text-sm font-black uppercase tracking-widest">{new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
-            </div>
+      <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+        {/* Circadian Timeline */}
+        <div className="xl:col-span-2 glass-card p-6 sm:p-8 lg:p-10 rounded-2xl">
+          <div className="flex items-baseline justify-between gap-4 mb-8">
+            <h2 className="font-editorial text-2xl sm:text-3xl font-normal text-slate-900 dark:text-white">
+              Circadian Rhythm
+            </h2>
+            <span className="text-xs text-slate-500 dark:text-slate-400">6 daily anchors</span>
           </div>
-          <div className="relative space-y-12">
-            <div className="absolute left-6 top-4 bottom-4 w-1 bg-gradient-to-b from-amber-200 via-amber-500 to-amber-100 dark:from-amber-700 dark:via-amber-500 dark:to-amber-700 rounded-full"></div>
+
+          <div className="relative space-y-5">
+            <div className="absolute left-[19px] top-4 bottom-4 w-px bg-slate-200 dark:bg-white/10" aria-hidden="true" />
             {steps.map((step, i) => {
-              const isPast = step.hour < currentHour;
-              const isCurrent = Math.abs(step.hour - currentHour) < 1.5;
+              const isPast = step.hour < currentHour - 1;
+              const isCurrent = Math.abs(step.hour - currentHour) <= 1.5;
               return (
-                <div key={i} className={`relative pl-16 group transition-all duration-500 ${isCurrent ? 'scale-105' : ''}`}>
+                <div key={i} className="relative pl-14 group">
                   <div className={`
-                    absolute left-1 top-0 w-11 h-11 rounded-[1.25rem] border-4 flex items-center justify-center z-10 transition-all duration-500
-                    ${isPast ? 'bg-emerald-500 border-emerald-100 text-white shadow-lg shadow-emerald-500/20' : 
-                      isCurrent ? 'bg-white dark:bg-slate-700 border-amber-500 text-amber-600 dark:text-amber-300 shadow-2xl shadow-amber-500/30 rotate-12 scale-125' : 
-                      'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-300 dark:text-slate-500 shadow-sm'}
+                    absolute left-0 top-1.5 w-10 h-10 rounded-xl border flex items-center justify-center z-10 transition-colors
+                    ${isPast
+                      ? 'bg-[#0F5E59] dark:bg-teal-400 border-transparent text-white dark:text-slate-950'
+                      : isCurrent
+                      ? 'bg-white dark:bg-[#111720] border-[#0F5E59] dark:border-teal-400 text-[#0F5E59] dark:text-teal-400 shadow-sm'
+                      : 'bg-[#F5F4EF] dark:bg-[#090D12] border-slate-200 dark:border-white/10 text-slate-400'}
                   `}>
-                    {isPast ? <CheckCircle2 size={20} /> : <step.icon size={20} className={isCurrent ? 'animate-pulse' : ''} />}
+                    {isPast ? <CheckCircle2 size={17} /> : <step.icon size={17} />}
                   </div>
+
                   <div className={`
-                    p-8 rounded-[2rem] border transition-all duration-500
-                    ${isCurrent ? 'bg-amber-700/80 text-white shadow-2xl border-none' : 'bg-white/50 dark:bg-slate-800/50 border-slate-100 dark:border-slate-700 hover:bg-white dark:hover:bg-slate-700 hover:shadow-xl'}
+                    p-4 sm:p-5 rounded-xl border transition-colors
+                    ${isCurrent
+                      ? 'bg-[#0F5E59]/[0.06] dark:bg-teal-400/[0.08] border-[#0F5E59]/30 dark:border-teal-400/30'
+                      : 'bg-white/60 dark:bg-white/[0.02] border-slate-900/[0.07] dark:border-white/[0.06]'}
                   `}>
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">
-                      <span className={`text-[10px] md:text-xs font-black uppercase tracking-[0.3em] ${isCurrent ? 'text-amber-100' : 'text-amber-600 dark:text-amber-400'}`}>{step.time}</span>
+                    <div className="flex flex-wrap items-center justify-between gap-2 mb-1">
+                      <span className="display-number text-xs font-semibold text-slate-500 dark:text-slate-400">
+                        {step.time} {step.period}
+                      </span>
                       {isCurrent && (
-                        <span className="px-4 py-1 bg-white/20 dark:bg-black/20 backdrop-blur-md rounded-full text-[10px] font-black uppercase tracking-widest">Active Now</span>
+                        <span className="text-xs font-semibold text-[#0F5E59] dark:text-teal-400">
+                          Current Window
+                        </span>
                       )}
                     </div>
-                    <h4 className={`text-xl md:text-2xl font-black tracking-tight ${isCurrent ? 'text-white' : 'text-slate-900 dark:text-white'}`}>{step.action}</h4>
-                    <p className={`text-sm md:text-base font-medium mt-2 leading-relaxed ${isCurrent ? 'text-amber-50 opacity-90' : 'text-slate-500 dark:text-slate-400'}`}>{step.desc}</p>
+                    <h3 className="text-base sm:text-lg font-semibold text-slate-900 dark:text-white tracking-tight">
+                      {step.action}
+                    </h3>
+                    <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 mt-1 leading-relaxed">
+                      {step.desc}
+                    </p>
                   </div>
                 </div>
               );
             })}
           </div>
         </div>
-        <div className="space-y-8">
-           <div className="px-2">
-             <h3 className="text-3xl font-black text-slate-900 dark:text-white tracking-tight">Daily Nudges</h3>
-             <p className="text-slate-500 dark:text-slate-300 font-bold">Actionable steps for your health.</p>
-           </div>
-           <div className="glass-card p-10 rounded-[3.5rem] bg-amber-600 text-white shadow-2xl shadow-amber-600/20 border-none space-y-8 group transition-transform hover:scale-[1.03] hover:shadow-amber-500/30">
-              <div className="w-16 h-16 bg-white/10 rounded-3xl flex items-center justify-center backdrop-blur-xl border border-white/20">
-                <Sun size={32} className="text-amber-100" />
+
+        {/* Interactive Reset & Hydration Column */}
+        <div className="space-y-6">
+          <div className="rounded-2xl p-6 sm:p-8 bg-[#0C1117] text-white border border-white/[0.08] space-y-6">
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-medium text-teal-400">Guided Pause</span>
+                <Sun size={16} className="text-amber-300" />
               </div>
-              <div className="space-y-4">
-                <h4 className="text-3xl font-black tracking-tight leading-none">Stretch & Move</h4>
-                <p className="text-amber-50 font-medium text-lg leading-relaxed opacity-90 italic">
-                  "You've been at your station for 120 minutes. A 3-minute desk yoga session is highly recommended."
-                </p>
-              </div>
-              <button className="w-full py-5 bg-white text-amber-600 rounded-3xl font-black text-lg transition-all active:scale-95 shadow-xl hover:bg-slate-100"
-              aria-label="Start desk yoga session"
-              >
-                Start Flow
-              </button>
-           </div>
-           <div className="glass-card p-10 rounded-[3.5rem] bg-slate-900 text-white shadow-2xl border-none space-y-6 hover:shadow-indigo-500/20 transition-transform hover:scale-[1.005]">
-              <div className="flex items-center justify-between mb-4">
-                <div className="w-12 h-12 bg-white/10 rounded-2xl flex items-center justify-center">
-                  <CircleDashed size={24} className="text-teal-400 animate-spin-slow" />
-                </div>
-                <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">Real-time Check</span>
-              </div>
-              <h4 className="text-2xl font-black text-white">Hydration Pulse</h4>
-              <p className="text-slate-400 font-bold leading-relaxed">
-                Stay focused and hydrated. Next glass is due in <span className="text-teal-400">12 minutes</span> to maintain peak cognitive function.
+              <h3 className="font-editorial text-2xl sm:text-3xl font-normal">
+                3-Minute Breath Reset
+              </h3>
+              <p className="text-sm text-slate-300 leading-relaxed">
+                Step back from the screen for balanced box breathing and shoulder release.
               </p>
-              <div className="h-2 w-full bg-white/10 rounded-full overflow-hidden">
-                <div className="h-full bg-teal-500 w-[65%] transition-all duration-1000"></div>
+            </div>
+
+            <div className="py-5 px-4 rounded-xl bg-white/[0.04] border border-white/[0.08] text-center space-y-1.5">
+              <p className="display-number text-4xl font-semibold tracking-tight text-white">
+                {formatTimer(resetSeconds)}
+              </p>
+              <p className="text-xs text-teal-300 font-medium">
+                {isResetActive ? breathPhase : resetSeconds === 0 ? 'Reset complete' : 'Ready when you are'}
+              </p>
+            </div>
+
+            <div className="flex items-center gap-2.5">
+              <button
+                onClick={() => {
+                  if (resetSeconds === 0) setResetSeconds(180);
+                  setIsResetActive(!isResetActive);
+                }}
+                className="flex-1 py-3 px-4 bg-white text-slate-950 hover:bg-teal-50 rounded-xl font-semibold text-sm inline-flex items-center justify-center gap-2 transition-colors min-h-[44px]"
+                aria-label={isResetActive ? "Pause breathing reset" : "Start breathing reset"}
+              >
+                {isResetActive ? <Pause size={15} /> : <Play size={15} />}
+                <span>{isResetActive ? 'Pause' : resetSeconds === 180 ? 'Start Reset' : 'Resume'}</span>
+              </button>
+              <button
+                onClick={() => { setIsResetActive(false); setResetSeconds(180); }}
+                className="w-11 h-11 rounded-xl border border-white/15 hover:bg-white/10 flex items-center justify-center text-slate-300 transition-colors"
+                aria-label="Reset timer"
+              >
+                <RotateCcw size={16} />
+              </button>
+            </div>
+          </div>
+
+          <div className="glass-card p-6 rounded-2xl space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2 text-xs font-medium text-slate-500 dark:text-slate-400">
+                <Droplets size={14} className="text-sky-600 dark:text-sky-400" />
+                <span>Hydration Cadence</span>
               </div>
-           </div>
-           <div className="glass-card p-10 rounded-[3.5rem] border-2 border-dashed border-slate-200 dark:border-slate-700 flex flex-col items-center justify-center text-center space-y-4 opacity-70 hover:opacity-100 transition-opacity hover:-translate-y-2">
-              <Cloud size={48} className="text-slate-300 dark:text-slate-500" />
-              <p className="text-slate-400 dark:text-slate-500 font-black uppercase tracking-widest text-[10px]">Upcoming Sync</p>
-              <h5 className="text-xl font-black text-slate-800 dark:text-white">Evening Sanctuary</h5>
-              <p className="text-sm text-slate-500 dark:text-slate-400 font-bold">Starts in 3h 12m</p>
-           </div>
+              <span className="display-number text-xs text-slate-500 dark:text-slate-400">Next · 12m</span>
+            </div>
+            <p className="text-sm text-slate-700 dark:text-slate-300 leading-relaxed">
+              Steady hydration supports afternoon focus stability and prevents late-day fatigue.
+            </p>
+            <button
+              onClick={() => setView(AppView.MUSIC)}
+              className="text-xs font-semibold text-[#0F5E59] dark:text-teal-400 hover:underline inline-flex items-center gap-1"
+            >
+              <span>Pair with Focus Audio →</span>
+            </button>
+          </div>
         </div>
       </div>
     </div>

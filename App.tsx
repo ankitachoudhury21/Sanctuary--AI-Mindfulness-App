@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { AppView, UserProfile, SleepData, ActivityData, JournalEntry } from './types';
 import WelcomeJourney from './components/WelcomeJourney';
@@ -6,8 +5,8 @@ import { AuthFlow } from './components/AuthFlow';
 import Dashboard from './components/Dashboard';
 import Navigation from './components/Navigation';
 import { analyzeSleepAndHealth } from './services/geminiService';
-import { Sparkles, Play } from 'lucide-react';
-// REMOVED: import BackgroundAmbience from './components/BackgroundAmbience';
+import { ArrowRight } from 'lucide-react';
+import backdropImg from './src/assets/images/sanctuary_ambient_backdrop_1794849879379.jpg';
 
 const STORAGE_KEYS = {
   USER: 'sanctuary_user_profile',
@@ -16,7 +15,6 @@ const STORAGE_KEYS = {
   ACTIVITY: 'sanctuary_activity_data',
   DRAFT: 'sanctuary_journal_draft',
   DARK_MODE: 'sanctuary_dark_mode',
-  // REMOVED: BACKGROUND_AMBIENCE: 'sanctuary_background_ambience' 
 };
 
 const App: React.FC = () => {
@@ -27,11 +25,6 @@ const App: React.FC = () => {
     return saved === 'true';
   });
   const [isAnyTrackPlaying, setIsAnyTrackPlaying] = useState(false);
-  // REMOVED: New state for background ambience control
-  // REMOVED: const [backgroundAmbienceActive, setBackgroundAmbienceActive] = useState(() => {
-  // REMOVED:   const saved = localStorage.getItem(STORAGE_KEYS.BACKGROUND_AMBIENCE);
-  // REMOVED:   return saved === null ? true : saved === 'true'; // Default to true if not set
-  // REMOVED: });
 
   const [user, setUser] = useState<UserProfile | null>(() => {
     try {
@@ -69,17 +62,9 @@ const App: React.FC = () => {
 
   useEffect(() => {
     localStorage.setItem(STORAGE_KEYS.DARK_MODE, isDarkMode.toString());
-    if (isDarkMode) {
-      document.body.classList.add('dark');
-    } else {
-      document.body.classList.remove('dark');
-    }
+    document.documentElement.classList.toggle('dark', isDarkMode);
+    document.body.classList.toggle('dark', isDarkMode);
   }, [isDarkMode]);
-
-  // REMOVED: Save background ambience preference
-  // REMOVED: useEffect(() => {
-  // REMOVED:   localStorage.setItem(STORAGE_KEYS.BACKGROUND_AMBIENCE, backgroundAmbienceActive.toString());
-  // REMOVED: }, [backgroundAmbienceActive]);
 
   useEffect(() => {
     if (user) {
@@ -96,20 +81,19 @@ const App: React.FC = () => {
     } catch (e) {
       console.error("AI Insights sync failed", e);
     }
-  }, [journalEntries, sleepData, user]); // Depend on relevant data
+  }, [journalEntries, sleepData, user]);
 
   useEffect(() => {
     localStorage.setItem(STORAGE_KEYS.JOURNAL, JSON.stringify(journalEntries));
-    
+
     if (refreshTimerRef.current) window.clearTimeout(refreshTimerRef.current);
-    
-    // Only refresh insights if journal entries count has actually changed
+
     if (journalEntries.length !== lastAnalyzedJournalCount.current) {
       refreshTimerRef.current = window.setTimeout(() => {
         if (journalEntries.length > 0 || user) refreshAIInsights();
-      }, 15000); 
+      }, 15000);
     }
-  }, [journalEntries, user, refreshAIInsights]); // Add refreshAIInsights to dependencies
+  }, [journalEntries, user, refreshAIInsights]);
 
   useEffect(() => {
     localStorage.setItem(STORAGE_KEYS.SLEEP, JSON.stringify(sleepData));
@@ -145,7 +129,7 @@ const App: React.FC = () => {
   const logout = useCallback(() => {
     localStorage.removeItem(STORAGE_KEYS.USER);
     localStorage.removeItem(STORAGE_KEYS.DRAFT);
-    
+
     setUser(null);
     setView(AppView.WELCOME);
     setHasStarted(false);
@@ -155,91 +139,103 @@ const App: React.FC = () => {
     setIsDarkMode(prevMode => !prevMode);
   }, []);
 
-  // REMOVED: New callback to toggle background ambience
-  // REMOVED: const toggleBackgroundAmbience = useCallback(() => {
-  // REMOVED:   setBackgroundAmbienceActive(prev => !prev);
-  // REMOVED: }, []);
-
   return (
-    <div className="min-h-screen transition-all duration-1000 relative overflow-x-hidden">
-      {/* REMOVED: Background Ambience Audio */}
-      {/* REMOVED: <BackgroundAmbience
-        isGloballyPlayingAudio={isAnyTrackPlaying}
-        isUserEnabled={backgroundAmbienceActive}
-        defaultVolume={0.2} 
-      /> */}
-
+    <div className="min-h-screen transition-colors duration-500 relative overflow-x-hidden bg-[#F5F4EF] dark:bg-[#090D12] text-slate-900 dark:text-slate-100">
+      {/* Subtle architectural backdrop */}
       <div className="fixed inset-0 z-0 overflow-hidden pointer-events-none">
-        <img 
-          src="https://images.unsplash.com/photo-1490522046460-e4d658c407c0?auto=format&fit=crop&q=80&w=2560" 
-          alt="Zen landscape" 
-          className="w-full h-full object-cover opacity-80 transition-opacity duration-1000"
-          decoding="async" 
-          fetchpriority="high"
+        <img
+          src={backdropImg}
+          alt="Minimalist architectural lakeside pavilion in morning mist"
+          referrerPolicy="no-referrer"
+          className="w-full h-full object-cover opacity-[0.14] dark:opacity-[0.12] scale-105 transition-opacity duration-700"
+          decoding="async"
+          fetchPriority="high"
         />
-        {/* Changed dark mode overlay to a darker slate for better background blending */}
-        <div className="absolute inset-0 bg-white/50 dark:bg-slate-900/60 backdrop-blur-md transition-colors duration-1000"></div>
-        {/* Changed dark mode gradient to a darker slate for better background blending */}
-        <div className="absolute inset-0 bg-gradient-to-b from-transparent to-slate-50/80 dark:to-slate-950/90 transition-colors duration-1000"></div>
+        <div className="absolute inset-0 bg-gradient-to-b from-[#F5F4EF]/85 via-[#F5F4EF]/92 to-[#F5F4EF] dark:from-[#090D12]/80 dark:via-[#090D12]/90 dark:to-[#090D12] transition-colors duration-500"></div>
       </div>
 
+      {/* Editorial Entry Gate */}
       {!hasStarted && (
-        <div className="fixed inset-0 z-[200] flex flex-col items-center justify-center p-6 text-center animate-in fade-in zoom-in-95 duration-1000">
-          <div className="absolute inset-0 bg-slate-900/10 backdrop-blur-md dark:bg-white/50 transition-colors duration-1000"></div>
-          <div className="relative z-10 glass-card p-10 md:p-24 rounded-[3rem] md:rounded-[5rem] shadow-2xl border-white/60 dark:border-teal-500/10 max-w-2xl w-full space-y-12 transition-all duration-1000">
-             <div className="space-y-6">
-                <div className="w-24 h-24 md:w-32 md:h-32 bg-teal-600/10 rounded-full flex items-center justify-center mx-auto mb-6 relative">
-                   <div className="absolute inset-0 border-2 border-teal-600/30 rounded-full animate-ping opacity-20"></div>
-                   <Sparkles size={48} className="text-teal-700 md:w-16 md:h-16" />
+        <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 sm:p-6 overflow-y-auto animate-in fade-in duration-700">
+          <div className="fixed inset-0 bg-[#F5F4EF]/75 dark:bg-[#090D12]/80 backdrop-blur-xl"></div>
+          <div className="relative z-10 w-full max-w-xl my-auto rounded-2xl bg-white/95 dark:bg-[#111720]/95 border border-slate-900/10 dark:border-white/10 shadow-2xl overflow-hidden">
+            <div className="relative h-44 sm:h-52 w-full overflow-hidden">
+              <img
+                src={backdropImg}
+                alt="Sanctuary architectural pavilion"
+                referrerPolicy="no-referrer"
+                className="w-full h-full object-cover"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/65 via-black/20 to-transparent"></div>
+              <div className="absolute bottom-4 left-6 right-6 flex items-center justify-between text-white">
+                <div className="flex items-center gap-2.5">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M12 2C6.477 2 2 6.477 2 12C2 17.523 6.477 22 12 22C17.523 22 22 17.523 22 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                    <circle cx="12" cy="12" r="2.75" fill="currentColor" />
+                  </svg>
+                  <span className="font-editorial text-lg font-medium tracking-tight">Sanctuary</span>
                 </div>
-                <h1 className="text-5xl md:text-7xl font-black text-slate-900 dark:text-slate-900 tracking-tighter font-display leading-tight transition-colors duration-1000">Welcome to <br/>Sanctuary</h1>
-                <p className="text-xl md:text-2xl text-slate-600 dark:text-slate-300 font-medium italic transition-colors duration-1000">Your mindful space is ready.</p>
-             </div>
-             <button 
-                onClick={handleStartExperience}
-                className="w-full calm-btn-primary py-6 md:py-8 rounded-[1.5rem] md:rounded-[2.5rem] text-2xl md:text-3xl font-black shadow-2xl hover:scale-105 active:scale-95 transition-all flex items-center justify-center gap-4 group hover:shadow-teal-500/40"
-                aria-label="Enter Sanctuary"
-              >
-                <Play size={28} className="md:w-9 md:h-9 group-hover:fill-current" fill="none" /> 
-                Enter Sanctuary
-             </button>
+                <span className="text-xs text-white/80 font-medium">Rest · Focus · Recovery</span>
+              </div>
+            </div>
+
+            <div className="p-6 sm:p-10 space-y-6 text-left">
+              <div className="space-y-2.5">
+                <h1 className="font-editorial text-3xl sm:text-4xl md:text-5xl font-normal text-slate-900 dark:text-white tracking-tight leading-[1.12] text-balance">
+                  A quiet place for rest and clarity.
+                </h1>
+                <p className="text-sm sm:text-base text-slate-600 dark:text-slate-300 leading-relaxed max-w-md">
+                  Guided soundscapes, sleep telemetry, and private reflection crafted for unhurried focus.
+                </p>
+              </div>
+
+              <div className="pt-2 border-t border-slate-900/10 dark:border-white/10 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <span className="text-xs text-slate-500 dark:text-slate-400">
+                  {user ? `Welcome back, ${user.name}` : 'Personal workspace'}
+                </span>
+                <button
+                  onClick={handleStartExperience}
+                  className="calm-btn-primary px-6 py-3.5 rounded-xl text-sm font-semibold inline-flex items-center justify-center gap-2.5 group"
+                  aria-label="Enter Sanctuary"
+                >
+                  <span>{user ? 'Resume Session' : 'Enter Sanctuary'}</span>
+                  <ArrowRight size={16} className="transition-transform group-hover:translate-x-0.5" />
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}
 
-      <div className={`relative z-10 min-h-screen flex flex-col transition-all duration-1000 ${hasStarted ? 'opacity-100 blur-0 scale-100' : 'opacity-0 blur-xl scale-110 pointer-events-none'}`}>
+      <div className={`relative z-10 min-h-screen flex flex-col transition-opacity duration-700 ${hasStarted ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
         {view === AppView.WELCOME && <WelcomeJourney onComplete={handleStart} />}
-        {/* FIX: Changed AppView.LIFIN to AppView.LOGIN */}
         {view === AppView.LOGIN && user && <AuthFlow onAuthComplete={handleAuthComplete} userName={user.name} />}
-        {/* FIX: Changed AppView.LIFIN to AppView.LOGIN */}
         {view !== AppView.WELCOME && view !== AppView.LOGIN && (
           <div className="flex flex-col md:flex-row min-h-screen">
-            <Navigation 
-              activeView={view} 
-              setView={setView} 
+            <Navigation
+              activeView={view}
+              setView={setView}
               onLogout={logout}
               isDarkMode={isDarkMode}
               toggleDarkMode={toggleDarkMode}
-              // REMOVED: isBackgroundAmbienceActive={backgroundAmbienceActive} 
-              // REMOVED: toggleBackgroundAmbience={toggleBackgroundAmbience} 
             />
-            <main className="flex-1 w-full transition-all duration-500 relative px-4 sm:px-8 pb-32 pt-24 md:pt-16 md:pl-[260px] max-w-[1600px] mx-auto">
-              {/* Changed main content gradient to be more subtle and darker in dark mode */}
-              <div className="fixed inset-0 bg-gradient-to-t from-slate-50/90 to-transparent dark:from-slate-900/90 dark:to-transparent pointer-events-none z-0"></div>
-              <Dashboard 
-                view={view}
-                setView={setView}
-                user={user} 
-                sleepData={sleepData} 
-                activity={activity}
-                setActivity={setActivity}
-                journalEntries={journalEntries}
-                setJournalEntries={setJournalEntries}
-                aiInsights={aiInsights}
-                setSleepData={setSleepData}
-                setIsAnyTrackPlaying={setIsAnyTrackPlaying}
-              />
-            </main>
+            <div className="flex-1 w-full min-w-0 md:pl-[232px] lg:pl-[256px] transition-all duration-300">
+              <main className="w-full max-w-[1320px] mx-auto relative px-4 sm:px-6 lg:px-10 pt-20 pb-24 md:pt-8 md:pb-14">
+                <Dashboard
+                  view={view}
+                  setView={setView}
+                  user={user}
+                  sleepData={sleepData}
+                  activity={activity}
+                  setActivity={setActivity}
+                  journalEntries={journalEntries}
+                  setJournalEntries={setJournalEntries}
+                  aiInsights={aiInsights}
+                  setSleepData={setSleepData}
+                  setIsAnyTrackPlaying={setIsAnyTrackPlaying}
+                />
+              </main>
+            </div>
           </div>
         )}
       </div>

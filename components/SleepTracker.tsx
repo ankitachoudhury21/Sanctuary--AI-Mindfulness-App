@@ -1,8 +1,7 @@
-
-import React from 'react';
+import React, { useState } from 'react';
 import { SleepData, AppView } from '../types';
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell, Area, AreaChart, ComposedChart } from 'recharts';
-import { Info, ShieldAlert, Sparkles, TrendingUp, ChevronLeft, Moon, Clock, Zap, Star } from 'lucide-react';
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts';
+import { ChevronLeft, Moon, Plus, X, ArrowUpRight, CheckCircle2 } from 'lucide-react';
 
 interface Props {
   data: SleepData[];
@@ -11,183 +10,340 @@ interface Props {
   setView: (view: AppView) => void;
 }
 
+const PROTOCOL_GUIDES: Record<string, { title: string; summary: string; steps: string[] }> = {
+  burnout: {
+    title: 'Evening Blue-Light & Cortisol Taper',
+    summary: 'Gradually lowers evening sympathetic tone 45 minutes before sleep onset.',
+    steps: [
+      'Dim overhead cool lighting and switch devices to warm display mode 45 minutes before bed.',
+      'Listen to 10 minutes of 432 Hz or Pink Noise meditation to shift into slower alpha waves.',
+      'Keep bedroom ambient temperature between 18°C and 19.5°C for uninterrupted slow-wave sleep.'
+    ]
+  },
+  forecast: {
+    title: 'Restorative Cycle Alignment Protocol',
+    summary: 'Stabilizes REM duration and minimizes mid-night micro-arousals.',
+    steps: [
+      'Anchor wake-up time within a consistent 30-minute window, including weekends.',
+      'Get 10 minutes of natural outdoor morning light within 60 minutes of waking.',
+      'Avoid caffeine within 9 hours of your target sleep onset.'
+    ]
+  }
+};
+
 const CustomSleepTooltip = React.memo(({ active, payload, label }: any) => {
   if (active && payload && payload.length) {
     const data = payload[0].payload;
     return (
-      <div className="glass-card p-4 rounded-xl shadow-lg border-blue-100 dark:border-blue-200 text-slate-900 dark:text-slate-900 transition-colors duration-300">
-        <p className="label-caps text-blue-500 dark:text-blue-700 mb-1">{label}</p>
-        <p className="text-lg font-black text-blue-700 dark:text-blue-700">{`${data.hours} hours`}</p>
-        <p className="text-sm text-slate-600 dark:text-slate-700">{`Quality: ${data.quality}/10`}</p>
-        <p className={`text-sm font-semibold ${data.label === 'Optimal' || data.label === 'Great' ? 'text-emerald-600' : data.label === 'Fair' || data.label === 'Good' ? 'text-amber-600' : 'text-rose-600'}`}>{`Status: ${data.label}`}</p>
+      <div className="bg-white dark:bg-[#111720] px-4 py-3 rounded-xl shadow-lg border border-slate-900/10 dark:border-white/10 text-slate-900 dark:text-slate-100">
+        <p className="text-xs font-medium text-slate-500 dark:text-slate-400 mb-0.5">{label}</p>
+        <p className="display-number text-base font-semibold text-[#0F5E59] dark:text-teal-400">{data.hours} hrs</p>
+        <p className="text-xs text-slate-600 dark:text-slate-300 display-number">Quality {data.quality}/10 · {data.label}</p>
       </div>
     );
   }
   return null;
 });
 
-const SleepTracker: React.FC<Props> = React.memo(({ data, aiInsights, setView }) => {
-  const avgHours = (data.reduce((acc, curr) => acc + curr.hours, 0) / data.length).toFixed(1);
+const SleepTracker: React.FC<Props> = React.memo(({ data, setData, aiInsights, setView }) => {
+  const [timeframe, setTimeframe] = useState<'weekly' | 'monthly'>('weekly');
+  const [showLogForm, setShowLogForm] = useState(false);
+  const [newHours, setNewHours] = useState('7.5');
+  const [newQuality, setNewQuality] = useState('8');
+  const [activeProtocol, setActiveProtocol] = useState<{ title: string; summary: string; steps: string[] } | null>(null);
+
+  const avgHours = data.length > 0
+    ? (data.reduce((acc, curr) => acc + curr.hours, 0) / data.length).toFixed(1)
+    : '0.0';
+
+  const monthlyData: SleepData[] = [
+    { date: 'Wk 1', hours: 6.9, quality: 7, score: 72, label: 'Fair' },
+    { date: 'Wk 2', hours: 7.3, quality: 8, score: 79, label: 'Good' },
+    { date: 'Wk 3', hours: 7.1, quality: 7, score: 75, label: 'Good' },
+    { date: 'Current', hours: Number(avgHours) || 7.2, quality: 8, score: 82, label: 'Optimal' },
+  ];
+
+  const chartData = timeframe === 'weekly' ? data : monthlyData;
+
+  const handleAddSleep = (e: React.FormEvent) => {
+    e.preventDefault();
+    const hours = Math.max(1, Math.min(14, parseFloat(newHours) || 7.5));
+    const quality = Math.max(1, Math.min(10, parseInt(newQuality) || 8));
+    const dayLabel = new Date().toLocaleDateString('en-US', { weekday: 'short' });
+    const label = quality >= 8 ? 'Great' : quality >= 6 ? 'Good' : 'Fair';
+    const score = Math.round((hours / 8) * 50 + quality * 5);
+
+    setData([...data.slice(-6), { date: dayLabel, hours, quality, score, label }]);
+    setShowLogForm(false);
+  };
 
   return (
-    <div className="space-y-10 md:space-y-16 animate-in fade-in slide-in-from-bottom-6 duration-1000 px-2 md:px-4 pb-24">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+    <div className="space-y-8 md:space-y-10 animate-in fade-in duration-500 pb-6">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 border-b border-slate-900/10 dark:border-white/[0.08] pb-6">
         <div className="space-y-2">
-          <button 
+          <button
             onClick={() => setView(AppView.DASHBOARD)}
-            className="flex items-center gap-2 text-blue-600 dark:text-blue-700 label-caps hover:gap-4 transition-all outline-none mb-2"
-            aria-label="Back to Sanctuary Dashboard"
+            className="inline-flex items-center gap-1.5 text-xs font-medium text-[#0F5E59] dark:text-teal-400 hover:underline min-h-[36px]"
+            aria-label="Back to Dashboard"
           >
-            <ChevronLeft size={16} /> Back to Sanctuary
+            <ChevronLeft size={15} />
+            <span>Dashboard</span>
           </button>
-          <div className="flex flex-col md:flex-row md:items-center gap-4">
-            <h2 className="text-4xl md:text-7xl font-black text-slate-900 dark:text-white tracking-tighter leading-none transition-colors duration-300">Rest & Recovery</h2>
-            <span className="label-caps px-3 py-1 bg-blue-100 dark:bg-blue-100/30 text-blue-600 dark:text-blue-700 rounded-full border border-blue-200 dark:border-blue-200 w-fit">BETA</span>
-          </div>
-          <p className="text-slate-500 dark:text-slate-300 font-semibold text-lg md:text-2xl transition-colors duration-300">Clinical-grade insights for corporate performance.</p>
+          <h1 className="font-editorial text-3xl sm:text-4xl lg:text-5xl font-normal text-slate-900 dark:text-white tracking-tight">
+            Sleep & Recovery
+          </h1>
+          <p className="text-sm sm:text-base text-slate-600 dark:text-slate-300">
+            Rest duration, cycle quality, and preventative recovery guidance.
+          </p>
         </div>
 
-        <div className="flex items-center gap-4 bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl p-3 rounded-[2.5rem] border border-white dark:border-slate-700 shadow-sm ring-1 ring-blue-500/5 transition-colors duration-300">
-           <div className="px-6 py-2 bg-blue-600 text-white rounded-full label-caps">Live Analysis</div>
-           <p className="text-slate-900 dark:text-white font-bold text-sm pr-4">Updated 2m ago</p>
-        </div>
+        <button
+          onClick={() => setShowLogForm(!showLogForm)}
+          className="calm-btn-primary px-5 py-3 rounded-xl text-sm font-semibold inline-flex items-center justify-center gap-2 min-h-[44px] self-start sm:self-auto"
+          aria-label="Log sleep session"
+        >
+          <Plus size={16} />
+          <span>Log Night</span>
+        </button>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <div className="lg:col-span-2 glass-card p-10 md:p-14 rounded-[3rem] md:rounded-[4.5rem] relative overflow-hidden flex flex-col justify-between shadow-2xl border-none ring-1 ring-blue-500/10 dark:ring-blue-500/10 min-h-[450px] hover:shadow-blue-500/20 transition-all duration-300 hover:scale-[1.005]">
-           <div className="absolute top-[-50px] right-[-50px] opacity-[0.03] text-blue-900 dark:text-blue-400">
-             <Moon size={300} />
-           </div>
-           <div className="space-y-10 relative z-10">
-              <div className="flex items-center gap-4">
-                <div className="w-14 h-14 bg-blue-600 rounded-2xl flex items-center justify-center text-white shadow-xl shadow-blue-500/20">
-                  <Star size={28} fill="currentColor" />
-                </div>
-                <div>
-                  <h3 className="text-2xl md:text-4xl font-black text-slate-900 dark:text-white tracking-tight transition-colors duration-300">Sleep Quality Index</h3>
-                  <p className="text-slate-500 dark:text-slate-300 font-semibold transition-colors duration-300">Comprehensive nightly analysis</p>
-                </div>
-              </div>
-              <div className="flex items-baseline gap-4">
-                <span className="text-[120px] md:text-[180px] font-black text-slate-900 dark:text-white tracking-tighter leading-none drop-shadow-2xl display-number transition-colors duration-300">
-                  {aiInsights?.score || '78'}
-                </span>
-                <div className="space-y-1">
-                   <div className="px-4 py-1.5 bg-emerald-100 dark:bg-emerald-100/30 text-emerald-700 dark:text-emerald-400 rounded-full label-caps inline-block">
-                     +{Math.floor(Math.random() * 5) + 2}% Up
-                   </div>
-                   <p className="label-caps text-slate-400 dark:text-slate-300 pl-1">Target 85+</p>
-                </div>
-              </div>
-           </div>
-           <div className="grid grid-cols-3 gap-6 relative z-10">
-              <div className="space-y-1">
-                <p className="label-caps text-slate-400 dark:text-slate-300">State</p>
-                <p className="text-lg md:text-2xl font-black text-blue-600 dark:text-blue-400 transition-colors duration-300">{aiInsights?.label || 'Optimal'}</p>
-              </div>
-              <div className="space-y-1">
-                <p className="label-caps text-slate-400 dark:text-slate-300">Avg Duration</p>
-                <p className="text-lg md:text-2xl font-black text-slate-900 dark:text-white display-number transition-colors duration-300">{avgHours}h</p>
-              </div>
-              <div className="space-y-1">
-                <p className="label-caps text-slate-400 dark:text-slate-300">Deep Sleep</p>
-                <p className="text-lg md:text-2xl font-black text-slate-900 dark:text-white display-number">32%</p>
-              </div>
-           </div>
-        </div>
-        <div className="glass-card p-10 rounded-[3rem] md:rounded-[4.5rem] bg-slate-900 text-white border-none flex flex-col justify-between shadow-2xl relative overflow-hidden group hover:shadow-indigo-500/20 transition-all duration-300 hover:scale-[1.005]">
-           <div className="absolute inset-0 bg-gradient-to-br from-blue-600/20 to-transparent opacity-50"></div>
-           <div className="relative z-10 space-y-6">
-              <div className="w-16 h-16 bg-white/10 rounded-3xl flex items-center justify-center backdrop-blur-xl border border-white/20">
-                <Zap size={32} className="text-blue-400" />
-              </div>
-              <h4 className="text-3xl md:text-4xl font-black tracking-tight leading-tight">Burnout <br/>Prevention</h4>
-              <p className="text-slate-300 font-medium text-lg leading-relaxed italic">
-                "{aiInsights?.advice || "Your restorative sleep phase is slightly delayed. Consider cutting blue light 30 minutes earlier tonight."}"
-              </p>
-           </div>
-           <button className="relative z-10 w-full py-5 bg-white text-slate-900 rounded-3xl font-black text-lg transition-all hover:scale-[1.02] active:scale-95 shadow-xl font-display hover:bg-slate-100"
-           aria-label="Explore burnout prevention protocols"
-           >
-             Explore Protocols
-           </button>
-        </div>
-      </div>
-
-      <div className="glass-card p-10 md:p-14 rounded-[3rem] md:rounded-[5rem] shadow-2xl border-none ring-1 ring-slate-200/50 dark:ring-slate-700/50 hover:shadow-blue-500/20 transition-all duration-300 hover:scale-[1.005]">
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-12">
-          <div className="space-y-2">
-            <h3 className="text-3xl md:text-5xl font-black text-slate-900 dark:text-white tracking-tight transition-colors duration-300">Recovery Trends</h3>
-            <p className="text-slate-500 dark:text-slate-300 font-semibold transition-colors duration-300">Historical data across past 7 sessions</p>
+      {/* Log Sleep Drawer */}
+      {showLogForm && (
+        <form onSubmit={handleAddSleep} className="glass-card rounded-2xl p-6 space-y-5 animate-in fade-in duration-200">
+          <div className="flex items-center justify-between">
+            <h2 className="font-editorial text-xl text-slate-900 dark:text-white">Record Sleep Session</h2>
+            <button type="button" onClick={() => setShowLogForm(false)} className="text-slate-400 hover:text-slate-700 dark:hover:text-white p-1">
+              <X size={18} />
+            </button>
           </div>
-          <div className="flex p-1 bg-slate-100/80 dark:bg-slate-800/80 backdrop-blur-3xl rounded-xl gap-0.5 border border-white dark:border-slate-700 shadow-inner">
-             <button className="px-6 py-3 bg-white dark:bg-slate-700 text-slate-900 dark:text-white rounded-2xl label-caps border border-slate-200 dark:border-slate-600 hover:bg-slate-100 dark:hover:bg-slate-600"
-             aria-label="View weekly recovery trends"
-             >Weekly</button>
-             <button className="px-6 py-3 text-slate-400 dark:text-slate-400 rounded-2xl label-caps hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-700"
-             aria-label="View monthly recovery trends"
-             >Monthly</button>
-          </div>
-        </div>
-        <div className="w-full h-[300px] md:h-[400px] relative overflow-hidden">
-          <ResponsiveContainer width="100%" height="100%">
-            <ComposedChart data={data}>
-              <defs>
-                <linearGradient id="chartGradient" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#2563eb" stopOpacity={0.8}/>
-                  <stop offset="100%" stopColor="#3b82f6" stopOpacity={0.1}/>
-                </linearGradient>
-              </defs>
-              <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontSize: 12, fontWeight: 700, fontFamily: 'Outfit' }} dy={20} />
-              <YAxis hide />
-              <Tooltip 
-                cursor={{ fill: 'rgba(59, 130, 246, 0.05)', radius: 24 }} 
-                content={CustomSleepTooltip} 
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label htmlFor="sleep-hours" className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1.5">
+                Duration (Hours)
+              </label>
+              <input
+                id="sleep-hours"
+                type="number"
+                step="0.1"
+                min="1"
+                max="14"
+                value={newHours}
+                onChange={(e) => setNewHours(e.target.value)}
+                className="w-full bg-[#F5F4EF] dark:bg-slate-900/70 border border-slate-900/12 dark:border-white/12 px-4 py-2.5 rounded-xl text-sm display-number outline-none focus:border-[#0F5E59] dark:focus:border-teal-400"
               />
-              <Bar dataKey="hours" radius={[18, 18, 18, 18]} barSize={48}>
-                {data.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={entry.hours < 7 ? '#60a5fa' : '#2563eb'} />
+            </div>
+            <div>
+              <label htmlFor="sleep-quality" className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1.5">
+                Rest Quality (1–10)
+              </label>
+              <input
+                id="sleep-quality"
+                type="number"
+                min="1"
+                max="10"
+                value={newQuality}
+                onChange={(e) => setNewQuality(e.target.value)}
+                className="w-full bg-[#F5F4EF] dark:bg-slate-900/70 border border-slate-900/12 dark:border-white/12 px-4 py-2.5 rounded-xl text-sm display-number outline-none focus:border-[#0F5E59] dark:focus:border-teal-400"
+              />
+            </div>
+          </div>
+          <div className="flex justify-end gap-3">
+            <button type="button" onClick={() => setShowLogForm(false)} className="px-4 py-2.5 text-sm font-medium text-slate-600 dark:text-slate-300">
+              Cancel
+            </button>
+            <button type="submit" className="calm-btn-primary px-5 py-2.5 rounded-xl text-sm font-semibold">
+              Save Entry
+            </button>
+          </div>
+        </form>
+      )}
+
+      {/* Main Quality Summary + Protocol Card */}
+      <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+        <div className="xl:col-span-2 glass-card p-6 sm:p-8 lg:p-10 rounded-2xl flex flex-col justify-between gap-8">
+          <div className="flex flex-wrap items-start justify-between gap-4">
+            <div className="space-y-1">
+              <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
+                <Moon size={14} className="text-[#0F5E59] dark:text-teal-400" />
+                <span>Sleep Quality Index</span>
+              </div>
+              <h2 className="font-editorial text-2xl sm:text-3xl font-normal text-slate-900 dark:text-white">
+                Nightly Recovery Balance
+              </h2>
+            </div>
+
+            <span className="text-xs font-medium text-emerald-700 dark:text-emerald-400">
+              +4% vs prior week · Target 85+
+            </span>
+          </div>
+
+          <div className="flex items-baseline gap-3">
+            <span className="display-number text-6xl sm:text-7xl font-semibold text-slate-900 dark:text-white tracking-tight">
+              {aiInsights?.score || '78'}
+            </span>
+            <span className="text-lg text-slate-400 display-number">/ 100</span>
+          </div>
+
+          <div className="grid grid-cols-3 gap-4 pt-5 border-t border-slate-900/10 dark:border-white/[0.08]">
+            <div className="space-y-1">
+              <p className="text-xs text-slate-500 dark:text-slate-400">State</p>
+              <p className="text-base sm:text-lg font-semibold text-[#0F5E59] dark:text-teal-400">
+                {aiInsights?.label || 'Optimal'}
+              </p>
+            </div>
+            <div className="space-y-1">
+              <p className="text-xs text-slate-500 dark:text-slate-400">Avg Duration</p>
+              <p className="display-number text-base sm:text-lg font-semibold text-slate-900 dark:text-white">
+                {avgHours}h
+              </p>
+            </div>
+            <div className="space-y-1">
+              <p className="text-xs text-slate-500 dark:text-slate-400">Deep Sleep</p>
+              <p className="display-number text-base sm:text-lg font-semibold text-slate-900 dark:text-white">
+                32%
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div className="rounded-2xl p-6 sm:p-8 bg-[#0C1117] text-white border border-white/[0.08] flex flex-col justify-between gap-6">
+          <div className="space-y-3">
+            <p className="text-xs font-medium text-teal-400">Preventative Focus</p>
+            <h3 className="font-editorial text-2xl sm:text-3xl font-normal leading-snug">
+              Burnout Prevention
+            </h3>
+            <p className="text-sm text-slate-300 leading-relaxed">
+              {aiInsights?.advice || "Your restorative sleep onset is slightly delayed. Stepping away from bright screens 30 minutes earlier supports deeper REM recovery."}
+            </p>
+          </div>
+          <button
+            onClick={() => setActiveProtocol(PROTOCOL_GUIDES.burnout)}
+            className="w-full py-3 px-4 bg-white text-slate-950 hover:bg-teal-50 rounded-xl font-semibold text-sm transition-colors inline-flex items-center justify-center gap-2 min-h-[44px]"
+            aria-label="Explore burnout prevention protocols"
+          >
+            <span>Explore Protocol</span>
+            <ArrowUpRight size={15} />
+          </button>
+        </div>
+      </div>
+
+      {/* Inline Protocol Guide Drawer */}
+      {activeProtocol && (
+        <div className="glass-card rounded-2xl p-6 sm:p-8 space-y-4 animate-in fade-in duration-300">
+          <div className="flex items-start justify-between gap-4">
+            <div className="space-y-1">
+              <p className="text-xs font-medium text-[#0F5E59] dark:text-teal-400">Recommended Protocol</p>
+              <h3 className="font-editorial text-xl sm:text-2xl text-slate-900 dark:text-white">{activeProtocol.title}</h3>
+              <p className="text-sm text-slate-600 dark:text-slate-300">{activeProtocol.summary}</p>
+            </div>
+            <button onClick={() => setActiveProtocol(null)} className="text-slate-400 hover:text-slate-700 dark:hover:text-white p-1" aria-label="Close protocol">
+              <X size={18} />
+            </button>
+          </div>
+          <div className="space-y-2.5 pt-2 border-t border-slate-900/10 dark:border-white/[0.08]">
+            {activeProtocol.steps.map((step, idx) => (
+              <div key={idx} className="flex items-start gap-3 text-sm text-slate-700 dark:text-slate-200">
+                <CheckCircle2 size={16} className="text-[#0F5E59] dark:text-teal-400 flex-shrink-0 mt-0.5" />
+                <span>{step}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Recovery Trends Bar Chart */}
+      <div className="glass-card p-6 sm:p-8 lg:p-10 rounded-2xl space-y-6">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+          <div className="space-y-1">
+            <h2 className="font-editorial text-2xl sm:text-3xl font-normal text-slate-900 dark:text-white">
+              Recovery Trends
+            </h2>
+            <p className="text-sm text-slate-500 dark:text-slate-400">
+              {timeframe === 'weekly' ? 'Duration across recent logged nights' : 'Weekly average hours across the past month'}
+            </p>
+          </div>
+          <div className="flex items-center gap-1 p-1 bg-[#F5F4EF] dark:bg-white/[0.05] rounded-xl border border-slate-900/10 dark:border-white/[0.08]">
+            <button
+              onClick={() => setTimeframe('weekly')}
+              className={`px-4 py-1.5 text-xs font-semibold rounded-lg transition-colors min-h-[36px] ${
+                timeframe === 'weekly'
+                  ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-sm'
+                  : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+              }`}
+              aria-label="View weekly recovery trends"
+            >
+              Weekly
+            </button>
+            <button
+              onClick={() => setTimeframe('monthly')}
+              className={`px-4 py-1.5 text-xs font-semibold rounded-lg transition-colors min-h-[36px] ${
+                timeframe === 'monthly'
+                  ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-sm'
+                  : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+              }`}
+              aria-label="View monthly recovery trends"
+            >
+              Monthly
+            </button>
+          </div>
+        </div>
+
+        <div className="w-full h-64 sm:h-72">
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart data={chartData} margin={{ top: 10, right: 10, left: 10, bottom: 0 }}>
+              <XAxis
+                dataKey="date"
+                axisLine={false}
+                tickLine={false}
+                tick={{ fill: '#64748B', fontSize: 12, fontFamily: 'Plus Jakarta Sans' }}
+                dy={8}
+              />
+              <YAxis hide domain={[0, 10]} />
+              <Tooltip cursor={{ fill: 'rgba(15, 94, 89, 0.05)', radius: 8 }} content={CustomSleepTooltip} />
+              <Bar dataKey="hours" radius={[8, 8, 8, 8]} barSize={38}>
+                {chartData.map((entry, index) => (
+                  <Cell key={`cell-${index}`} fill={entry.hours < 7 ? '#94A3B8' : '#0F5E59'} />
                 ))}
               </Bar>
-              <Area type="monotone" dataKey="hours" stroke="none" fill="url(#chartGradient)" />
-            </ComposedChart>
+            </BarChart>
           </ResponsiveContainer>
         </div>
       </div>
 
-      <div className="space-y-8">
-        <div className="px-2">
-          <h3 className="text-3xl md:text-5xl font-black text-slate-900 dark:text-white tracking-tight flex items-center gap-4 transition-colors duration-300">
-            <ShieldAlert className="text-blue-600 dark:text-blue-400 w-10 h-10 md:w-14 md:h-14" /> Wellness Forecasts
-          </h3>
-          <p className="text-slate-500 dark:text-slate-300 font-semibold text-lg md:text-2xl transition-colors duration-300">Predictive health alerts based on biometric patterns.</p>
+      {/* Wellness Forecasts */}
+      <div className="space-y-4">
+        <div className="space-y-1">
+          <h2 className="font-editorial text-2xl sm:text-3xl font-normal text-slate-900 dark:text-white">
+            Wellness Forecasts
+          </h2>
+          <p className="text-sm text-slate-500 dark:text-slate-400">
+            Signals derived from sleep duration variance and reflection cadence.
+          </p>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {(aiInsights?.predictions || ["Cognitive Fatigue Risk", "Elevated Cortisol Levels", "Social Withdrawal Signal"]).map((pred: string, i: number) => (
-            <div key={i} className="glass-card p-10 rounded-[3rem] space-y-8 hover:shadow-2xl hover:-translate-y-2 transition-all hover:shadow-blue-500/20 border-none ring-1 ring-slate-100 dark:ring-slate-700">
-               <div className="w-16 h-16 bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-3xl flex items-center justify-center">
-                 <Sparkles size={32} />
-               </div>
-               <div className="space-y-3">
-                 <h4 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight leading-snug">{pred}</h4>
-                 <p className="text-slate-500 dark:text-slate-300 font-semibold">Detected in late REM cycles during Tuesday - Thursday interval.</p>
-               </div>
-               <button className="flex items-center gap-2 label-caps text-blue-700 dark:text-blue-400 hover:underline"
-               aria-label={`Read protocol for ${pred}`}
-               >
-                 Read Protocol <TrendingUp size={16} />
-               </button>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+          {(aiInsights?.predictions || ["Cognitive Fatigue Risk", "Elevated Cortisol Load", "Evening Wind-Down Drift"]).map((pred: string, i: number) => (
+            <div key={i} className="glass-card p-6 rounded-2xl flex flex-col justify-between gap-5">
+              <div className="space-y-2">
+                <p className="text-xs font-medium text-amber-700 dark:text-amber-400">Pattern Signal</p>
+                <h3 className="text-lg font-semibold text-slate-900 dark:text-white tracking-tight">
+                  {pred}
+                </h3>
+                <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 leading-relaxed">
+                  Observed during late REM cycles across mid-week intervals.
+                </p>
+              </div>
+              <button
+                onClick={() => setActiveProtocol({ ...PROTOCOL_GUIDES.forecast, title: `${pred} · Response Guide` })}
+                className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#0F5E59] dark:text-teal-400 hover:underline self-start"
+                aria-label={`Read protocol for ${pred}`}
+              >
+                <span>View Protocol</span>
+                <ArrowUpRight size={14} />
+              </button>
             </div>
           ))}
-          <button className="glass-card p-10 rounded-[3rem] border-2 border-dashed border-blue-200 dark:border-blue-700 flex flex-col items-center justify-center text-center space-y-4 hover:bg-blue-50 dark:hover:bg-slate-800 transition-all group outline-none"
-          aria-label="Unlock full bio-report by connecting your wearable"
-          >
-            <div className="w-14 h-14 bg-white dark:bg-slate-700 rounded-full flex items-center justify-center shadow-md group-hover:scale-110 transition-transform">
-              <Info className="text-blue-600 dark:text-blue-400" />
-            </div>
-            <span className="text-xl font-black text-blue-900 dark:text-white font-display">Unlock Full Bio-Report</span>
-            <p className="text-sm text-slate-500 dark:text-slate-400 font-semibold">Connect your wearable for heart-rate variability tracking.</p>
-          </button>
         </div>
       </div>
     </div>

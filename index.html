@@ -1,140 +1,181 @@
-
 <!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <title>Sanctuary | Your Peace</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0" />
+    <title>Sanctuary | Mindful Rest & Recovery</title>
+    <meta name="description" content="Sanctuary — A serene, restorative space for meditation, sleep telemetry, and mindful reflection." />
+    <meta property="og:title" content="Sanctuary | Mindful Rest & Recovery" />
+    <meta property="og:description" content="A serene, restorative space for meditation, sleep telemetry, and mindful reflection." />
     <link rel="preconnect" href="https://esm.sh">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@300;400;500;600;700&family=Outfit:wght@100;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <script>
+      tailwind.config = {
+        darkMode: 'class',
+        theme: {
+          extend: {
+            fontFamily: {
+              serif: ['Fraunces', 'Georgia', 'serif'],
+              sans: ['Plus Jakarta Sans', 'system-ui', '-apple-system', 'sans-serif'],
+              mono: ['JetBrains Mono', 'ui-monospace', 'SFMono-Regular', 'monospace'],
+            },
+            colors: {
+              stone: {
+                50: '#FAF9F6',
+                100: '#F5F4EF',
+                200: '#E8E6DF',
+              },
+              pine: {
+                600: '#0F5E59',
+                700: '#0B4642',
+                800: '#083330',
+              }
+            }
+          }
+        }
+      };
+    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,400;1,9..144,500&family=JetBrains+Mono:wght@400;500;600&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
       :root {
-        /* Calming Sanctuary Palette */
-        --sanctuary-teal: #0d9488;
-        --sanctuary-blue: #0369a1;
-        --sanctuary-bg-tint: #f8fafc; 
-        --sanctuary-text: #0f172a;
-        --sanctuary-primary-light: #2dd4bf; /* A lighter tint of primary teal */
+        --sanctuary-teal: #0F5E59;
+        --sanctuary-teal-bright: #2DD4BF;
+        --sanctuary-canvas: #F5F4EF;
+        --sanctuary-surface: #FFFFFF;
+        --sanctuary-ink: #111827;
+        --sanctuary-muted: #5B6472;
+        --sanctuary-border: rgba(15, 23, 42, 0.08);
+        --sanctuary-focus-ring: rgba(15, 94, 89, 0.35);
+      }
+
+      .dark {
+        --sanctuary-teal: #2DD4BF;
+        --sanctuary-canvas: #090D12;
+        --sanctuary-surface: #111720;
+        --sanctuary-ink: #F1F5F9;
+        --sanctuary-muted: #94A3B8;
+        --sanctuary-border: rgba(255, 255, 255, 0.08);
         --sanctuary-focus-ring: rgba(45, 212, 191, 0.4);
       }
+
+      html {
+        -webkit-text-size-adjust: 100%;
+        font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+      }
+
       body {
-        font-family: 'Quicksand', sans-serif;
+        font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
         overflow-x: hidden;
-        background-color: var(--sanctuary-bg-tint);
+        background-color: var(--sanctuary-canvas);
+        color: var(--sanctuary-ink);
         -webkit-font-smoothing: antialiased;
         -moz-osx-font-smoothing: grayscale;
         overscroll-behavior-y: none;
         line-height: 1.6;
-        color: var(--sanctuary-text);
+        transition: background-color 0.3s ease, color 0.3s ease;
       }
-      body.dark {
-        background-color: #0f172a; /* Slate-900 for dark mode background */
-        color: #ffffff; /* White text for dark mode */
-      }
-      h1, h2, h3, h4, .font-display, .display-number {
-        font-family: 'Outfit', sans-serif;
-        text-shadow: 0 1px 2px rgba(0,0,0,0.03);
+
+      .font-editorial {
+        font-family: 'Fraunces', Georgia, serif;
         letter-spacing: -0.02em;
       }
+
+      .font-display {
+        font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+        letter-spacing: -0.025em;
+      }
+
+      .display-number {
+        font-family: 'JetBrains Mono', ui-monospace, monospace;
+        font-variant-numeric: tabular-nums;
+        letter-spacing: -0.03em;
+      }
+
       .label-caps {
-        font-family: 'Outfit', sans-serif;
+        font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
         text-transform: uppercase;
-        letter-spacing: 0.25em;
-        font-weight: 800;
-        font-size: 0.65rem;
+        letter-spacing: 0.14em;
+        font-weight: 600;
+        font-size: 0.7rem;
       }
+
       .glass-card {
-        background: rgba(255, 255, 255, 0.96); 
-        backdrop-filter: blur(12px);
-        -webkit-backdrop-filter: blur(12px);
-        border: 1px solid rgba(13, 148, 136, 0.08);
-        box-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.04);
+        background: rgba(255, 255, 255, 0.92);
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+        border: 1px solid rgba(15, 23, 42, 0.08);
+        box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03), 0 12px 32px -12px rgba(15, 23, 42, 0.06);
       }
-      /* In dark mode, allow glass card to be transparent to underlying background */
-      body.dark .glass-card {
-        background: rgba(255, 255, 255, 0.15); /* More translucent for dark mode */
-        border: 1px solid rgba(255, 255, 255, 0.1); /* Lighter border for contrast */
-        box-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.2); /* Deeper shadow for depth */
+
+      .dark .glass-card {
+        background: rgba(17, 23, 32, 0.88);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        box-shadow: 0 12px 36px -12px rgba(0, 0, 0, 0.45);
       }
+
       .calm-btn-primary {
-        background: linear-gradient(135deg, #0d9488 0%, #0369a1 100%);
-        color: white;
-        font-family: 'Outfit', sans-serif;
-        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        background-color: #0F5E59;
+        color: #FFFFFF;
+        font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+        font-weight: 600;
+        transition: background-color 0.2s cubic-bezier(0.16, 1, 0.3, 1), transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s ease;
       }
-      .calm-btn-primary:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 15px 30px rgba(13, 148, 136, 0.25);
+
+      .calm-btn-primary:hover:not(:disabled) {
+        background-color: #0B4642;
+        box-shadow: 0 8px 24px -6px rgba(15, 94, 89, 0.35);
       }
-      body.dark .calm-btn-primary:hover {
-        box-shadow: 0 15px 30px rgba(45, 212, 191, 0.25);
+
+      .dark .calm-btn-primary {
+        background-color: #14B8A6;
+        color: #042F2E;
       }
-      .calm-btn-primary:active {
-        transform: scale(0.97);
+
+      .dark .calm-btn-primary:hover:not(:disabled) {
+        background-color: #2DD4BF;
+        box-shadow: 0 8px 24px -6px rgba(45, 212, 191, 0.35);
       }
+
+      .calm-btn-primary:active:not(:disabled) {
+        transform: scale(0.985);
+      }
+
       ::-webkit-scrollbar {
-        width: 8px;
-        height: 8px;
-      }
-      ::-webkit-scrollbar-thumb {
-        background: var(--sanctuary-primary-light);
-        border-radius: 10px;
-        border: 2px solid transparent; /* Gives a subtle padding */
-        background-clip: content-box; /* Ensures border doesn't get filled */
-      }
-      ::-webkit-scrollbar-track {
-        background: rgba(var(--sanctuary-primary-light), 0.1);
-        border-radius: 10px;
-      }
-      body.dark ::-webkit-scrollbar-thumb {
-        background: var(--sanctuary-primary-light);
-        border-color: #25282d; /* Darker border for dark mode */
-      }
-      body.dark ::-webkit-scrollbar-track {
-        background: rgba(45, 212, 191, 0.05);
-      }
-      .hero-text-shadow {
-        text-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-      }
-      .custom-scrollbar::-webkit-scrollbar {
         width: 6px;
         height: 6px;
       }
-      .custom-scrollbar::-webkit-scrollbar-thumb {
-        background: rgba(var(--sanctuary-teal), 0.3);
-        border-radius: 10px;
+
+      ::-webkit-scrollbar-thumb {
+        background: rgba(15, 23, 42, 0.16);
+        border-radius: 9999px;
       }
-      body.dark .custom-scrollbar::-webkit-scrollbar-thumb {
-        background: rgba(45, 212, 191, 0.25);
+
+      .dark ::-webkit-scrollbar-thumb {
+        background: rgba(255, 255, 255, 0.16);
       }
+
+      ::-webkit-scrollbar-track {
+        background: transparent;
+      }
+
       .text-balance {
         text-wrap: balance;
       }
-      html {
-        -webkit-text-size-adjust: 100%;
-      }
-      /* Global Focus Styles */
+
       :focus-visible {
-        outline: 3px solid var(--sanctuary-focus-ring);
-        outline-offset: 2px;
-        border-radius: 8px; /* Default for most elements */
-      }
-      button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visible {
-        outline: 3px solid var(--sanctuary-focus-ring);
+        outline: 2px solid var(--sanctuary-focus-ring);
         outline-offset: 2px;
       }
-      .rounded-full:focus-visible {
-        border-radius: 9999px; /* Override for full rounded elements */
-      }
-      /* Custom strong text shadow for legibility */
-      .text-shadow-strong {
-        text-shadow: 
-          0 0 8px rgba(0, 0, 0, 0.7), /* Stronger blur for glow effect */
-          0 0 16px rgba(0, 0, 0, 0.5),
-          1px 1px 3px rgba(0, 0, 0, 0.8); /* Solid shadow for definition */
+
+      @media (prefers-reduced-motion: reduce) {
+        *, *::before, *::after {
+          animation-duration: 0.01ms !important;
+          animation-iteration-count: 1 !important;
+          transition-duration: 0.01ms !important;
+          scroll-behavior: auto !important;
+        }
       }
     </style>
     <script type="importmap">
@@ -143,15 +184,14 @@
         "react": "https://esm.sh/react@^19.2.3",
         "react-dom/": "https://esm.sh/react-dom@^19.2.3/",
         "react/": "https://esm.sh/react@^19.2.3/",
-        "@google/genai": "https://esm.sh/@google/genai@^1.34.0",
         "lucide-react": "https://esm.sh/lucide-react@^0.562.0",
         "recharts": "https://esm.sh/recharts@^3.6.0"
       }
     }
     </script>
   </head>
-  <body class="selection:bg-teal-100 selection:text-teal-900">
+  <body class="selection:bg-teal-900/15 selection:text-teal-950 dark:selection:bg-teal-400/20 dark:selection:text-teal-100">
     <div id="root"></div>
-    <script type="module" src="index.tsx"></script> 
+    <script type="module" src="index.tsx"></script>
   </body>
 </html>

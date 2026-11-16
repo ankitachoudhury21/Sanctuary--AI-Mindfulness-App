@@ -2,9 +2,9 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { AppView } from '../types';
 import { 
-  ChevronLeft, Play, Pause, Rocket, Loader2, Volume2, VolumeX, 
-  Zap, Music, Radio, Eye
+  ChevronLeft, Play, Pause, Loader2, Volume2, VolumeX
 } from 'lucide-react';
+import observatoryImg from '../src/assets/images/observatory_night_horizon_1794849879739.jpg';
 
 interface Planet {
   id: string;
@@ -594,6 +594,7 @@ export const PlanetaryMission: React.FC<{ setView: (v: AppView) => void; setIsAn
   const [isPlaying, setIsPlaying] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [imageLoaded, setImageLoaded] = useState(false);
+  const [imageError, setImageError] = useState(false);
   const [sessionTime, setSessionTime] = useState(0);
   const [volume, setVolume] = useState(0.5);
   const [isMuted, setIsMuted] = useState(false);
@@ -707,9 +708,10 @@ export const PlanetaryMission: React.FC<{ setView: (v: AppView) => void; setIsAn
     if (isLoading) return;
     setIsLoading(true);
     setIsScanning(true);
-    setImageLoaded(false); 
-    setVideoError(false); 
-    setTimeout(() => setIsScanning(false), 2000);
+    setImageLoaded(false);
+    setImageError(false);
+    setVideoError(false);
+    setTimeout(() => setIsScanning(false), 900);
     if (activePlanet.id === p.id && isPlaying && !isMuted) {
         if (videoRef.current && !videoRef.current.paused) {
             videoRef.current.pause();
@@ -755,158 +757,199 @@ export const PlanetaryMission: React.FC<{ setView: (v: AppView) => void; setIsAn
   };
 
   return (
-    <div className="space-y-10 md:space-y-16 animate-in slide-in-from-bottom-8 duration-1000 pb-40 px-2 md:px-0 max-w-7xl mx-auto">
-      <div className="flex justify-between items-center px-4">
-        <div className="space-y-1">
-          <button 
+    <div className="space-y-8 md:space-y-10 animate-in fade-in duration-500 pb-6 max-w-7xl mx-auto">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 border-b border-slate-900/10 dark:border-white/[0.08] pb-6">
+        <div className="space-y-2">
+          <button
             onClick={() => { stopSynthesis(); setView(AppView.DASHBOARD); }}
-            className="flex items-center gap-2 text-teal-800 label-caps text-[10px] md:text-xs hover:gap-3 transition-all mb-2"
-            aria-label="Exit Observation Deck"
+            className="inline-flex items-center gap-1.5 text-xs font-medium text-[#0F5E59] dark:text-teal-400 hover:underline min-h-[36px]"
+            aria-label="Back to Dashboard"
           >
-            <ChevronLeft size={16} /> Back to Sanctuary
+            <ChevronLeft size={15} />
+            <span>Dashboard</span>
           </button>
-          <div className="flex flex-col md:flex-row md:items-center gap-4">
-            <h2 className="text-4xl md:text-7xl font-black text-slate-950 dark:text-white tracking-tighter leading-none transition-colors duration-300">Observation Deck</h2>
-            <span className="label-caps px-3 py-1 bg-teal-100 dark:bg-teal-100/30 text-teal-700 dark:text-teal-700 rounded-full border border-teal-200 dark:border-teal-200 w-fit">BETA</span>
-          </div>
-          <p className="text-slate-500 dark:text-slate-300 font-semibold text-lg md:text-2xl transition-colors duration-300">
-            Embark on an auditory odyssey through our solar system.
+          <h1 className="font-editorial text-3xl sm:text-4xl lg:text-5xl font-normal text-slate-900 dark:text-white tracking-tight">
+            Celestial Audio
+          </h1>
+          <p className="text-sm sm:text-base text-slate-600 dark:text-slate-300">
+            Spatial frequencies synthesized from planetary acoustics and atmospheric resonances.
           </p>
         </div>
-        <div className="flex items-center gap-4 bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl p-3 rounded-[2.5rem] border border-white dark:border-slate-700 shadow-sm ring-1 ring-teal-500/5 transition-colors duration-300">
-           <Radio className="text-teal-600 dark:text-teal-400 ml-2" />
-           <p className="text-slate-900 dark:text-white font-black uppercase tracking-widest text-[10px] pr-4">Spectral Link Active</p>
+
+        <div className="text-xs text-slate-500 dark:text-slate-400 display-number">
+          {PLANETS.length} celestial bodies · {activePlanet.metrics.distance}
         </div>
       </div>
 
-      <div className="glass-card p-8 md:p-14 rounded-[3rem] md:rounded-[5rem] relative overflow-hidden flex flex-col justify-between min-h-[500px] shadow-2xl border-none ring-1 ring-teal-500/10 dark:ring-teal-700/10 hover:shadow-teal-500/20 transition-all duration-300">
-        <div className={`absolute inset-0 bg-gradient-to-br ${activePlanet.color} opacity-60 mix-blend-multiply transition-all duration-1000`}></div>
-        <div className="absolute inset-0 bg-black/50 backdrop-brightness-75"></div>
-        
-        <div className={`absolute inset-0 bg-gradient-to-br ${activePlanet.color} opacity-20 z-0`}></div>
+      {/* Observatory Stage */}
+      <div className="relative rounded-2xl overflow-hidden shadow-xl border border-slate-900/10 dark:border-white/[0.08] min-h-[380px] flex flex-col justify-between p-6 sm:p-10 bg-[#090D12]">
+        <img
+          src={observatoryImg}
+          alt="Astronomical observatory night sky horizon"
+          referrerPolicy="no-referrer"
+          className="absolute inset-0 w-full h-full object-cover opacity-80"
+          decoding="async"
+        />
 
         {activePlanet.videoUrl && activePlanet.videoUrl !== '' && !videoError ? (
-            <video 
-                ref={videoRef}
-                src={activePlanet.videoUrl} 
-                loop 
-                muted 
-                autoPlay 
-                playsInline 
-                className={`absolute inset-0 w-full h-full object-cover z-0 transition-opacity duration-1000 ${imageLoaded ? 'opacity-50' : 'opacity-0'}`}
-                onCanPlay={() => setImageLoaded(true)}
-                onError={() => setVideoError(true)}
-            ></video>
-        ) : (
-            <img 
-                src={activePlanet.imageUrl} 
-                alt={activePlanet.name} 
-                className={`absolute inset-0 w-full h-full object-cover z-0 transition-opacity duration-1000 ${imageLoaded ? 'opacity-50' : 'opacity-0'}`}
-                decoding="async" 
-                fetchpriority="high"
-                loading="lazy"
-                onLoad={() => setImageLoaded(true)}
-            />
-        )}
-        
-        {isScanning && (
-          <div className="absolute inset-0 flex items-center justify-center bg-black/70 z-30 animate-in fade-in duration-500">
-            <Loader2 className="w-16 h-16 text-teal-400 animate-spin" />
-            <p className="absolute bottom-1/4 text-white text-xl font-bold tracking-widest animate-pulse">SCANNING...</p>
-          </div>
-        )}
-
-        <div className="relative z-10 flex flex-col items-center text-white text-center space-y-6 md:space-y-10 pt-10">
-          <div className="inline-flex items-center gap-3 px-6 py-2.5 bg-white/10 backdrop-blur-3xl rounded-full border border-white/25 shadow-2xl">
-            <Rocket size={16} className="text-teal-300 animate-pulse" />
-            <p className="text-[10px] md:text-sm font-black uppercase tracking-[0.5em] text-white">ACTIVE MISSION</p>
-          </div>
-          <h3 className="text-4xl md:text-6xl font-black tracking-tight drop-shadow-[0_20px_50px_rgba(0,0,0,0.8)] leading-none text-white italic transition-all duration-300">{activePlanet.name}</h3>
-          <p className="text-base md:text-xl text-white/80 font-medium italic tracking-wide max-w-2xl mx-auto drop-shadow-lg opacity-90 leading-relaxed">"{activePlanet.mission}"</p>
-        </div>
-
-        <div className="relative z-10 flex flex-col md:flex-row items-center justify-center gap-8 md:gap-12 mt-auto pb-10">
-          <button 
-            onClick={() => {
-              if (isPlaying) stopSynthesis();
-              else startSynthesis(activePlanet.synthesis);
-            }}
-            disabled={isLoading || isScanning}
-            className="w-24 h-24 md:w-32 md:h-32 flex items-center justify-center rounded-full bg-white text-slate-900 shadow-[0_0_80px_rgba(255,255,255,0.4)] hover:scale-110 active:scale-90 transition-all"
-            aria-label={isPlaying ? "Pause exploration audio" : "Start exploration audio"}
-          >
-            {isLoading ? <Loader2 size={40} className="animate-spin text-teal-600" /> : (isPlaying ? <Pause size={48} fill="currentColor" /> : <Play size={48} fill="currentColor" className="ml-2" />)}
-          </button>
-        </div>
-
-        <div className="absolute bottom-10 md:bottom-14 right-10 md:right-14 z-10 flex items-center gap-4">
-          <button 
-            onClick={toggleMute}
-            className={`transition-all hover:scale-110 active:scale-95 outline-none ${isMuted ? 'text-slate-400' : 'text-white'}`}
-            aria-label={isMuted ? "Unmute audio" : "Mute audio"}
-          >
-            {isMuted ? <VolumeX size={20} /> : <Volume2 size={20} />}
-          </button>
-          <input 
-            type="range" min="0" max="1" step="0.01" 
-            className="w-20 md:w-32 h-1 bg-white/30 rounded-full appearance-none cursor-pointer accent-white"
-            value={volume}
-            onChange={(e) => {
-              const val = parseFloat(e.target.value);
-              setVolume(val);
-              if (masterGainRef.current && audioContextRef.current && !isMuted) {
-                masterGainRef.current.gain.setValueAtTime(val, audioContextRef.current.currentTime);
-              }
-            }}
+          <video
+            ref={videoRef}
+            src={activePlanet.videoUrl}
+            loop
+            muted
+            autoPlay
+            playsInline
+            className={`absolute inset-0 w-full h-full object-cover z-0 transition-opacity duration-700 ${imageLoaded ? 'opacity-45' : 'opacity-0'}`}
+            onCanPlay={() => setImageLoaded(true)}
+            onError={() => setVideoError(true)}
           />
+        ) : !imageError && (
+          <img
+            src={activePlanet.imageUrl}
+            alt={activePlanet.name}
+            referrerPolicy="no-referrer"
+            className={`absolute inset-0 w-full h-full object-cover z-0 transition-opacity duration-700 ${imageLoaded ? 'opacity-40' : 'opacity-0'}`}
+            decoding="async"
+            loading="lazy"
+            onLoad={() => setImageLoaded(true)}
+            onError={() => setImageError(true)}
+          />
+        )}
+
+        <div className="absolute inset-0 bg-gradient-to-t from-[#090D12]/95 via-[#090D12]/60 to-[#090D12]/55 z-0"></div>
+
+        {isScanning && (
+          <div className="absolute inset-0 flex flex-col items-center justify-center bg-[#090D12]/70 backdrop-blur-sm z-30 gap-3">
+            <Loader2 className="w-8 h-8 text-teal-400 animate-spin" />
+            <p className="text-xs font-medium text-slate-300 tracking-wide">Tuning synthesis...</p>
+          </div>
+        )}
+
+        {/* Top Unboxed Telemetry Row */}
+        <div className="relative z-10 flex flex-wrap items-center justify-between gap-3 text-xs text-slate-300">
+          <span className="font-medium text-teal-300">
+            {activePlanet.audioTrackName} · {activePlanet.desc}
+          </span>
+          <span className="display-number text-slate-300">
+            {activePlanet.metrics.temp} · {activePlanet.metrics.distance}
+          </span>
         </div>
-        <div className="absolute bottom-10 md:bottom-14 left-10 md:left-14 z-10 text-white/80">
-          <p className="text-[10px] font-black uppercase tracking-widest">Mission Elapsed</p>
-          <p className="text-xl md:text-3xl font-black font-display tracking-tight">{formatTime(sessionTime)}</p>
+
+        {/* Center Subject & Play Control */}
+        <div className="relative z-10 flex flex-col items-center text-center space-y-3 py-6 sm:py-8 max-w-2xl mx-auto">
+          <h2 className="font-editorial text-3xl sm:text-5xl font-normal text-white tracking-tight">
+            {activePlanet.name}
+          </h2>
+          <p className="text-sm sm:text-base text-slate-200/90 leading-relaxed max-w-xl">
+            "{activePlanet.mission}"
+          </p>
+
+          <div className="pt-4">
+            <button
+              onClick={() => {
+                if (isPlaying) stopSynthesis();
+                else startSynthesis(activePlanet.synthesis);
+              }}
+              disabled={isLoading || isScanning}
+              className="w-16 h-16 sm:w-20 sm:h-20 flex items-center justify-center rounded-full bg-white text-slate-950 shadow-2xl hover:bg-teal-50 active:scale-95 transition-all disabled:opacity-50"
+              aria-label={isPlaying ? "Pause exploration audio" : "Start exploration audio"}
+            >
+              {isLoading ? (
+                <Loader2 size={26} className="animate-spin text-[#0F5E59]" />
+              ) : isPlaying ? (
+                <Pause size={26} fill="currentColor" />
+              ) : (
+                <Play size={26} fill="currentColor" className="ml-1" />
+              )}
+            </button>
+          </div>
         </div>
-        <div className="absolute top-10 left-1/2 -translate-x-1/2 z-10 flex items-center gap-3 px-6 py-2.5 bg-white/10 backdrop-blur-3xl rounded-full border border-white/25 shadow-2xl">
-          <Music size={16} className="text-teal-300" />
-          <p className="text-[10px] md:text-sm font-black uppercase tracking-[0.5em] text-white">{activePlanet.audioTrackName}</p>
+
+        {/* Bottom Audio Controls */}
+        <div className="relative z-10 w-full flex flex-wrap items-center justify-between gap-4 pt-4 border-t border-white/15">
+          <div className="flex items-center gap-3 text-xs text-slate-300">
+            <span className="display-number font-medium text-white">Elapsed {formatTime(sessionTime)}</span>
+            <span aria-hidden="true">·</span>
+            <span className="display-number">Diameter {activePlanet.metrics.diameter}</span>
+          </div>
+
+          <div className="flex items-center gap-3">
+            <button
+              onClick={toggleMute}
+              className={`min-w-[40px] min-h-[40px] flex items-center justify-center rounded-lg hover:bg-white/10 transition-colors outline-none ${isMuted ? 'text-slate-400' : 'text-white'}`}
+              aria-label={isMuted ? "Unmute audio" : "Mute audio"}
+            >
+              {isMuted ? <VolumeX size={18} /> : <Volume2 size={18} />}
+            </button>
+            <input
+              type="range" min="0" max="1" step="0.01"
+              className="w-24 sm:w-32 h-1.5 bg-white/25 rounded-full appearance-none cursor-pointer accent-teal-300"
+              value={volume}
+              aria-label="Volume"
+              onChange={(e) => {
+                const val = parseFloat(e.target.value);
+                setVolume(val);
+                if (masterGainRef.current && audioContextRef.current && !isMuted) {
+                  masterGainRef.current.gain.setValueAtTime(val, audioContextRef.current.currentTime);
+                }
+              }}
+            />
+          </div>
         </div>
       </div>
 
-      <section className="space-y-6">
-          <div className="px-4 flex items-center justify-between">
-            <h3 className="text-2xl md:text-4xl font-black text-slate-950 dark:text-white tracking-tight transition-colors duration-300">Celestial Navigation</h3>
-            <p className="label-caps text-slate-500 dark:text-slate-300 font-black">Deep Space Network v4.2</p>
-          </div>
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 md:gap-6">
-            {PLANETS.map((planet) => (
+      {/* Celestial Body Selector */}
+      <section className="space-y-4">
+        <div className="flex flex-wrap items-baseline justify-between gap-2">
+          <h2 className="font-editorial text-2xl sm:text-3xl font-normal text-slate-900 dark:text-white tracking-tight">
+            Celestial Bodies
+          </h2>
+          <span className="text-xs text-slate-500 dark:text-slate-400">Select a world to tune audio</span>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+          {PLANETS.map((planet) => {
+            const isSelected = activePlanet.id === planet.id;
+            return (
               <button
                 key={planet.id}
                 onClick={() => handlePlanetSelect(planet)}
                 disabled={isLoading}
-                className={`group glass-card p-6 md:p-8 rounded-[2.5rem] text-left space-y-4 transition-all hover:scale-[1.03] hover:shadow-xl border-none ring-1 ring-slate-100/50 dark:ring-slate-200/50 
-                ${activePlanet.id === planet.id ? 'bg-teal-50 dark:bg-teal-900/30 border-teal-200 dark:border-teal-700 ring-teal-500/30' : ''}
-                ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
+                className={`group glass-card p-5 rounded-2xl text-left space-y-4 transition-colors min-w-0 ${
+                  isSelected
+                    ? 'border-[#0F5E59] dark:border-teal-400 bg-[#0F5E59]/[0.04] dark:bg-teal-400/[0.06]'
+                    : 'hover:border-slate-900/25 dark:hover:border-white/25'
+                } ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
                 aria-label={`Select ${planet.name} for exploration`}
               >
-                <div className={`relative w-12 h-12 md:w-14 md:h-14 bg-gradient-to-br ${planet.color} text-white flex items-center justify-center rounded-2xl shadow-lg transition-transform group-hover:rotate-6`}>
-                  {activePlanet.id === planet.id && isPlaying && !isLoading ? (
-                    <Zap size={24} className="animate-pulse" />
-                  ) : (
-                    <Eye size={24} />
+                <div className="flex items-center justify-between gap-3">
+                  <div className={`w-10 h-10 rounded-full bg-gradient-to-br ${planet.color} shadow-inner border border-white/20 flex-shrink-0`} />
+                  {isSelected && (
+                    <span className="text-xs font-semibold text-[#0F5E59] dark:text-teal-400">
+                      {isPlaying ? 'Active' : 'Selected'}
+                    </span>
                   )}
                 </div>
-                <div>
-                  <h4 className={`text-lg md:text-xl font-black text-slate-950 dark:text-white tracking-tight leading-tight transition-colors duration-300`}>
+
+                <div className="space-y-1 min-w-0">
+                  <h3 className="text-base font-semibold text-slate-900 dark:text-white tracking-tight truncate">
                     {planet.name}
-                  </h4>
-                  <p className="text-[10px] md:text-xs font-semibold text-slate-500 dark:text-slate-300 mt-1 leading-tight transition-colors duration-300">{planet.desc}</p>
+                  </h3>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 truncate">
+                    {planet.desc}
+                  </p>
                 </div>
-                <div className="pt-2 border-t border-slate-100 dark:border-slate-700 space-y-1">
-                  <p className="label-caps text-slate-400 dark:text-slate-300">Hazard</p>
-                  <p className="text-sm font-bold text-slate-900 dark:text-white">{planet.metrics.hazard}</p>
+
+                <div className="pt-3 border-t border-slate-900/[0.08] dark:border-white/[0.08] flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 display-number">
+                  <span>{planet.metrics.temp}</span>
+                  <span>{planet.metrics.distance}</span>
                 </div>
               </button>
-            ))}
-          </div>
-        </section>
+            );
+          })}
+        </div>
+      </section>
     </div>
   );
 };

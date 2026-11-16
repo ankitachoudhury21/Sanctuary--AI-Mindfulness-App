@@ -2,11 +2,12 @@
 import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { AppView } from '../types';
 import { 
-  Play, Pause, SkipBack, SkipForward, Sparkles, 
-  ChevronLeft, Loader2, Volume2, VolumeX, Timer, Brain, 
-  WavesIcon, Wind, Cloud, Moon,
-  Target, Heart, Sun, Activity, Music, Droplets, Stars, Maximize2, Zap, Coffee
+  Play, Pause, SkipBack, SkipForward, 
+  ChevronLeft, Loader2, Volume2, VolumeX, Brain, 
+  WavesIcon, Wind, Moon,
+  Target, Heart, Sun, Activity, Music, Droplets, Stars, Zap
 } from 'lucide-react';
+import soundChamberImg from '../src/assets/images/meditation_sound_chamber_1794849880005.jpg';
 
 interface Props {
   setView: (view: AppView) => void;
@@ -1136,155 +1137,214 @@ const MusicPlayer: React.FC<Props> = ({ setView, setIsAnyTrackPlaying }) => {
   
 
   return (
-    <div className="space-y-8 md:space-y-12 animate-in slide-in-from-bottom-8 duration-1000 pb-24 px-2 md:px-0 max-w-7xl mx-auto">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
-        <div className="space-y-1">
-          <button 
+    <div className="space-y-8 md:space-y-10 animate-in fade-in duration-500 pb-6 max-w-7xl mx-auto">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 border-b border-slate-900/10 dark:border-white/[0.08] pb-6">
+        <div className="space-y-2">
+          <button
             onClick={() => { stopCurrentVoicesInternal(); setIsPlaying(false); setIsAnyTrackPlaying(false); setView(AppView.DASHBOARD); }}
-            className="flex items-center gap-2 text-indigo-800 label-caps text-[10px] md:text-xs hover:gap-3 transition-all mb-2"
-            aria-label="Back to Sanctuary Dashboard"
+            className="inline-flex items-center gap-1.5 text-xs font-medium text-[#0F5E59] dark:text-teal-400 hover:underline min-h-[36px]"
+            aria-label="Back to Dashboard"
           >
-            <ChevronLeft size={16} /> Exit Mediation
+            <ChevronLeft size={15} />
+            <span>Dashboard</span>
           </button>
-          <div className="flex flex-col md:flex-row md:items-center gap-4">
-            <h2 className="text-4xl md:text-7xl font-black text-slate-900 dark:text-white tracking-tighter leading-none transition-colors duration-300">Daily Meditation</h2>
-            <span className="px-3 py-1 bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 rounded-full border border-indigo-200 uppercase w-fit text-[10px] font-black tracking-widest">BETA</span>
-          </div>
-          <p className="text-slate-500 dark:text-slate-300 font-semibold text-lg md:text-2xl transition-colors duration-300">Procedural forest baths for tech professionals.</p>
+          <h1 className="font-editorial text-3xl sm:text-4xl lg:text-5xl font-normal text-slate-900 dark:text-white tracking-tight">
+            Meditation Studio
+          </h1>
+          <p className="text-sm sm:text-base text-slate-600 dark:text-slate-300">
+            Synthesized forest acoustics, ragas, and binaural frequencies generated live.
+          </p>
         </div>
 
-        <div className="flex items-center gap-4 bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl p-3 rounded-[2.5rem] border border-white dark:border-slate-700 shadow-sm ring-1 ring-indigo-500/5 transition-colors duration-300">
-           <Timer className="text-indigo-600 dark:text-indigo-400 ml-2" />
-           <p className="text-slate-900 dark:text-white font-black uppercase tracking-widest text-[10px] pr-4">Session Active</p>
+        <div className="text-xs text-slate-500 dark:text-slate-400 display-number">
+          {filteredTracks.length} {filteredTracks.length === 1 ? 'session' : 'sessions'} available
         </div>
       </div>
 
-      <div className="glass-card p-8 md:p-14 rounded-[3rem] md:rounded-[5rem] relative overflow-hidden flex flex-col items-center justify-center min-h-[400px] shadow-2xl border-none ring-1 ring-indigo-500/10 dark:ring-indigo-700/10 hover:shadow-indigo-500/20 transition-all duration-300">
-        <div className={`absolute inset-0 bg-gradient-to-br ${currentTrack.color} opacity-60 mix-blend-multiply transition-all duration-1000`}></div>
-        <div className="absolute inset-0 bg-black/50 backdrop-brightness-75"></div>
-        
-        <canvas ref={canvasRef} width={1000} height={200} className="absolute bottom-0 left-0 w-full opacity-30"></canvas>
+      {/* Acoustic Stage */}
+      <div className="relative rounded-2xl overflow-hidden shadow-xl border border-slate-900/10 dark:border-white/[0.08] min-h-[360px] flex flex-col justify-between p-6 sm:p-10">
+        <img
+          src={soundChamberImg}
+          alt="Minimalist obsidian and walnut meditation sound chamber"
+          referrerPolicy="no-referrer"
+          className="absolute inset-0 w-full h-full object-cover"
+          decoding="async"
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-[#090D12]/92 via-[#090D12]/65 to-[#090D12]/55"></div>
+        <canvas ref={canvasRef} width={1000} height={180} className="absolute bottom-0 left-0 w-full opacity-35 pointer-events-none"></canvas>
 
-        <div className="relative z-10 flex flex-col items-center text-white text-center space-y-6 md:space-y-10">
-          <div className="inline-flex items-center gap-3 px-6 py-2.5 bg-white/10 backdrop-blur-3xl rounded-full border border-white/25 shadow-2xl">
-            <Sparkles size={16} className="text-indigo-300 animate-pulse" />
-            <p className="text-[10px] md:text-sm font-black uppercase tracking-[0.5em] text-white">GENERATIVE AUDIO</p>
-          </div>
-          <h3 className="text-4xl md:text-6xl font-black tracking-tight drop-shadow-[0_20px_50px_rgba(0,0,0,0.8)] leading-none text-white italic transition-all duration-300">{currentTrack.name}</h3>
-          <p className="text-base md:text-xl text-indigo-100 font-medium italic tracking-wide max-w-2xl mx-auto drop-shadow-lg opacity-90 leading-relaxed">"{currentTrack.benefit}"</p>
+        {/* Top Track Metadata */}
+        <div className="relative z-10 flex flex-wrap items-center justify-between gap-3 text-xs text-slate-300">
+          <span className="font-medium text-teal-300">
+            {currentTrack.genre} · {isPlaying ? 'Playing' : 'Ready'}
+          </span>
+          <span className="display-number text-slate-300">
+            Session {formatTime(sessionTime)}
+          </span>
         </div>
 
-        <div className="relative z-10 flex items-center gap-8 md:gap-12 mt-10 md:mt-16">
-          <button 
-            onClick={playPreviousTrack}
-            disabled={isLoading}
-            className="w-16 h-16 md:w-20 md:h-20 flex items-center justify-center rounded-full bg-white/10 text-white hover:bg-white/20 active:scale-90 transition-all shadow-lg"
-            aria-label="Previous track"
-          >
-            <SkipBack size={24} />
-          </button>
-          <button 
-            onClick={togglePlayPause}
-            disabled={isLoading}
-            className="w-24 h-24 md:w-32 md:h-32 flex items-center justify-center rounded-full bg-white text-slate-900 shadow-[0_0_80px_rgba(255,255,255,0.4)] hover:scale-110 active:scale-90 transition-all"
-            aria-label={isPlaying ? "Pause meditation" : "Play meditation"}
-          >
-            {isLoading ? <Loader2 size={40} className="animate-spin text-indigo-600" /> : (isPlaying ? <Pause size={48} fill="currentColor" /> : <Play size={48} fill="currentColor" className="ml-2" />)}
-          </button>
-          <button 
-            onClick={playNextTrack}
-            disabled={isLoading}
-            className="w-16 h-16 md:w-20 md:h-20 flex items-center justify-center rounded-full bg-white/10 text-white hover:bg-white/20 active:scale-90 transition-all shadow-lg"
-            aria-label="Next track"
-          >
-            <SkipForward size={24} />
-          </button>
-        </div>
+        {/* Center Title & Benefit */}
+        <div className="relative z-10 flex flex-col items-center text-center space-y-3 py-6 sm:py-8 max-w-2xl mx-auto">
+          <h2 className="font-editorial text-3xl sm:text-5xl font-normal text-white tracking-tight text-balance">
+            {currentTrack.name}
+          </h2>
+          <p className="text-sm sm:text-base text-slate-200/90 leading-relaxed max-w-xl">
+            {currentTrack.benefit}
+          </p>
 
-        <div className="absolute bottom-10 md:bottom-14 right-10 md:right-14 z-10 flex items-center gap-4">
-          <button 
-            onClick={toggleMute}
-            className={`transition-all hover:scale-110 active:scale-95 outline-none ${isMuted ? 'text-slate-400' : 'text-white'}`}
-            aria-label={isMuted ? "Unmute audio" : "Mute audio"}
-          >
-            {isMuted ? <VolumeX size={20} /> : <Volume2 size={20} />}
-          </button>
-          <input 
-            type="range" min="0" max="1" step="0.01" 
-            className="w-20 md:w-32 h-1 bg-white/30 rounded-full appearance-none cursor-pointer accent-white"
-            value={volume}
-            onChange={(e) => {
-              const val = parseFloat(e.target.value);
-              setVolume(val);
-              if (masterGainRef.current && audioContextRef.current && !isMuted) {
-                masterGainRef.current.gain.setValueAtTime(val, audioContextRef.current.currentTime);
-              }
-            }}
-          />
-        </div>
-        <div className="absolute bottom-10 md:bottom-14 left-10 md:left-14 z-10 text-white/80">
-          <p className="text-[10px] font-black uppercase tracking-widest">Session Time</p>
-          <p className="text-xl md:text-3xl font-black font-display tracking-tight">{formatTime(sessionTime)}</p>
-        </div>
-      </div>
-
-      <div className="px-2 md:px-0">
-        <h3 className="text-2xl md:text-4xl font-black text-slate-900 dark:text-white tracking-tight mb-6 transition-colors duration-300">Track Categories</h3>
-        <div className="flex flex-wrap gap-3">
-          {CATEGORIES.map(cat => (
+          {/* Studio Transport Controls */}
+          <div className="flex items-center gap-5 sm:gap-7 pt-4">
             <button
-              key={cat.id}
-              onClick={() => setActiveCat(cat.id)}
-              className={`flex items-center gap-2 px-5 py-2.5 rounded-full border transition-all ${activeCat === cat.id ? `${cat.bg} ${cat.color} border-current shadow-lg` : 'bg-white text-slate-500 dark:text-slate-300 border-slate-200 hover:border-slate-400 hover:text-slate-700 dark:hover:text-slate-100'}`}
-              aria-label={`Select ${cat.label} category`}
+              onClick={playPreviousTrack}
+              disabled={isLoading}
+              className="w-12 h-12 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 text-white border border-white/15 transition-colors active:scale-95 disabled:opacity-40"
+              aria-label="Previous track"
             >
-              <cat.icon size={16} />
-              <span className="text-sm font-black uppercase tracking-widest">{cat.label}</span>
+              <SkipBack size={19} />
             </button>
-          ))}
+
+            <button
+              onClick={togglePlayPause}
+              disabled={isLoading}
+              className="w-16 h-16 sm:w-20 sm:h-20 flex items-center justify-center rounded-full bg-white text-slate-950 shadow-2xl hover:bg-teal-50 active:scale-95 transition-all disabled:opacity-60"
+              aria-label={isPlaying ? "Pause meditation" : "Play meditation"}
+            >
+              {isLoading ? (
+                <Loader2 size={26} className="animate-spin text-[#0F5E59]" />
+              ) : isPlaying ? (
+                <Pause size={26} fill="currentColor" />
+              ) : (
+                <Play size={26} fill="currentColor" className="ml-1" />
+              )}
+            </button>
+
+            <button
+              onClick={playNextTrack}
+              disabled={isLoading}
+              className="w-12 h-12 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 text-white border border-white/15 transition-colors active:scale-95 disabled:opacity-40"
+              aria-label="Next track"
+            >
+              <SkipForward size={19} />
+            </button>
+          </div>
+        </div>
+
+        {/* Bottom Audio Controls */}
+        <div className="relative z-10 w-full flex flex-wrap items-center justify-between gap-4 pt-4 border-t border-white/15">
+          <div className="flex items-center gap-2 text-xs text-slate-300">
+            <span>Procedural Web Audio</span>
+            <span aria-hidden="true">·</span>
+            <span>Crossfade {CROSSFADE_TIME}s</span>
+          </div>
+
+          <div className="flex items-center gap-3">
+            <button
+              onClick={toggleMute}
+              className={`min-w-[40px] min-h-[40px] flex items-center justify-center rounded-lg hover:bg-white/10 transition-colors outline-none ${isMuted ? 'text-slate-400' : 'text-white'}`}
+              aria-label={isMuted ? "Unmute audio" : "Mute audio"}
+            >
+              {isMuted ? <VolumeX size={18} /> : <Volume2 size={18} />}
+            </button>
+            <input
+              type="range" min="0" max="1" step="0.01"
+              className="w-24 sm:w-32 h-1.5 bg-white/25 rounded-full appearance-none cursor-pointer accent-teal-300"
+              value={volume}
+              aria-label="Volume"
+              onChange={(e) => {
+                const val = parseFloat(e.target.value);
+                setVolume(val);
+                if (masterGainRef.current && audioContextRef.current && !isMuted) {
+                  masterGainRef.current.gain.setValueAtTime(val, audioContextRef.current.currentTime);
+                }
+              }}
+            />
+          </div>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 md:gap-8 px-2 md:px-0">
-        {filteredTracks.map(track => (
-          <button 
-            key={track.id}
-            onClick={() => {
-              if (currentTrack.id === track.id) {
-                togglePlayPause();
-              } else {
-                setCurrentTrack(track);
-                if (!isPlaying) { 
-                  setIsPlaying(true);
-                }
-                if (isMuted) {
-                  setIsMuted(false);
-                }
-              }
-            }}
-            className={`group glass-card p-6 md:p-8 rounded-[2.5rem] text-left space-y-4 transition-all hover:scale-[1.03] hover:shadow-xl border-none ring-1 ring-slate-100/50 dark:ring-slate-200/50 ${currentTrack.id === track.id ? 'bg-indigo-50/80 dark:bg-indigo-900/40 border-indigo-200 dark:border-indigo-700 ring-indigo-500/30' : ''}`}
-            aria-label={`Play ${track.name} (${track.genre})`}
-          >
-            <div className={`relative w-12 h-12 md:w-14 md:h-14 bg-gradient-to-br ${track.color} text-white flex items-center justify-center rounded-2xl shadow-lg transition-transform group-hover:rotate-6`}>
-              {currentTrack.id === track.id && isPlaying && !isLoading ? (
-                <WavesIcon size={24} className="animate-pulse" />
-              ) : (
-                <track.icon size={24} />
-              )}
-            </div>
-            <div>
-              <h4 className={`text-lg md:text-xl font-black text-slate-900 dark:text-white tracking-tight leading-tight transition-colors duration-300`}>
-                {track.name}
-              </h4>
-              <p className="text-[10px] md:text-xs font-semibold text-slate-500 dark:text-slate-300 mt-1 leading-tight transition-colors duration-300">{track.genre}</p>
-            </div>
-            {currentTrack.id === track.id && (isPlaying || isLoading) && (
-              <div className="absolute top-4 right-4 text-indigo-500 dark:text-indigo-300">
-                {isLoading ? <Loader2 size={20} className="animate-spin" /> : <Play size={20} fill="currentColor" />}
-              </div>
-            )}
-          </button>
-        ))}
+      {/* Category Filter Bar */}
+      <div className="space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <h2 className="font-editorial text-2xl sm:text-3xl font-normal text-slate-900 dark:text-white tracking-tight">
+            Soundscapes
+          </h2>
+          <div className="flex flex-wrap items-center gap-1.5 p-1 bg-white/70 dark:bg-white/[0.04] rounded-xl border border-slate-900/10 dark:border-white/[0.08]">
+            {CATEGORIES.map(cat => {
+              const isSelected = activeCat === cat.id;
+              return (
+                <button
+                  key={cat.id}
+                  onClick={() => setActiveCat(cat.id)}
+                  className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-colors min-h-[36px] whitespace-nowrap ${
+                    isSelected
+                      ? 'bg-[#0F5E59] dark:bg-teal-400 text-white dark:text-slate-950'
+                      : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'
+                  }`}
+                  aria-label={`Select ${cat.label} category`}
+                >
+                  {cat.label}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Track Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+          {filteredTracks.map(track => {
+            const isActive = currentTrack.id === track.id;
+            return (
+              <button
+                key={track.id}
+                onClick={() => {
+                  if (isActive) {
+                    togglePlayPause();
+                  } else {
+                    setCurrentTrack(track);
+                    if (!isPlaying) setIsPlaying(true);
+                    if (isMuted) setIsMuted(false);
+                  }
+                }}
+                className={`group glass-card p-5 rounded-2xl text-left flex flex-col justify-between gap-4 transition-colors min-w-0 ${
+                  isActive
+                    ? 'border-[#0F5E59] dark:border-teal-400 bg-[#0F5E59]/[0.04] dark:bg-teal-400/[0.06]'
+                    : 'hover:border-slate-900/25 dark:hover:border-white/25'
+                }`}
+                aria-label={`Play ${track.name} (${track.genre})`}
+              >
+                <div className="flex items-center justify-between gap-3">
+                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center border transition-colors ${
+                    isActive
+                      ? 'bg-[#0F5E59] dark:bg-teal-400 text-white dark:text-slate-950 border-transparent'
+                      : 'bg-[#F5F4EF] dark:bg-white/[0.05] text-slate-600 dark:text-slate-300 border-slate-900/10 dark:border-white/10'
+                  }`}>
+                    {isActive && isPlaying && !isLoading ? (
+                      <WavesIcon size={17} />
+                    ) : (
+                      <track.icon size={17} />
+                    )}
+                  </div>
+
+                  {isActive && (
+                    <span className="text-xs font-semibold text-[#0F5E59] dark:text-teal-400">
+                      {isLoading ? 'Loading' : isPlaying ? 'Playing' : 'Selected'}
+                    </span>
+                  )}
+                </div>
+
+                <div className="space-y-1 min-w-0">
+                  <h3 className="text-base font-semibold text-slate-900 dark:text-white tracking-tight truncate">
+                    {track.name}
+                  </h3>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 truncate">
+                    {track.genre}
+                  </p>
+                </div>
+              </button>
+            );
+          })}
+        </div>
       </div>
     </div>
   );
