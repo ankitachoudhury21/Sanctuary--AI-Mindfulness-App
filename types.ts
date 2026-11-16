@@ -37,3 +37,9 @@ export interface DailyMantraItem {
   breathCue: string;
 }
 
+export interface LiveTranscriptTurn {
+  id: string;
+  speaker: 'user' | 'mentor';
+  text: string;
+  timestamp: string;
+}

@@ -1,4 +1,4 @@
-import { DailyMantraItem, MindfulnessInsights, UserProfile } from '../types';
+import { DailyMantraItem, LiveTranscriptTurn, MindfulnessInsights, UserProfile } from '../types';
 
 const FALLBACK_DAILY_MANTRAS: DailyMantraItem[] = [
   {
@@ -128,4 +128,57 @@ export const generateDailyMantras = async (
     };
   }
 };
+
+/**
+ * Distills a spoken two-way Gratitude Journal conversation into a concise archive summary.
+ */
+export const summarizeLiveJournal = async (
+  turns: LiveTranscriptTurn[],
+  user: UserProfile | null
+): Promise<{ success: boolean; summary: string; mentorReflection: string }> => {
+  const userUtterances = turns
+    .filter((t) => t.speaker === 'user' && t.text.trim())
+    .map((t) => t.text.trim());
+  const mentorUtterances = turns
+    .filter((t) => t.speaker === 'mentor' && t.text.trim())
+    .map((t) => t.text.trim());
+
+  const fallbackSummary =
+    userUtterances.length > 0
+      ? userUtterances.join(' ')
+      : turns.map((t) => t.text.trim()).filter(Boolean).join(' ');
+  const fallbackReflection =
+    mentorUtterances[mentorUtterances.length - 1] ||
+    'Your spoken reflection is archived. Taking time to voice what matters brings quiet clarity.';
+
+  try {
+    const response = await fetch('/api/gemini/journal-summary', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        turns: turns.map((t) => ({ speaker: t.speaker, text: t.text })),
+        user,
+      }),
+    });
+
+    const data = await response.json();
+    if (!response.ok || !data?.summary || !data?.mentorReflection) {
+      throw new Error(data?.error || 'Failed to summarize conversation.');
+    }
+
+    return {
+      success: true,
+      summary: data.summary,
+      mentorReflection: data.mentorReflection,
+    };
+  } catch (error) {
+    console.error('Live journal summarization failed:', error);
+    return {
+      success: false,
+      summary: fallbackSummary,
+      mentorReflection: fallbackReflection,
+    };
+  }
+};
+
 

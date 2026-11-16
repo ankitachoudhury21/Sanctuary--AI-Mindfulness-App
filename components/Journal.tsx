@@ -1,11 +1,12 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { JournalEntry, AppView, UserProfile } from '../types';
+import { JournalEntry, AppView, UserProfile, LiveTranscriptTurn } from '../types';
 import {
   Mic, Square, Send, Heart,
   Loader2, Trash2, ChevronLeft,
-  Download, Eraser, AlertCircle, BookOpen
+  Download, Eraser, AlertCircle, BookOpen, MessageCircle, PenLine
 } from 'lucide-react';
-import { analyzeGratitudeJournal } from '../services/geminiService';
+import { analyzeGratitudeJournal, summarizeLiveJournal } from '../services/geminiService';
+import { LiveJournalDialogue } from './LiveJournalDialogue';
 
 interface Props {
   entries: JournalEntry[];
@@ -16,7 +17,9 @@ interface Props {
 
 const DRAFT_STORAGE_KEY = 'sanctuary_journal_draft';
 
-const Journal: React.FC<Props> = React.memo(({ entries, setEntries, setView }) => {
+const Journal: React.FC<Props> = React.memo(({ entries, setEntries, setView, user }) => {
+  const [journalMode, setJournalMode] = useState<'live' | 'write'>('live');
+  const [isLiveSessionActive, setIsLiveSessionActive] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [textEntry, setTextEntry] = useState(() => localStorage.getItem(DRAFT_STORAGE_KEY) || '');
@@ -116,9 +119,35 @@ const Journal: React.FC<Props> = React.memo(({ entries, setEntries, setView }) =
     }
   }, [textEntry, isProcessing, setEntries]);
 
+  const handleSaveLiveSummary = useCallback(
+    async (turns: LiveTranscriptTurn[]) => {
+      setAiFeedback(null);
+      const entryDate = new Date().toLocaleDateString('en-US', {
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric',
+      });
+      const result = await summarizeLiveJournal(turns, user);
+
+      const newEntry: JournalEntry = {
+        id: Date.now().toString(),
+        date: entryDate,
+        type: 'live',
+        transcript: result.summary,
+        aiResponse: result.mentorReflection,
+      };
+
+      setEntries((prev) => [newEntry, ...prev]);
+      setAiFeedback(result.mentorReflection);
+    },
+    [setEntries, user]
+  );
+
   const exportJournal = useCallback(() => {
     if (entries.length === 0) return;
-    const content = entries.map(e => `[${e.date}]\nReflection: ${e.transcript}\nInsight: ${e.aiResponse}\n\n`).join('---\n');
+    const content = entries
+      .map((e) => `[${e.date}${e.type === 'live' ? ' · Spoken Dialogue' : ''}]\nReflection: ${e.transcript}\nInsight: ${e.aiResponse}\n\n`)
+      .join('---\n');
     const blob = new Blob([content], { type: 'text/plain' });
     const link = document.createElement('a');
     link.href = URL.createObjectURL(blob);
@@ -153,52 +182,115 @@ const Journal: React.FC<Props> = React.memo(({ entries, setEntries, setView }) =
         </div>
       </div>
 
-      {/* Writing Canvas */}
+      {/* Gratitude Reflection Workspace */}
       <div className="glass-card rounded-2xl p-5 sm:p-8 space-y-6">
-        <div className="rounded-xl bg-[#FAF9F6] dark:bg-slate-900/70 border border-slate-900/10 dark:border-white/10 overflow-hidden">
-          <div className="flex flex-wrap items-center justify-between gap-2 px-4 sm:px-6 py-3 border-b border-slate-900/[0.06] dark:border-white/[0.06]">
-            <span className="text-xs text-slate-500 dark:text-slate-400">
-              {getNudge()}
-            </span>
-            {isRecording && (
-              <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-rose-600 dark:text-rose-400">
-                <Mic size={13} />
-                Listening...
-              </span>
-            )}
+        {/* Segmented Mode Switch */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div
+            className="inline-flex items-center p-1 rounded-xl bg-[#F5F4EF] dark:bg-white/[0.04] border border-slate-900/10 dark:border-white/10 self-start"
+            role="tablist"
+            aria-label="Gratitude Journal interaction mode"
+          >
+            <button
+              type="button"
+              role="tab"
+              aria-selected={journalMode === 'live'}
+              disabled={isLiveSessionActive && journalMode !== 'live'}
+              onClick={() => {
+                setAiFeedback(null);
+                setJournalMode('live');
+              }}
+              className={`px-4 py-2 rounded-lg text-xs sm:text-sm font-medium inline-flex items-center gap-2 transition-colors whitespace-nowrap shrink-0 min-h-[40px] ${
+                journalMode === 'live'
+                  ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-sm'
+                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+              }`}
+            >
+              <MessageCircle size={15} className={journalMode === 'live' ? 'text-[#0F5E59] dark:text-teal-400' : ''} />
+              <span>Live Conversation</span>
+            </button>
+
+            <button
+              type="button"
+              role="tab"
+              aria-selected={journalMode === 'write'}
+              disabled={isLiveSessionActive}
+              onClick={() => {
+                setAiFeedback(null);
+                setJournalMode('write');
+              }}
+              className={`px-4 py-2 rounded-lg text-xs sm:text-sm font-medium inline-flex items-center gap-2 transition-colors whitespace-nowrap shrink-0 min-h-[40px] disabled:opacity-45 ${
+                journalMode === 'write'
+                  ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-sm'
+                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+              }`}
+            >
+              <PenLine size={15} className={journalMode === 'write' ? 'text-[#0F5E59] dark:text-teal-400' : ''} />
+              <span>Write Reflection</span>
+            </button>
           </div>
-          <textarea
-            className="w-full h-44 sm:h-56 px-4 sm:px-6 py-5 bg-transparent font-editorial text-lg sm:text-2xl text-slate-900 dark:text-white outline-none placeholder:text-slate-400 dark:placeholder:text-slate-600 resize-none leading-relaxed"
-            placeholder="Today, I am grateful for..."
-            value={textEntry}
-            onChange={(e) => setTextEntry(e.target.value)}
-            aria-label="Write your daily gratitude reflection"
+
+          <span className="text-xs text-slate-500 dark:text-slate-400">
+            {journalMode === 'live'
+              ? 'Two-way spoken dialogue with automatic summary'
+              : 'Written reflection with optional dictation'}
+          </span>
+        </div>
+
+        {journalMode === 'live' ? (
+          <LiveJournalDialogue
+            user={user}
+            onSaveSummary={handleSaveLiveSummary}
+            onActiveStateChange={setIsLiveSessionActive}
           />
-        </div>
+        ) : (
+          <>
+            <div className="rounded-xl bg-[#FAF9F6] dark:bg-slate-900/70 border border-slate-900/10 dark:border-white/10 overflow-hidden">
+              <div className="flex flex-wrap items-center justify-between gap-2 px-4 sm:px-6 py-3 border-b border-slate-900/[0.06] dark:border-white/[0.06]">
+                <span className="text-xs text-slate-500 dark:text-slate-400">
+                  {getNudge()}
+                </span>
+                {isRecording && (
+                  <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-rose-600 dark:text-rose-400">
+                    <Mic size={13} />
+                    Listening...
+                  </span>
+                )}
+              </div>
+              <textarea
+                className="w-full h-44 sm:h-56 px-4 sm:px-6 py-5 bg-transparent font-editorial text-lg sm:text-2xl text-slate-900 dark:text-white outline-none placeholder:text-slate-400 dark:placeholder:text-slate-600 resize-none leading-relaxed"
+                placeholder="Today, I am grateful for..."
+                value={textEntry}
+                onChange={(e) => setTextEntry(e.target.value)}
+                aria-label="Write your daily gratitude reflection"
+              />
+            </div>
 
-        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
-          <button
-            onClick={handleVoiceToggle}
-            disabled={isProcessing}
-            className={`px-5 py-3 rounded-xl border text-sm font-medium inline-flex items-center justify-center gap-2.5 transition-colors min-h-[44px] ${
-              isRecording
-                ? 'bg-rose-600 border-rose-600 text-white'
-                : 'bg-[#F5F4EF] dark:bg-white/[0.04] border-slate-900/10 dark:border-white/10 text-slate-800 dark:text-slate-200 hover:border-slate-900/25 dark:hover:border-white/25'
-            }`}
-          >
-            {isRecording ? <Square size={15} fill="currentColor" /> : <Mic size={16} className="text-[#0F5E59] dark:text-teal-400" />}
-            <span>{isRecording ? 'Stop Dictation' : 'Voice Dictation'}</span>
-          </button>
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+              <button
+                onClick={handleVoiceToggle}
+                disabled={isProcessing}
+                className={`px-5 py-3 rounded-xl border text-sm font-medium inline-flex items-center justify-center gap-2.5 transition-colors min-h-[44px] ${
+                  isRecording
+                    ? 'bg-rose-600 border-rose-600 text-white'
+                    : 'bg-[#F5F4EF] dark:bg-white/[0.04] border-slate-900/10 dark:border-white/10 text-slate-800 dark:text-slate-200 hover:border-slate-900/25 dark:hover:border-white/25'
+                }`}
+              >
+                {isRecording ? <Square size={15} fill="currentColor" /> : <Mic size={16} className="text-[#0F5E59] dark:text-teal-400" />}
+                <span>{isRecording ? 'Stop Dictation' : 'Voice Dictation'}</span>
+              </button>
 
-          <button
-            onClick={handleTextSubmit}
-            disabled={isProcessing || !textEntry.trim() || isRecording}
-            className="calm-btn-primary px-6 py-3 rounded-xl text-sm font-semibold disabled:opacity-40 disabled:cursor-not-allowed inline-flex items-center justify-center gap-2 min-h-[44px]"
-          >
-            {isProcessing ? <Loader2 size={16} className="animate-spin" /> : <Send size={16} />}
-            <span>{isProcessing ? 'Reflecting...' : 'Save Reflection'}</span>
-          </button>
-        </div>
+              <button
+                onClick={handleTextSubmit}
+                disabled={isProcessing || !textEntry.trim() || isRecording}
+                className="calm-btn-primary px-6 py-3 rounded-xl text-sm font-semibold disabled:opacity-40 disabled:cursor-not-allowed inline-flex items-center justify-center gap-2 min-h-[44px]"
+              >
+                {isProcessing ? <Loader2 size={16} className="animate-spin" /> : <Send size={16} />}
+                <span>{isProcessing ? 'Reflecting...' : 'Save Reflection'}</span>
+              </button>
+            </div>
+          </>
+        )}
 
         {aiFeedback && (
           <div className="p-5 sm:p-6 rounded-xl bg-[#0F5E59]/[0.06] dark:bg-teal-400/[0.08] border border-[#0F5E59]/15 dark:border-teal-400/20 animate-in fade-in duration-300 space-y-2">
@@ -279,7 +371,15 @@ const Journal: React.FC<Props> = React.memo(({ entries, setEntries, setView }) =
             <article key={entry.id} className="glass-card p-6 rounded-2xl space-y-4 flex flex-col justify-between">
               <div className="space-y-4">
                 <div className="flex items-center justify-between gap-3 text-xs text-slate-500 dark:text-slate-400">
-                  <span className="display-number font-medium">{entry.date}</span>
+                  <div className="flex items-center gap-2 min-w-0">
+                    <span className="display-number font-medium">{entry.date}</span>
+                    {entry.type === 'live' && (
+                      <>
+                        <span aria-hidden="true">·</span>
+                        <span className="text-[#0F5E59] dark:text-teal-400 font-medium">Spoken Dialogue</span>
+                      </>
+                    )}
+                  </div>
                   <button
                     onClick={() => setEntries(prev => prev.filter(e => e.id !== entry.id))}
                     className="w-8 h-8 flex items-center justify-center rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors"

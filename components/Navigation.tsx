@@ -65,7 +65,7 @@ const Navigation: React.FC<Props> = React.memo(({ activeView, setView, onLogout,
     { icon: Home, label: 'Dashboard', shortLabel: 'Home', view: AppView.DASHBOARD },
     { icon: Headphones, label: 'Meditation', shortLabel: 'Meditate', view: AppView.MUSIC },
     { icon: Sparkles, label: 'Celestial Audio', shortLabel: 'Cosmos', view: AppView.PLANETARY },
-    { icon: BookHeart, label: 'Gratitude', shortLabel: 'Journal', view: AppView.JOURNAL },
+    { icon: BookHeart, label: 'Gratitude Journal', shortLabel: 'Gratitude Journal', view: AppView.JOURNAL },
   ];
 
   return (
