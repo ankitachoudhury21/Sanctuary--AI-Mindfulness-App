@@ -1,6 +1,6 @@
 import React from 'react';
 import { AppView } from '../types';
-import { Home, BookHeart, Moon, Compass, LogOut, Headphones, Sparkles, Sun, CloudMoon } from 'lucide-react';
+import { Home, BookHeart, LogOut, Headphones, Sparkles, Sun, CloudMoon } from 'lucide-react';
 
 interface Props {
   activeView: AppView;
@@ -45,7 +45,7 @@ const MobileNavItem: React.FC<{ item: any; activeView: AppView; setView: (view: 
   return (
     <button
       onClick={() => setView(item.view)}
-      className="flex flex-col items-center justify-center flex-1 min-w-0 min-h-[44px] py-1.5 px-0.5 gap-1 outline-none transition-colors active:opacity-70"
+      className="flex flex-col items-center justify-center flex-1 min-w-0 min-h-[44px] py-1.5 px-1 gap-1 outline-none transition-colors active:opacity-70"
       aria-label={`Navigate to ${item.label}`}
       aria-current={isActive ? 'page' : undefined}
     >
@@ -64,10 +64,8 @@ const Navigation: React.FC<Props> = React.memo(({ activeView, setView, onLogout,
   const navItems = [
     { icon: Home, label: 'Dashboard', shortLabel: 'Home', view: AppView.DASHBOARD },
     { icon: Headphones, label: 'Meditation', shortLabel: 'Meditate', view: AppView.MUSIC },
-    { icon: Moon, label: 'Sleep & Rest', shortLabel: 'Sleep', view: AppView.SLEEP },
     { icon: Sparkles, label: 'Celestial Audio', shortLabel: 'Cosmos', view: AppView.PLANETARY },
     { icon: BookHeart, label: 'Gratitude', shortLabel: 'Journal', view: AppView.JOURNAL },
-    { icon: Compass, label: 'Daily Flow', shortLabel: 'Flow', view: AppView.ACTIVITY },
   ];
 
   return (
@@ -92,7 +90,7 @@ const Navigation: React.FC<Props> = React.memo(({ activeView, setView, onLogout,
           <button
             onClick={toggleDarkMode}
             className="w-10 h-10 min-w-[40px] min-h-[40px] flex items-center justify-center rounded-xl border border-slate-900/10 dark:border-white/10 bg-white/80 dark:bg-white/[0.05] text-slate-700 dark:text-amber-300 transition-colors"
-            aria-label={isDarkMode ? "Switch to light mode" : "Switch to dark mode"}
+            aria-label={isDarkMode ? 'Switch to light mode' : 'Switch to dark mode'}
           >
             {isDarkMode ? <Sun size={17} /> : <CloudMoon size={17} />}
           </button>
@@ -133,7 +131,7 @@ const Navigation: React.FC<Props> = React.memo(({ activeView, setView, onLogout,
           <button
             onClick={toggleDarkMode}
             className="w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-slate-300 hover:text-white hover:bg-white/[0.05] transition-colors min-h-[44px] text-sm font-medium"
-            aria-label={isDarkMode ? "Switch to light mode" : "Switch to dark mode"}
+            aria-label={isDarkMode ? 'Switch to light mode' : 'Switch to dark mode'}
           >
             <span className="flex items-center gap-3">
               {isDarkMode ? <Sun size={17} className="text-amber-300" /> : <CloudMoon size={17} className="text-slate-400" />}
@@ -154,7 +152,7 @@ const Navigation: React.FC<Props> = React.memo(({ activeView, setView, onLogout,
       </aside>
 
       {/* Mobile Bottom Tab Bar */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-[70] bg-[#0C1117]/95 backdrop-blur-xl border-t border-white/10 px-1.5 flex justify-around items-center h-16 pb-safe shadow-[0_-8px_30px_rgba(0,0,0,0.25)]" aria-label="Mobile Navigation">
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-[70] bg-[#0C1117]/95 backdrop-blur-xl border-t border-white/10 px-2 flex justify-around items-center h-16 pb-safe shadow-[0_-8px_30px_rgba(0,0,0,0.25)]" aria-label="Mobile Navigation">
         {navItems.map((item) => (
           <MobileNavItem key={item.view} item={item} activeView={activeView} setView={setView} />
         ))}

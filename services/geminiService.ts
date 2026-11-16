@@ -1,4 +1,37 @@
-import { SleepData, UserProfile } from '../types';
+import { DailyMantraItem, MindfulnessInsights, UserProfile } from '../types';
+
+const FALLBACK_DAILY_MANTRAS: DailyMantraItem[] = [
+  {
+    id: 'fallback-1',
+    affirmation: 'I am the calm center in the stream of daily work.',
+    theme: 'Quiet Clarity',
+    breathCue: 'Take three slow breaths before opening your next task.',
+  },
+  {
+    id: 'fallback-2',
+    affirmation: 'I release the urgency to solve everything in this hour.',
+    theme: 'Unhurried Pace',
+    breathCue: 'Drop your shoulders away from your ears as you exhale.',
+  },
+  {
+    id: 'fallback-3',
+    affirmation: 'My attention belongs to the quiet clarity of this moment.',
+    theme: 'Steady Focus',
+    breathCue: 'Inhale gently for four counts and rest on a single priority.',
+  },
+  {
+    id: 'fallback-4',
+    affirmation: 'Even brief stillness restores clarity to a crowded mind.',
+    theme: 'Present Ease',
+    breathCue: 'Unclench your jaw and let your gaze soften for ten seconds.',
+  },
+  {
+    id: 'fallback-5',
+    affirmation: 'I meet today with steady breath and unforced patience.',
+    theme: 'Grounded Rhythm',
+    breathCue: 'Feel both feet settle into the floor on your next exhale.',
+  },
+];
 
 /**
  * Analyzes a gratitude reflection via the server API and provides an empathetic insight.
@@ -29,34 +62,70 @@ export const analyzeGratitudeJournal = async (
 };
 
 /**
- * Analyzes health data via the server API and provides a holistic wellness report.
+ * Generates general mindfulness score, mantra, and guidance without sleep metrics.
  */
-export const analyzeSleepAndHealth = async (
-  sleepHistory: SleepData[],
+export const analyzeMindfulnessInsights = async (
   journalHistory: string[],
   user: UserProfile | null
-) => {
+): Promise<MindfulnessInsights> => {
   try {
-    const response = await fetch('/api/gemini/health-analysis', {
+    const response = await fetch('/api/gemini/mindfulness', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ sleepHistory, journalHistory, user }),
+      body: JSON.stringify({ journalHistory, user }),
     });
 
     const data = await response.json();
     if (!response.ok) {
-      throw new Error(data?.error || 'Failed to analyze sleep and health data.');
+      throw new Error(data?.error || 'Failed to generate mindfulness insights.');
     }
 
     return data;
   } catch (error: any) {
-    console.error('Health Analysis failed:', error);
+    console.error('Mindfulness analysis failed:', error);
     return {
-      score: 75,
+      score: 78,
       label: 'Balanced',
-      predictions: ['Stability detected', 'Focusing on rhythm', 'Insights loading'],
-      advice: 'Take a deep breath. Your data is being processed.',
-      affirmation: 'I am the calm within the stream.',
+      predictions: ['Steady reflective cadence', 'Acoustic focus active', 'Calm breathing rhythm'],
+      advice: 'Take three slow breaths before transitioning into your next focus block.',
+      affirmation: 'I am the calm center in the stream of daily work.',
     };
   }
 };
+
+/**
+ * Generates a rotating set of AI mindfulness affirmations for the user's login session.
+ */
+export const generateDailyMantras = async (
+  journalHistory: string[],
+  user: UserProfile | null
+): Promise<{ mantras: DailyMantraItem[]; isFallback: boolean; error?: string }> => {
+  try {
+    const dateLabel = new Date().toLocaleDateString('en-US', {
+      weekday: 'long',
+      month: 'long',
+      day: 'numeric',
+    });
+
+    const response = await fetch('/api/gemini/mantras', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ journalHistory, user, dateLabel }),
+    });
+
+    const data = await response.json();
+    if (!response.ok || !Array.isArray(data?.mantras) || data.mantras.length === 0) {
+      throw new Error(data?.error || 'Unable to generate daily affirmations.');
+    }
+
+    return { mantras: data.mantras, isFallback: false };
+  } catch (error: any) {
+    console.error('Daily mantra generation failed:', error);
+    return {
+      mantras: FALLBACK_DAILY_MANTRAS,
+      isFallback: true,
+      error: error?.message || 'Unable to reach AI affirmation service.',
+    };
+  }
+};
+

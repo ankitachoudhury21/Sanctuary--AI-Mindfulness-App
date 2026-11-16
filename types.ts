@@ -1,20 +1,15 @@
-
 export enum AppView {
   WELCOME = 'WELCOME',
   LOGIN = 'LOGIN',
   DASHBOARD = 'DASHBOARD',
   JOURNAL = 'JOURNAL',
-  SLEEP = 'SLEEP',
   MUSIC = 'MUSIC',
-  ACTIVITY = 'ACTIVITY',
   PLANETARY = 'PLANETARY',
 }
 
 export interface UserProfile {
   name: string;
   stressLevel: number; // 1-10
-  waterGoal: number; // liters
-  stepGoal: number;
   goals?: string[];
 }
 
@@ -27,17 +22,18 @@ export interface JournalEntry {
   aiResponse?: string;
 }
 
-export interface SleepData {
-  date: string;
-  hours: number;
-  quality: number; // 1-10
-  score?: number;
-  label?: string;
-  insights?: string;
-  healthPredictions?: string[];
+export interface MindfulnessInsights {
+  score: number;
+  label: string;
+  predictions?: string[];
+  advice: string;
+  affirmation: string;
 }
 
-export interface ActivityData {
-  steps: number;
-  waterIntake: number; // glasses
+export interface DailyMantraItem {
+  id: string;
+  affirmation: string;
+  theme: string;
+  breathCue: string;
 }
+

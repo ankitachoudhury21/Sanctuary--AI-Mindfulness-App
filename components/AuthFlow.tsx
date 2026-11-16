@@ -128,7 +128,7 @@ export const AuthFlow: React.FC<Props> = ({ onAuthComplete, userName }) => {
             </h3>
             <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
               {method === 'social'
-                ? 'Choose a sign-in method to save reflections and sleep trends privately.'
+                ? 'Choose a sign-in method to save reflections and mindfulness progress privately.'
                 : method === 'magic'
                 ? 'We will send a single-use entry link to your inbox.'
                 : isLogin

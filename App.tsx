@@ -1,21 +1,22 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { AppView, UserProfile, SleepData, ActivityData, JournalEntry } from './types';
+import { AppView, UserProfile, JournalEntry, MindfulnessInsights, DailyMantraItem } from './types';
 import WelcomeJourney from './components/WelcomeJourney';
 import { AuthFlow } from './components/AuthFlow';
 import Dashboard from './components/Dashboard';
 import Navigation from './components/Navigation';
-import { analyzeSleepAndHealth } from './services/geminiService';
+import { analyzeMindfulnessInsights, generateDailyMantras } from './services/geminiService';
 import { ArrowRight } from 'lucide-react';
 import backdropImg from './src/assets/images/sanctuary_ambient_backdrop_1794849879379.jpg';
 
 const STORAGE_KEYS = {
   USER: 'sanctuary_user_profile',
   JOURNAL: 'sanctuary_journal_entries',
-  SLEEP: 'sanctuary_sleep_data',
-  ACTIVITY: 'sanctuary_activity_data',
   DRAFT: 'sanctuary_journal_draft',
   DARK_MODE: 'sanctuary_dark_mode',
+  MANTRAS: 'sanctuary_daily_mantras',
 };
+
+const getTodayKey = () => new Date().toISOString().slice(0, 10);
 
 const App: React.FC = () => {
   const [hasStarted, setHasStarted] = useState(false);
@@ -38,25 +39,22 @@ const App: React.FC = () => {
       return saved ? JSON.parse(saved) : [];
     } catch { return []; }
   });
-  const [sleepData, setSleepData] = useState<SleepData[]>(() => {
+  const [aiInsights, setAiInsights] = useState<MindfulnessInsights | null>(null);
+  const [dailyMantras, setDailyMantras] = useState<DailyMantraItem[]>(() => {
     try {
-      const saved = localStorage.getItem(STORAGE_KEYS.SLEEP);
-      return saved ? JSON.parse(saved) : [
-        { date: 'Mon', hours: 6.5, quality: 6, score: 65, label: 'Fair' },
-        { date: 'Tue', hours: 7.2, quality: 8, score: 82, label: 'Good' },
-        { date: 'Wed', hours: 5.8, quality: 4, score: 45, label: 'Poor' },
-        { date: 'Thu', hours: 8.1, quality: 9, score: 88, label: 'Great' },
-        { date: 'Fri', hours: 7.5, quality: 8, score: 79, label: 'Good' },
-      ];
-    } catch { return []; }
+      const saved = localStorage.getItem(STORAGE_KEYS.MANTRAS);
+      if (!saved) return [];
+      const parsed = JSON.parse(saved);
+      if (parsed?.date === getTodayKey() && Array.isArray(parsed?.mantras)) {
+        return parsed.mantras;
+      }
+      return [];
+    } catch {
+      return [];
+    }
   });
-  const [activity, setActivity] = useState<ActivityData>(() => {
-    try {
-      const saved = localStorage.getItem(STORAGE_KEYS.ACTIVITY);
-      return saved ? JSON.parse(saved) : { steps: 4200, waterIntake: 5 };
-    } catch { return { steps: 0, waterIntake: 0 }; }
-  });
-  const [aiInsights, setAiInsights] = useState<any>(null);
+  const [isLoadingMantras, setIsLoadingMantras] = useState(false);
+  const [mantrasError, setMantrasError] = useState<string | null>(null);
   const refreshTimerRef = useRef<number | null>(null);
   const lastAnalyzedJournalCount = useRef<number>(0);
 
@@ -72,16 +70,47 @@ const App: React.FC = () => {
     }
   }, [user]);
 
+  const loadDailyMantras = useCallback(
+    async (profileOverride?: UserProfile | null) => {
+      const activeUser = profileOverride !== undefined ? profileOverride : user;
+      setIsLoadingMantras(true);
+      setMantrasError(null);
+      try {
+        const snippets = journalEntries.slice(0, 4).map((e) => e.transcript || '');
+        const result = await generateDailyMantras(snippets, activeUser);
+        setDailyMantras(result.mantras);
+        if (result.isFallback) {
+          setMantrasError(result.error || 'Unable to reach AI affirmation service.');
+        } else {
+          localStorage.setItem(
+            STORAGE_KEYS.MANTRAS,
+            JSON.stringify({
+              date: getTodayKey(),
+              userName: activeUser?.name || '',
+              mantras: result.mantras,
+            })
+          );
+        }
+      } catch (e: any) {
+        console.error('Daily mantra load failed', e);
+        setMantrasError(e?.message || 'Unable to load daily affirmations.');
+      } finally {
+        setIsLoadingMantras(false);
+      }
+    },
+    [journalEntries, user]
+  );
+
   const refreshAIInsights = useCallback(async () => {
     try {
       lastAnalyzedJournalCount.current = journalEntries.length;
-      const snippets = journalEntries.slice(0, 5).map(e => e.transcript || "");
-      const result = await analyzeSleepAndHealth(sleepData, snippets, user);
+      const snippets = journalEntries.slice(0, 5).map(e => e.transcript || '');
+      const result = await analyzeMindfulnessInsights(snippets, user);
       setAiInsights(result);
     } catch (e) {
-      console.error("AI Insights sync failed", e);
+      console.error('AI Insights sync failed', e);
     }
-  }, [journalEntries, sleepData, user]);
+  }, [journalEntries, user]);
 
   useEffect(() => {
     localStorage.setItem(STORAGE_KEYS.JOURNAL, JSON.stringify(journalEntries));
@@ -96,14 +125,6 @@ const App: React.FC = () => {
   }, [journalEntries, user, refreshAIInsights]);
 
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEYS.SLEEP, JSON.stringify(sleepData));
-  }, [sleepData]);
-
-  useEffect(() => {
-    localStorage.setItem(STORAGE_KEYS.ACTIVITY, JSON.stringify(activity));
-  }, [activity]);
-
-  useEffect(() => {
     if (hasStarted && user && view === AppView.WELCOME) {
       setView(AppView.DASHBOARD);
     }
@@ -113,8 +134,14 @@ const App: React.FC = () => {
     setHasStarted(true);
     if (user && view === AppView.WELCOME) {
       setView(AppView.DASHBOARD);
+      if (dailyMantras.length === 0) {
+        loadDailyMantras(user);
+      }
+      if (!aiInsights) {
+        refreshAIInsights();
+      }
     }
-  }, [user, view]);
+  }, [user, view, dailyMantras.length, aiInsights, loadDailyMantras, refreshAIInsights]);
 
   const handleStart = useCallback((profile: UserProfile) => {
     setUser(profile);
@@ -124,13 +151,18 @@ const App: React.FC = () => {
   const handleAuthComplete = useCallback(() => {
     setView(AppView.DASHBOARD);
     refreshAIInsights();
-  }, [refreshAIInsights]);
+    loadDailyMantras(user);
+  }, [refreshAIInsights, loadDailyMantras, user]);
 
   const logout = useCallback(() => {
     localStorage.removeItem(STORAGE_KEYS.USER);
     localStorage.removeItem(STORAGE_KEYS.DRAFT);
+    localStorage.removeItem(STORAGE_KEYS.MANTRAS);
 
     setUser(null);
+    setDailyMantras([]);
+    setMantrasError(null);
+    setAiInsights(null);
     setView(AppView.WELCOME);
     setHasStarted(false);
   }, []);
@@ -175,23 +207,23 @@ const App: React.FC = () => {
                   </svg>
                   <span className="font-editorial text-lg font-medium tracking-tight">Sanctuary</span>
                 </div>
-                <span className="text-xs text-white/80 font-medium">Rest · Focus · Recovery</span>
+                <span className="text-xs text-white/80 font-medium">Focus · Audio · Reflection</span>
               </div>
             </div>
 
             <div className="p-6 sm:p-10 space-y-6 text-left">
               <div className="space-y-2.5">
                 <h1 className="font-editorial text-3xl sm:text-4xl md:text-5xl font-normal text-slate-900 dark:text-white tracking-tight leading-[1.12] text-balance">
-                  A quiet place for rest and clarity.
+                  A quiet place for focus and clarity.
                 </h1>
                 <p className="text-sm sm:text-base text-slate-600 dark:text-slate-300 leading-relaxed max-w-md">
-                  Guided soundscapes, sleep telemetry, and private reflection crafted for unhurried focus.
+                  Guided meditation soundscapes, celestial frequencies, and private gratitude reflection crafted for unhurried calm.
                 </p>
               </div>
 
               <div className="pt-2 border-t border-slate-900/10 dark:border-white/10 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <span className="text-xs text-slate-500 dark:text-slate-400">
-                  {user ? `Welcome back, ${user.name}` : 'Personal workspace'}
+                  {user ? `Welcome back, ${user.name}` : 'Personal mindfulness space'}
                 </span>
                 <button
                   onClick={handleStartExperience}
@@ -225,13 +257,13 @@ const App: React.FC = () => {
                   view={view}
                   setView={setView}
                   user={user}
-                  sleepData={sleepData}
-                  activity={activity}
-                  setActivity={setActivity}
                   journalEntries={journalEntries}
                   setJournalEntries={setJournalEntries}
                   aiInsights={aiInsights}
-                  setSleepData={setSleepData}
+                  dailyMantras={dailyMantras}
+                  isLoadingMantras={isLoadingMantras}
+                  mantrasError={mantrasError}
+                  onRefreshMantras={() => loadDailyMantras(user)}
                   setIsAnyTrackPlaying={setIsAnyTrackPlaying}
                 />
               </main>

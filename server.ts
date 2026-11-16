@@ -3,7 +3,7 @@ import type { Request, Response } from 'express';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { GoogleGenAI, Type } from '@google/genai';
+import { GoogleGenAI, ThinkingLevel, Type } from '@google/genai';
 import type { GenerateContentResponse } from '@google/genai';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -100,32 +100,30 @@ Tone: Warm, poetic, and concise. No hashtags or corporate speak.`,
     }
   });
 
-  app.post('/api/gemini/health-analysis', async (req: Request, res: Response) => {
+  app.post('/api/gemini/mindfulness', async (req: Request, res: Response) => {
     try {
-      const { sleepHistory = [], journalHistory = [], user = null } = req.body ?? {};
+      const { journalHistory = [], user = null } = req.body ?? {};
 
-      const sleepContext = JSON.stringify(Array.isArray(sleepHistory) ? sleepHistory.slice(-7) : []);
       const journalContext = Array.isArray(journalHistory) ? journalHistory.slice(0, 5).join(' | ') : '';
       const userContext = user
-        ? `User Profile: Stress Level ${user.stressLevel}/10, Goals: ${Array.isArray(user.goals) ? user.goals.join(', ') : ''}`
+        ? `User Profile: Stress Level ${user.stressLevel}/10, Intentions: ${Array.isArray(user.goals) ? user.goals.join(', ') : ''}`
         : 'User Profile: Not available';
 
       const ai = getAI();
       const response = await withRetry<GenerateContentResponse>(() =>
         ai.models.generateContent({
           model: 'gemini-4-hydrogen',
-          contents: `You are a holistic wellness consultant for corporate tech professionals.
-Analyze the following data:
+          contents: `You are a thoughtful mindfulness mentor for busy knowledge workers.
+Analyze the following context without assuming or mentioning sleep metrics:
 ${userContext}
-Sleep History: ${sleepContext}
-Recent Reflections: ${journalContext}
+Recent Gratitude Reflections: ${journalContext || 'No journal entries yet.'}
 
 Provide:
-1. A wellness score (0-100).
-2. A label (Optimal, Restorative, Fair, Fatigued).
-3. 3 pattern predictions.
-4. 1 actionable advice.
-5. A brief 8-10 word mantra.
+1. A general mindfulness score (0-100) reflecting calm and reflective consistency.
+2. A concise 1-word calm state label (e.g., Grounded, Balanced, Steady, Unwinding).
+3. 3 brief mindful observations or focus themes.
+4. 1 concise, practical mindfulness guidance sentence.
+5. A brief 8-10 word daily mantra.
 
 Return JSON only.`,
           config: {
@@ -148,10 +146,96 @@ Return JSON only.`,
       const parsed = JSON.parse((response.text ?? '{}').trim());
       res.json(parsed);
     } catch (error: any) {
-      console.error('Server health analysis failed:', error);
+      console.error('Server mindfulness analysis failed:', error);
       const status = typeof error?.status === 'number' && error.status >= 400 ? error.status : 500;
       res.status(status).json({
-        error: error?.message || 'Failed to generate wellness insights.',
+        error: error?.message || 'Failed to generate mindfulness insights.',
+      });
+    }
+  });
+
+  app.post('/api/gemini/mantras', async (req: Request, res: Response) => {
+    try {
+      const { journalHistory = [], user = null, dateLabel = '' } = req.body ?? {};
+
+      const journalContext = Array.isArray(journalHistory)
+        ? journalHistory.filter((entry) => typeof entry === 'string' && entry.trim()).slice(0, 4).join(' | ')
+        : '';
+
+      const userContext = user
+        ? `Name: ${user.name || 'Friend'}, Stress Level: ${user.stressLevel ?? 5}/10, Intentions: ${
+            Array.isArray(user.goals) && user.goals.length > 0 ? user.goals.join(', ') : 'Present-moment calm'
+          }`
+        : 'Name: Friend, Stress Level: 5/10, Intentions: Present-moment calm';
+
+      const ai = getAI();
+      const response = await withRetry<GenerateContentResponse>(() =>
+        ai.models.generateContent({
+          model: 'gemini-4-hydrogen',
+          contents: `Create 5 distinct, calming daily mindfulness affirmations for a user signing into their mindfulness workspace${
+            dateLabel ? ` on ${dateLabel}` : ''
+          }.
+Context: ${userContext}
+Recent Gratitude Reflections: ${journalContext || 'No recent reflections yet.'}
+
+Requirements:
+- Each affirmation must be 8 to 15 words, poetic yet grounded in everyday human clarity (first-person "I" or quiet second-person).
+- Each item needs a 2-3 word theme label (e.g., "Quiet Clarity", "Steady Breath", "Unhurried Pace").
+- Each item needs 1 concise grounding breath or attention cue (10-16 words).
+- Do not include hashtags, emojis, exclamation marks, or sleep metrics.
+Return JSON only.`,
+          config: {
+            thinkingConfig: { thinkingLevel: ThinkingLevel.LOW },
+            responseMimeType: 'application/json',
+            responseSchema: {
+              type: Type.OBJECT,
+              properties: {
+                mantras: {
+                  type: Type.ARRAY,
+                  items: {
+                    type: Type.OBJECT,
+                    properties: {
+                      affirmation: { type: Type.STRING },
+                      theme: { type: Type.STRING },
+                      breathCue: { type: Type.STRING },
+                    },
+                    required: ['affirmation', 'theme', 'breathCue'],
+                  },
+                },
+              },
+              required: ['mantras'],
+            },
+          },
+        })
+      );
+
+      const parsed = JSON.parse((response.text ?? '{}').trim());
+      const rawList = Array.isArray(parsed?.mantras) ? parsed.mantras : [];
+
+      if (rawList.length === 0) {
+        res.status(502).json({ error: 'Empty mantra set received from Gemini.' });
+        return;
+      }
+
+      const mantras = rawList
+        .slice(0, 5)
+        .filter((item: any) => typeof item?.affirmation === 'string' && item.affirmation.trim())
+        .map((item: any, idx: number) => ({
+          id: `mantra-${Date.now()}-${idx}`,
+          affirmation: item.affirmation.trim().replace(/^["']|["']$/g, ''),
+          theme: typeof item.theme === 'string' && item.theme.trim() ? item.theme.trim() : 'Mindful Anchor',
+          breathCue:
+            typeof item.breathCue === 'string' && item.breathCue.trim()
+              ? item.breathCue.trim()
+              : 'Take one slow inhale and soften your shoulders as you exhale.',
+        }));
+
+      res.json({ mantras, generatedAt: new Date().toISOString() });
+    } catch (error: any) {
+      console.error('Server daily mantras generation failed:', error);
+      const status = typeof error?.status === 'number' && error.status >= 400 ? error.status : 500;
+      res.status(status).json({
+        error: error?.message || 'Failed to generate daily mindfulness affirmations.',
       });
     }
   });

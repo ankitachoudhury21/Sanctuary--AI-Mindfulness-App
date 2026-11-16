@@ -1,35 +1,34 @@
 import React, { useState, useEffect } from 'react';
 import { UserProfile } from '../types';
-import { ArrowRight, Moon, Zap, Sun, Shield, Sparkles, Check } from 'lucide-react';
+import { ArrowRight, Headphones, Shield, Sparkles, BookHeart, Check } from 'lucide-react';
 
 interface Props {
   onComplete: (profile: UserProfile) => void;
 }
 
 const GOAL_OPTIONS = [
-  { id: 'sleep', label: 'Deepen sleep architecture', desc: 'Stabilize REM & wind-down cadence', icon: Moon },
-  { id: 'focus', label: 'Restore uninterrupted focus', desc: 'Acoustic forest & binaural sessions', icon: Zap },
-  { id: 'stress', label: 'Quiet workday tension', desc: 'Guided breathing & somatic resets', icon: Shield },
-  { id: 'gratitude', label: 'Cultivate daily reflection', desc: 'Private voice & text journaling', icon: Sparkles },
-  { id: 'habits', label: 'Align circadian rhythm', desc: 'Hydration, movement & rest cues', icon: Sun },
+  { id: 'focus', label: 'Restore uninterrupted focus', desc: 'Acoustic forest & binaural sessions', icon: Headphones },
+  { id: 'stress', label: 'Quiet workday tension', desc: 'Grounding mindfulness & calm breathing', icon: Shield },
+  { id: 'gratitude', label: 'Cultivate daily reflection', desc: 'Private voice & text journaling', icon: BookHeart },
+  { id: 'cosmos', label: 'Explore spatial soundscapes', desc: 'Ambient planetary audio listening', icon: Sparkles },
 ];
 
 const QUESTIONNAIRE = [
   {
-    question: "How does your mind feel when evening arrives?",
-    tip: "Understanding your cognitive baseline calibrates your soundscapes.",
-    options: ["Scattered & Restless", "Fatigued but Wired", "Calm yet Heavy", "Generally Steady"]
+    question: 'How does your mind feel after a demanding workday?',
+    tip: 'Your cognitive baseline helps tailor your daily mantra and meditation recommendations.',
+    options: ['Scattered & Overstimulated', 'Mentally Fatigued', 'Calm yet Tense', 'Generally Steady'],
   },
   {
-    question: "Which acoustic environment settles your attention fastest?",
-    tip: "Your primary audio channel shapes the studio workspace.",
-    options: ["Deep Cedar Forest & Rain", "Sub-Bass & Binaural Frequencies", "Quiet Observational Cosmos", "Minimalist Acoustic Silence"]
+    question: 'Which acoustic environment settles your attention fastest?',
+    tip: 'Your preferred sound channel guides the Meditation Studio and Celestial Audio.',
+    options: ['Cedar Forest & Rain', 'Binaural & Alpha Frequencies', 'Acoustic Raga & Felt Piano', 'Deep Space Harmonics'],
   },
   {
-    question: "What outcome matters most over the next thirty days?",
-    tip: "All daily insights and sleep alerts adapt to this priority.",
-    options: ["Consistent Sleep Quality", "Sustained Deep Work Focus", "Lower Daily Stress Load", "Emotional Steadiness"]
-  }
+    question: 'What intention matters most right now?',
+    tip: 'Daily guidance and reflection prompts adapt to this priority.',
+    options: ['Sustained Deep Focus', 'Lower Daily Stress Load', 'Consistent Gratitude Practice', 'Emotional Steadiness'],
+  },
 ];
 
 const WelcomeJourney: React.FC<Props> = React.memo(({ onComplete }) => {
@@ -39,9 +38,7 @@ const WelcomeJourney: React.FC<Props> = React.memo(({ onComplete }) => {
   const [profile, setProfile] = useState<UserProfile>({
     name: '',
     stressLevel: 5,
-    waterGoal: 2.5,
-    stepGoal: 8000,
-    goals: []
+    goals: [],
   });
 
   useEffect(() => {
@@ -53,7 +50,7 @@ const WelcomeJourney: React.FC<Props> = React.memo(({ onComplete }) => {
       ...prev,
       goals: prev.goals?.includes(id)
         ? prev.goals.filter(g => g !== id)
-        : [...(prev.goals || []), id]
+        : [...(prev.goals || []), id],
     }));
   };
 
@@ -119,7 +116,7 @@ const WelcomeJourney: React.FC<Props> = React.memo(({ onComplete }) => {
                   Begin with your name.
                 </h1>
                 <p className="text-sm sm:text-base text-slate-600 dark:text-slate-300 leading-relaxed max-w-lg">
-                  Sanctuary shapes acoustic sessions, rest scores, and evening reflections around your cadence.
+                  Sanctuary shapes guided soundscapes, mindfulness guidance, and evening gratitude around your focus.
                 </p>
               </div>
 
@@ -161,7 +158,7 @@ const WelcomeJourney: React.FC<Props> = React.memo(({ onComplete }) => {
                   What brings you here today?
                 </h2>
                 <p className="text-sm text-slate-600 dark:text-slate-300">
-                  Select one or more focus areas for your workspace.
+                  Select one or more focus areas for your mindfulness practice.
                 </p>
               </div>
 
@@ -277,12 +274,12 @@ const WelcomeJourney: React.FC<Props> = React.memo(({ onComplete }) => {
           {step === 4 && (
             <div className="glass-card p-6 sm:p-10 rounded-2xl space-y-8 animate-in slide-in-from-right-4 duration-300">
               <div className="space-y-2">
-                <p className="text-xs font-medium text-[#0F5E59] dark:text-teal-400">Daily Targets</p>
+                <p className="text-xs font-medium text-[#0F5E59] dark:text-teal-400">Stress Calibration</p>
                 <h2 className="font-editorial text-2xl sm:text-4xl font-normal text-slate-900 dark:text-white tracking-tight">
-                  Personalize your baseline
+                  Set your starting baseline
                 </h2>
                 <p className="text-sm text-slate-600 dark:text-slate-300">
-                  Set current stress load and daily hydration targets.
+                  Adjust how much tension you are carrying today so Sanctuary can calibrate your mindfulness score and guidance.
                 </p>
               </div>
 
@@ -305,27 +302,6 @@ const WelcomeJourney: React.FC<Props> = React.memo(({ onComplete }) => {
                   <span>Calm</span>
                   <span>Moderate</span>
                   <span>Elevated</span>
-                </div>
-              </div>
-
-              <div className="space-y-3">
-                <span className="block text-sm font-medium text-slate-700 dark:text-slate-300">Daily Hydration Goal</span>
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                  {[1.5, 2, 2.5, 3].map(val => (
-                    <button
-                      key={val}
-                      onClick={() => setProfile({ ...profile, waterGoal: val })}
-                      className={`py-3 rounded-xl font-semibold text-sm display-number transition-all border min-h-[44px] ${
-                        profile.waterGoal === val
-                          ? 'bg-[#0F5E59] dark:bg-teal-400 border-transparent text-white dark:text-slate-950 shadow-sm'
-                          : 'bg-white/60 dark:bg-white/[0.03] border-slate-900/10 dark:border-white/10 text-slate-700 dark:text-slate-200 hover:border-slate-900/25 dark:hover:border-white/25'
-                      }`}
-                      aria-pressed={profile.waterGoal === val}
-                      aria-label={`Set hydration goal to ${val} liters`}
-                    >
-                      {val} L
-                    </button>
-                  ))}
                 </div>
               </div>
 
